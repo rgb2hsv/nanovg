@@ -1,21 +1,14 @@
-cmake_minimum_required(VERSION 3.1.0)
+project(nanovg VERSION 0.0.0 LANGUAGES C CXX)
 
-set(PROJECT_NAME nanovg)
+#add_library(${PROJECT_NAME}
+#        src/nanovg.c
+#        )
 
-project(${PROJECT_NAME})
+include_directories("src")
 
-set(SRC_DIR "./src")
-file(GLOB SRCS ${SRC_DIR}/*.c)
-file(GLOB HDRS ${SRC_DIR}/*.h)
+file(GLOB SOURCES "src/*.c")
 
-add_library(${PROJECT_NAME} ${SRCS})
+#target_include_directories(${PROJECT_NAME} PUBLIC .)
+#target_include_directories(${PROJECT_NAME} PRIVATE ./src)
 
-
-install(TARGETS ${PROJECT_NAME}
-        LIBRARY DESTINATION lib
-        ARCHIVE DESTINATION lib
-        RUNTIME DESTINATION bin
-        INCLUDES DESTINATION include/${PROJECT_NAME}
-)
-
-install(FILES ${HDRS} DESTINATION include/${PROJECT_NAME}/)
+add_library(${PROJECT_NAME} STATIC ${SOURCES})
