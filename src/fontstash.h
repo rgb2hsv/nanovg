@@ -1369,7 +1369,7 @@ static void fons__getQuad(FONScontext* stash, FONSfont* font,
 
 	if (prevGlyphIndex != -1) {
 		float adv = fons__tt_getGlyphKernAdvance(&font->font, prevGlyphIndex, glyph->index) * scale;
-		*x += (int)(adv + spacing + 0.5f);
+		*x += adv + spacing + 0.5f;
 	}
 
 	// Each glyph has 2px border to allow good interpolation,
