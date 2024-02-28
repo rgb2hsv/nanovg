@@ -795,14 +795,9 @@ void drawColorwheel(NVGcontext* vg, float x, float y, float w, float h, float t)
 	char str[128];
 	sprintf(str, "%d%%", (int)(100.0f * (hue + 1.0f)) % 100);
 	nvgBeginPath(vg);
-	nvgText(vg, 0.0f, -0.25f * th, str, 0);
+	nvgText(vg, 0.0f, -0.2f * th, str, 0);
 	nvgFill(vg);
-	float bounds[4];
-	nvgTextBounds(vg, 0.0f, -0.25f * th, str, 0, bounds);
-	nvgBeginPath(vg);
-	nvgRect(vg, bounds[0], bounds[1], bounds[2] - bounds[0], bounds[3] - bounds[1]);
-	nvgStrokeColor(vg, nvgRGBA(0,255,255,128));
-	nvgStroke(vg);
+
 	nvgRestore(vg);
 	nvgRestore(vg);
 }
@@ -1175,6 +1170,21 @@ void drawBezierCurve(NVGcontext* vg, float x0, float y0, float radius, float t){
 	nvgFill(vg);
 }
 
+void drawScaledText(NVGcontext* vg, float x0, float y0, float t){
+	nvgSave(vg);
+	const float scale = (cos(2 * NVG_PI * t * 0.25)+1.0) + 0.1;
+	nvgTranslate(vg, x0, y0);
+;	nvgScale(vg, scale, scale);
+	nvgFontSize(vg, 24.0f);
+	nvgFontFace(vg, "sans-bold");
+	nvgTextAlign(vg,NVG_ALIGN_CENTER|NVG_ALIGN_MIDDLE);
+	nvgFillColor(vg, nvgRGBA(255,255,255,255));
+	nvgBeginPath(vg);
+	nvgText(vg, 0.0f, 0.0f, "NanoVG", NULL);
+	nvgFill(vg);
+	nvgRestore(vg);
+}
+
 void renderDemo(NVGcontext* vg, float mx, float my, float width, float height,
 				float t, int blowup, DemoData* data)
 {
@@ -1254,6 +1264,7 @@ void renderDemo(NVGcontext* vg, float mx, float my, float width, float height,
 	nvgRestore(vg);
 
 	drawBezierCurve(vg, width - 380, height - 220, 100, t);
+	drawScaledText(vg, 450.0, 50, t);
 }
 
 static int mini(int a, int b) { return a < b ? a : b; }

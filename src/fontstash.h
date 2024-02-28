@@ -1383,8 +1383,8 @@ static void fons__getQuad(FONScontext* stash, FONSfont* font,
 	y1 = (float)(glyph->y1-1);
 
 	if (stash->params.flags & FONS_ZERO_TOPLEFT) {
-		rx = floorf(*x + xoff);
-		ry = floorf(*y + yoff);
+		rx = *x + xoff;
+		ry = *y + yoff;
 
 		q->x0 = rx;
 		q->y0 = ry;
@@ -1396,8 +1396,8 @@ static void fons__getQuad(FONScontext* stash, FONSfont* font,
 		q->s1 = x1 * stash->itw;
 		q->t1 = y1 * stash->ith;
 	} else {
-		rx = floorf(*x + xoff);
-		ry = floorf(*y - yoff);
+		rx = *x + xoff;
+		ry = *y - yoff;
 
 		q->x0 = rx;
 		q->y0 = ry;
@@ -1410,7 +1410,7 @@ static void fons__getQuad(FONScontext* stash, FONSfont* font,
 		q->t1 = y1 * stash->ith;
 	}
 
-	*x += (int)(glyph->xadv / 10.0f + 0.5f);
+	*x += (glyph->xadv / 10.0f + 0.5f);
 }
 
 static void fons__flush(FONScontext* stash)
