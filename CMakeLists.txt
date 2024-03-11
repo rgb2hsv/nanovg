@@ -7,8 +7,8 @@ set(CMAKE_C_STANDARD 11)
 project(${PROJECT_NAME})
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGL_GLEXT_PROTOTYPES=1 -O3 -Wall -Wreturn-type -Wno-reorder -Wno-implicit-fallthrough -Wno-unused-variable -Wno-unused-parameter -Wno-deprecated -fmessage-length=0 -MMD -MP")
-	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DGL_GLEXT_PROTOTYPES=1 -O3 -Wall -Wextra")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGL_GLEXT_PROTOTYPES=1 -O3 -Wall -Wreturn-type -Wno-reorder -Wno-implicit-fallthrough -Wno-unused-variable -Wno-unused-parameter -Wno-unused-function -Wno-deprecated -fmessage-length=0")
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DGL_GLEXT_PROTOTYPES=1 -O3 -Wall -Wno-unused-function -Wno-unused-variable -Wno-unused-parameter -Wno-deprecated")
 endif()
 
 if(WIN32)
@@ -30,17 +30,9 @@ set(SRC_DIR "./src")
 file(GLOB SRCS ${SRC_DIR}/*.c)
 file(GLOB HDRS ${SRC_DIR}/*.h)
 
-add_library(${PROJECT_NAME} ${SRCS})
-
-
-install(TARGETS ${PROJECT_NAME}
-        LIBRARY DESTINATION lib
-        ARCHIVE DESTINATION lib
-        RUNTIME DESTINATION bin
-        INCLUDES DESTINATION include/${PROJECT_NAME}
-)
-
 install(FILES ${HDRS} DESTINATION include/${PROJECT_NAME}/)
+
+add_library(${PROJECT_NAME} ${SRCS})
 
 set(DEFS "")
 if(APPLE)
@@ -58,11 +50,19 @@ else()
 endif()
 set(COMMON_FILES "example/demo.c" "example/perf.c")
 
+set(TARGETS ${PROJECT_NAME})
 foreach(EXAMPLE_PROJ IN ITEMS gles2 gles3 gl2 gl3 fbo)
-        message("Building example_${EXAMPLE_PROJ}")
-        add_executable(${EXAMPLE_PROJ} "example/example_${EXAMPLE_PROJ}.c" ${COMMON_FILES})
-        target_compile_definitions(${EXAMPLE_PROJ} PUBLIC ${DEFS})
-        target_link_libraries(${EXAMPLE_PROJ} ${PROJECT_NAME} ${LIBS})
-        target_include_directories(${EXAMPLE_PROJ} PUBLIC ${SRC_DIR})
+        add_executable(example_${EXAMPLE_PROJ} "example/example_${EXAMPLE_PROJ}.c" ${COMMON_FILES})
+        list(APPEND ${TARGETS} example_${EXAMPLE_PROJ})
+        target_compile_definitions(example_${EXAMPLE_PROJ} PUBLIC ${DEFS})
+        target_link_libraries(example_${EXAMPLE_PROJ} ${PROJECT_NAME} ${LIBS})
+        target_include_directories(example_${EXAMPLE_PROJ} PUBLIC ${SRC_DIR})
 endforeach()
+
+install(TARGETS ${TARGETS}
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib
+        RUNTIME DESTINATION bin
+        INCLUDES DESTINATION include/${PROJECT_NAME}
+)
 

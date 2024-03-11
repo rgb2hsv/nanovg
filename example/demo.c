@@ -802,7 +802,7 @@ void drawColorwheel(NVGcontext* vg, float x, float y, float w, float h, float t)
 	nvgRestore(vg);
 }
 
-void drawStylizedLines(NVGcontext* vg, float x, float y, float w, float h, float t){
+void drawStylizedLines(NVGcontext* vg, float x, float y, float w, float h){
 	nvgLineJoin(vg, NVG_ROUND);
 	nvgLineStyle(vg, NVG_LINE_DASHED);
 	nvgStrokeColor(vg,nvgRGBAf(0.6f,0.6f,1.0f,1.0f));
@@ -935,7 +935,6 @@ void drawParagraph(NVGcontext* vg, float x, float y, float width, float height, 
 	const char* hoverText = "Hover your mouse over the text to see calculated caret position.";
 	float gx,gy;
 	int gutter = 0;
-	const char* boxText = "Testing\nsome multiline\ntext.";
 	NVG_NOTUSED(height);
 
 	nvgSave(vg);
@@ -1191,7 +1190,7 @@ void renderDemo(NVGcontext* vg, float mx, float my, float width, float height,
 	float x,y,popy;
 
 	drawEyes(vg, width - 230, 30, 150, 100, mx, my, t);
-	drawStylizedLines(vg, width - 245, 15, 180 ,130, t);
+	drawStylizedLines(vg, width - 245, 15, 180 ,130);
 	drawFancyText(vg, width - 160, 170);
 	drawParagraph(vg, width - 450, 50, 150, 100, mx, my);
 	drawGraph(vg, 0, height/2, width, height/2, t);
