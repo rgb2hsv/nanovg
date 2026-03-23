@@ -44,8 +44,8 @@ int premult = 0;
 
 static void key(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-	NVG_NOTUSED(scancode);
-	NVG_NOTUSED(mods);
+	UNUSED(scancode);
+	UNUSED(mods);
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, GL_TRUE);
 	if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
@@ -60,7 +60,7 @@ int main()
 {
 	GLFWwindow* window;
 	DemoData data;
-	NVGcontext* vg = NULL;
+	Context* vg = NULL;
 	GPUtimer gpuTimer;
 	PerfGraph fps, cpuGraph, gpuGraph;
 	double prevt = 0, cpuTime = 0;
@@ -107,9 +107,9 @@ int main()
 #endif
 
 #ifdef DEMO_MSAA
-	vg = nvgCreateGL3(static_cast<int>(CreateFlags::StencilStrokes | CreateFlags::Debug));
+	vg = createGL3(static_cast<int>(CreateFlags::StencilStrokes | CreateFlags::Debug));
 #else
-	vg = nvgCreateGL3(static_cast<int>(CreateFlags::Antialias | CreateFlags::StencilStrokes | CreateFlags::Debug));
+	vg = createGL3(static_cast<int>(CreateFlags::Antialias | CreateFlags::StencilStrokes | CreateFlags::Debug));
 #endif
 	if (vg == NULL) {
 		printf("Could not init nanovg.\n");
@@ -155,7 +155,7 @@ int main()
 			glClearColor(0.3f, 0.3f, 0.32f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT|GL_STENCIL_BUFFER_BIT);
 
-		nvgBeginFrame(vg, winWidth, winHeight, pxRatio);
+		beginFrame(vg, winWidth, winHeight, pxRatio);
 
 		renderDemo(vg, mx,my, winWidth,winHeight, t, blowup, &data);
 
@@ -164,7 +164,7 @@ int main()
 		if (gpuTimer.supported)
 			renderGraph(vg, 5+200+5+200+5,5, &gpuGraph);
 
-		nvgEndFrame(vg);
+		endFrame(vg);
 
 		// Measure the CPU time taken excluding swap buffers (as the swap may wait for GPU)
 		cpuTime = glfwGetTime() - t;
@@ -188,7 +188,7 @@ int main()
 
 	freeDemoData(vg, &data);
 
-	nvgDeleteGL3(vg);
+	deleteGL3(vg);
 
 	printf("Average Frame Time: %.2f ms\n", getGraphAverage(&fps) * 1000.0f);
 	printf("          CPU Time: %.2f ms\n", getGraphAverage(&cpuGraph) * 1000.0f);

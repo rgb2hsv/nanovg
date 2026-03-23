@@ -31,7 +31,7 @@
 using namespace nvg;
 #include "perf.h"
 
-void renderPattern(NVGcontext* vg, NVGLUframebuffer* fb, float t, float pxRatio)
+void renderPattern(Context* vg, GlUtilsFramebuffer* fb, float t, float pxRatio)
 {
 	int winWidth, winHeight;
 	int fboWidth, fboHeight;
@@ -42,7 +42,7 @@ void renderPattern(NVGcontext* vg, NVGLUframebuffer* fb, float t, float pxRatio)
 
 	if (fb == NULL) return;
 
-	nvgImageSize(vg, fb->image, &fboWidth, &fboHeight);
+	imageSize(vg, fb->image, &fboWidth, &fboHeight);
 	winWidth = (int)(fboWidth / pxRatio);
 	winHeight = (int)(fboHeight / pxRatio);
 
@@ -51,35 +51,35 @@ void renderPattern(NVGcontext* vg, NVGLUframebuffer* fb, float t, float pxRatio)
 	glViewport(0, 0, fboWidth, fboHeight);
 	glClearColor(0, 0, 0, 0);
 	glClear(GL_COLOR_BUFFER_BIT|GL_STENCIL_BUFFER_BIT);
-	nvgBeginFrame(vg, winWidth, winHeight, pxRatio);
+	beginFrame(vg, winWidth, winHeight, pxRatio);
 
 	pw = (int)ceilf(winWidth / s);
 	ph = (int)ceilf(winHeight / s);
 
-	nvgBeginPath(vg);
+	beginPath(vg);
 	for (y = 0; y < ph; y++) {
 		for (x = 0; x < pw; x++) {
 			float cx = (x+0.5f) * s;
 			float cy = (y+0.5f) * s;
-			nvgCircle(vg, cx,cy, r);
+			circle(vg, cx,cy, r);
 		}
 	}
-	nvgFillColor(vg, nvgRGBA(220,160,0,200));
-	nvgFill(vg);
+	fillColor(vg, rgba(220,160,0,200));
+	fill(vg);
 
-	nvgEndFrame(vg);
+	endFrame(vg);
 	nvgluBindFramebuffer(NULL);
 }
 
-int loadFonts(NVGcontext* vg)
+int loadFonts(Context* vg)
 {
 	int font;
-	font = nvgCreateFont(vg, "sans", "../example/Roboto-Regular.ttf");
+	font = createFont(vg, "sans", "../example/Roboto-Regular.ttf");
 	if (font == -1) {
 		printf("Could not add font regular.\n");
 		return -1;
 	}
-	font = nvgCreateFont(vg, "sans-bold", "../example/Roboto-Bold.ttf");
+	font = createFont(vg, "sans-bold", "../example/Roboto-Bold.ttf");
 	if (font == -1) {
 		printf("Could not add font bold.\n");
 		return -1;
@@ -94,8 +94,8 @@ void errorcb(int error, const char* desc)
 
 static void key(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-	NVG_NOTUSED(scancode);
-	NVG_NOTUSED(mods);
+	UNUSED(scancode);
+	UNUSED(mods);
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, GL_TRUE);
 }
@@ -103,11 +103,11 @@ static void key(GLFWwindow* window, int key, int scancode, int action, int mods)
 int main()
 {
 	GLFWwindow* window;
-	NVGcontext* vg = NULL;
+	Context* vg = NULL;
 	GPUtimer gpuTimer;
 	PerfGraph fps, cpuGraph, gpuGraph;
 	double prevt = 0, cpuTime = 0;
-	NVGLUframebuffer* fb = NULL;
+	GlUtilsFramebuffer* fb = NULL;
 	int winWidth, winHeight;
 	int fbWidth, fbHeight;
 	float pxRatio;
@@ -154,9 +154,9 @@ int main()
 #endif
 
 #ifdef DEMO_MSAA
-	vg = nvgCreateGL3(static_cast<int>(CreateFlags::StencilStrokes | CreateFlags::Debug));
+	vg = createGL3(static_cast<int>(CreateFlags::StencilStrokes | CreateFlags::Debug));
 #else
-	vg = nvgCreateGL3(static_cast<int>(CreateFlags::Antialias | CreateFlags::StencilStrokes | CreateFlags::Debug));
+	vg = createGL3(static_cast<int>(CreateFlags::Antialias | CreateFlags::StencilStrokes | CreateFlags::Debug));
 #endif
 	if (vg == NULL) {
 		printf("Could not init nanovg.\n");
@@ -213,29 +213,29 @@ int main()
 		glClearColor(0.3f, 0.3f, 0.32f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT|GL_STENCIL_BUFFER_BIT);
 
-		nvgBeginFrame(vg, winWidth, winHeight, pxRatio);
+		beginFrame(vg, winWidth, winHeight, pxRatio);
 
 		// Use the FBO as image pattern.
 		if (fb != NULL) {
-			NVGpaint img = nvgImagePattern(vg, 0, 0, 100, 100, 0, fb->image, 1.0f);
-			nvgSave(vg);
+			Paint img = imagePattern(vg, 0, 0, 100, 100, 0, fb->image, 1.0f);
+			save(vg);
 
 			for (i = 0; i < 20; i++) {
-				nvgBeginPath(vg);
-				nvgRect(vg, 10 + i*30,10, 10, winHeight-20);
-				nvgFillColor(vg, nvgHSLA(i/19.0f, 0.5f, 0.5f, 255));
-				nvgFill(vg);
+				beginPath(vg);
+				rect(vg, 10 + i*30,10, 10, winHeight-20);
+				fillColor(vg, hsla(i/19.0f, 0.5f, 0.5f, 255));
+				fill(vg);
 			}
 
-			nvgBeginPath(vg);
-			nvgRoundedRect(vg, 140 + sinf(t*1.3f)*100, 140 + cosf(t*1.71244f)*100, 250, 250, 20);
-			nvgFillPaint(vg, img);
-			nvgFill(vg);
-			nvgStrokeColor(vg, nvgRGBA(220,160,0,255));
-			nvgStrokeWidth(vg, 3.0f);
-			nvgStroke(vg);
+			beginPath(vg);
+			roundedRect(vg, 140 + sinf(t*1.3f)*100, 140 + cosf(t*1.71244f)*100, 250, 250, 20);
+			fillPaint(vg, img);
+			fill(vg);
+			strokeColor(vg, rgba(220,160,0,255));
+			strokeWidth(vg, 3.0f);
+			stroke(vg);
 
-			nvgRestore(vg);
+			restore(vg);
 		}
 
 		renderGraph(vg, 5,5, &fps);
@@ -243,7 +243,7 @@ int main()
 		if (gpuTimer.supported)
 			renderGraph(vg, 5+200+5+200+5,5, &gpuGraph);
 
-		nvgEndFrame(vg);
+		endFrame(vg);
 
 		// Measure the CPU time taken excluding swap buffers (as the swap may wait for GPU)
 		cpuTime = glfwGetTime() - t;
@@ -262,7 +262,7 @@ int main()
 
 	nvgluDeleteFramebuffer(fb);
 
-	nvgDeleteGL3(vg);
+	deleteGL3(vg);
 
 	printf("Average Frame Time: %.2f ms\n", getGraphAverage(&fps) * 1000.0f);
 	printf("          CPU Time: %.2f ms\n", getGraphAverage(&cpuGraph) * 1000.0f);

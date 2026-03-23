@@ -9,9 +9,9 @@ struct DemoData {
 };
 typedef struct DemoData DemoData;
 
-int loadDemoData(nvg::NVGcontext* vg, DemoData* data);
-void freeDemoData(nvg::NVGcontext* vg, DemoData* data);
-void renderDemo(nvg::NVGcontext* vg, float mx, float my, float width, float height, float t, int blowup, DemoData* data);
+int loadDemoData(nvg::Context* vg, DemoData* data);
+void freeDemoData(nvg::Context* vg, DemoData* data);
+void renderDemo(nvg::Context* vg, float mx, float my, float width, float height, float t, int blowup, DemoData* data);
 
 void saveScreenShot(int w, int h, int premult, const char* name);
 

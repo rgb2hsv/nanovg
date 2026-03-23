@@ -20,7 +20,7 @@ typedef struct PerfGraph PerfGraph;
 
 void initGraph(PerfGraph* fps, int style, const char* name);
 void updateGraph(PerfGraph* fps, float frameTime);
-void renderGraph(nvg::NVGcontext* vg, float x, float y, PerfGraph* fps);
+void renderGraph(nvg::Context* vg, float x, float y, PerfGraph* fps);
 float getGraphAverage(PerfGraph* fps);
 
 #define GPU_QUERY_COUNT 5

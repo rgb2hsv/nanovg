@@ -41,8 +41,8 @@ int premult = 0;
 
 static void key(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-	NVG_NOTUSED(scancode);
-	NVG_NOTUSED(mods);
+	UNUSED(scancode);
+	UNUSED(mods);
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, GL_TRUE);
 	if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
@@ -57,7 +57,7 @@ int main()
 {
 	GLFWwindow* window;
 	DemoData data;
-	NVGcontext* vg = NULL;
+	Context* vg = NULL;
 	PerfGraph fps;
 	double prevt = 0;
 
@@ -94,9 +94,9 @@ int main()
 #endif
 
 #ifdef DEMO_MSAA
-	vg = nvgCreateGL2(static_cast<int>(CreateFlags::StencilStrokes | CreateFlags::Debug));
+	vg = createGL2(static_cast<int>(CreateFlags::StencilStrokes | CreateFlags::Debug));
 #else
-	vg = nvgCreateGL2(static_cast<int>(CreateFlags::Antialias | CreateFlags::StencilStrokes | CreateFlags::Debug));
+	vg = createGL2(static_cast<int>(CreateFlags::Antialias | CreateFlags::StencilStrokes | CreateFlags::Debug));
 #endif
 	if (vg == NULL) {
 		printf("Could not init nanovg.\n");
@@ -138,12 +138,12 @@ int main()
 			glClearColor(0.3f, 0.3f, 0.32f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT|GL_STENCIL_BUFFER_BIT);
 
-		nvgBeginFrame(vg, winWidth, winHeight, pxRatio);
+		beginFrame(vg, winWidth, winHeight, pxRatio);
 
 		renderDemo(vg, mx,my, winWidth,winHeight, t, blowup, &data);
 		renderGraph(vg, 5,5, &fps);
 
-		nvgEndFrame(vg);
+		endFrame(vg);
 
 		if (screenshot) {
 			screenshot = 0;
@@ -156,7 +156,7 @@ int main()
 
 	freeDemoData(vg, &data);
 
-	nvgDeleteGL2(vg);
+	deleteGL2(vg);
 
 	glfwTerminate();
 	return 0;

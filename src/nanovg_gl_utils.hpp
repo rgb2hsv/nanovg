@@ -15,28 +15,29 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 //
-#ifndef NANOVG_GL_UTILS_HPP
-#define NANOVG_GL_UTILS_HPP
+#pragma once
 
 #include "nanovg.hpp"
 
-struct NVGLUframebuffer {
-	nvg::NVGcontext* ctx;
+struct GlUtilsFramebuffer {
+	nvg::Context* ctx;
 	GLuint fbo;
 	GLuint rbo;
 	GLuint texture;
 	int image;
 };
-typedef struct NVGLUframebuffer NVGLUframebuffer;
+typedef struct GlUtilsFramebuffer GlUtilsFramebuffer;
 
 // Helper function to create GL frame buffer to render to.
-void nvgluBindFramebuffer(NVGLUframebuffer* fb);
-NVGLUframebuffer* nvgluCreateFramebuffer(nvg::NVGcontext* ctx, int w, int h, int imageFlags);
-void nvgluDeleteFramebuffer(NVGLUframebuffer* fb);
+void nvgluBindFramebuffer(GlUtilsFramebuffer* fb);
+GlUtilsFramebuffer* nvgluCreateFramebuffer(nvg::Context* ctx, int w, int h, int imageFlags);
+void nvgluDeleteFramebuffer(GlUtilsFramebuffer* fb);
 
 #endif // NANOVG_GL_UTILS_HPP
 
 #ifdef NANOVG_GL_IMPLEMENTATION
+
+#include <new>
 
 using namespace nvg;
 
@@ -53,21 +54,20 @@ using namespace nvg;
 
 static GLint defaultFBO = -1;
 
-NVGLUframebuffer* nvgluCreateFramebuffer(nvg::NVGcontext* ctx, int w, int h, int imageFlags)
+GlUtilsFramebuffer* nvgluCreateFramebuffer(nvg::Context* ctx, int w, int h, int imageFlags)
 {
 #ifdef NANOVG_FBO_VALID
 	GLint defaultFBO;
 	GLint defaultRBO;
-	NVGLUframebuffer* fb = NULL;
+	GlUtilsFramebuffer* fb = NULL;
 
 	glGetIntegerv(GL_FRAMEBUFFER_BINDING, &defaultFBO);
 	glGetIntegerv(GL_RENDERBUFFER_BINDING, &defaultRBO);
 
-	fb = (NVGLUframebuffer*)malloc(sizeof(NVGLUframebuffer));
+	fb = new (std::nothrow) GlUtilsFramebuffer{};
 	if (fb == NULL) goto error;
-	memset(fb, 0, sizeof(NVGLUframebuffer));
 
-	fb->image = nvgCreateImageRGBA(ctx, w, h, imageFlags | static_cast<int>(ImageFlags::Flipy | ImageFlags::Premultiplied), NULL);
+	fb->image = createImageRGBA(ctx, w, h, imageFlags | static_cast<int>(ImageFlags::Flipy | ImageFlags::Premultiplied), NULL);
 
 #if defined NANOVG_GL2
 	fb->texture = nvglImageHandleGL2(ctx, fb->image);
@@ -116,25 +116,25 @@ error:
 	nvgluDeleteFramebuffer(fb);
 	return NULL;
 #else
-	NVG_NOTUSED(ctx);
-	NVG_NOTUSED(w);
-	NVG_NOTUSED(h);
-	NVG_NOTUSED(imageFlags);
+	UNUSED(ctx);
+	UNUSED(w);
+	UNUSED(h);
+	UNUSED(imageFlags);
 	return NULL;
 #endif
 }
 
-void nvgluBindFramebuffer(NVGLUframebuffer* fb)
+void nvgluBindFramebuffer(GlUtilsFramebuffer* fb)
 {
 #ifdef NANOVG_FBO_VALID
 	if (defaultFBO == -1) glGetIntegerv(GL_FRAMEBUFFER_BINDING, &defaultFBO);
 	glBindFramebuffer(GL_FRAMEBUFFER, fb != NULL ? fb->fbo : (GLuint)defaultFBO);
 #else
-	NVG_NOTUSED(fb);
+	UNUSED(fb);
 #endif
 }
 
-void nvgluDeleteFramebuffer(NVGLUframebuffer* fb)
+void nvgluDeleteFramebuffer(GlUtilsFramebuffer* fb)
 {
 #ifdef NANOVG_FBO_VALID
 	if (fb == NULL) return;
@@ -143,16 +143,15 @@ void nvgluDeleteFramebuffer(NVGLUframebuffer* fb)
 	if (fb->rbo != 0)
 		glDeleteRenderbuffers(1, &fb->rbo);
 	if (fb->image >= 0)
-		nvgDeleteImage(fb->ctx, fb->image);
+		deleteImage(fb->ctx, fb->image);
 	fb->ctx = NULL;
 	fb->fbo = 0;
 	fb->rbo = 0;
 	fb->texture = 0;
 	fb->image = -1;
-	free(fb);
+	delete fb;
 #else
-	NVG_NOTUSED(fb);
+	UNUSED(fb);
 #endif
 }
 
-#endif // NANOVG_GL_IMPLEMENTATION

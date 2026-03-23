@@ -40,8 +40,8 @@ int premult = 0;
 
 static void key(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-	NVG_NOTUSED(scancode);
-	NVG_NOTUSED(mods);
+	UNUSED(scancode);
+	UNUSED(mods);
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, GL_TRUE);
 	if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
@@ -56,7 +56,7 @@ int main()
 {
 	GLFWwindow* window;
 	DemoData data;
-	NVGcontext* vg = NULL;
+	Context* vg = NULL;
 	PerfGraph fps;
 	double prevt = 0;
 
@@ -84,7 +84,7 @@ int main()
 
 	glfwMakeContextCurrent(window);
 
-	vg = nvgCreateGLES3(static_cast<int>(CreateFlags::Antialias | CreateFlags::StencilStrokes | CreateFlags::Debug));
+	vg = createGLES3(static_cast<int>(CreateFlags::Antialias | CreateFlags::StencilStrokes | CreateFlags::Debug));
 	if (vg == NULL) {
 		printf("Could not init nanovg.\n");
 		return -1;
@@ -129,12 +129,12 @@ int main()
 		glEnable(GL_CULL_FACE);
 		glDisable(GL_DEPTH_TEST);
 
-		nvgBeginFrame(vg, winWidth, winHeight, pxRatio);
+		beginFrame(vg, winWidth, winHeight, pxRatio);
 
 		renderDemo(vg, mx,my, winWidth,winHeight, t, blowup, &data);
 		renderGraph(vg, 5,5, &fps);
 
-		nvgEndFrame(vg);
+		endFrame(vg);
 
 		glEnable(GL_DEPTH_TEST);
 
@@ -149,7 +149,7 @@ int main()
 
 	freeDemoData(vg, &data);
 
-	nvgDeleteGLES3(vg);
+	deleteGLES3(vg);
 
 	glfwTerminate();
 	return 0;

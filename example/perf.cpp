@@ -50,8 +50,8 @@ void startGPUTimer(GPUtimer* timer)
 
 int stopGPUTimer(GPUtimer* timer, float* times, int maxTimes)
 {
-	NVG_NOTUSED(times);
-	NVG_NOTUSED(maxTimes);
+	UNUSED(times);
+	UNUSED(maxTimes);
 	GLint available = 1;
 	int n = 0;
 	if (!timer->supported)
@@ -99,7 +99,7 @@ float getGraphAverage(PerfGraph* fps)
 	return avg / (float)GRAPH_HISTORY_COUNT;
 }
 
-void renderGraph(NVGcontext* vg, float x, float y, PerfGraph* fps)
+void renderGraph(Context* vg, float x, float y, PerfGraph* fps)
 {
 	int i;
 	float avg, w, h;
@@ -110,13 +110,13 @@ void renderGraph(NVGcontext* vg, float x, float y, PerfGraph* fps)
 	w = 200;
 	h = 35;
 
-	nvgBeginPath(vg);
-	nvgRect(vg, x,y, w,h);
-	nvgFillColor(vg, nvgRGBA(0,0,0,128));
-	nvgFill(vg);
+	beginPath(vg);
+	rect(vg, x,y, w,h);
+	fillColor(vg, rgba(0,0,0,128));
+	fill(vg);
 
-	nvgBeginPath(vg);
-	nvgMoveTo(vg, x, y+h);
+	beginPath(vg);
+	moveTo(vg, x, y+h);
 	if (fps->style == GRAPH_RENDER_FPS) {
 		for (i = 0; i < GRAPH_HISTORY_COUNT; i++) {
 			float v = 1.0f / (0.00001f + fps->values[(fps->head+i) % GRAPH_HISTORY_COUNT]);
@@ -124,7 +124,7 @@ void renderGraph(NVGcontext* vg, float x, float y, PerfGraph* fps)
 			if (v > 80.0f) v = 80.0f;
 			vx = x + ((float)i/(GRAPH_HISTORY_COUNT-1)) * w;
 			vy = y + h - ((v / 80.0f) * h);
-			nvgLineTo(vg, vx, vy);
+			lineTo(vg, vx, vy);
 		}
 	} else if (fps->style == GRAPH_RENDER_PERCENT) {
 		for (i = 0; i < GRAPH_HISTORY_COUNT; i++) {
@@ -133,7 +133,7 @@ void renderGraph(NVGcontext* vg, float x, float y, PerfGraph* fps)
 			if (v > 100.0f) v = 100.0f;
 			vx = x + ((float)i/(GRAPH_HISTORY_COUNT-1)) * w;
 			vy = y + h - ((v / 100.0f) * h);
-			nvgLineTo(vg, vx, vy);
+			lineTo(vg, vx, vy);
 		}
 	} else {
 		for (i = 0; i < GRAPH_HISTORY_COUNT; i++) {
@@ -142,46 +142,46 @@ void renderGraph(NVGcontext* vg, float x, float y, PerfGraph* fps)
 			if (v > 20.0f) v = 20.0f;
 			vx = x + ((float)i/(GRAPH_HISTORY_COUNT-1)) * w;
 			vy = y + h - ((v / 20.0f) * h);
-			nvgLineTo(vg, vx, vy);
+			lineTo(vg, vx, vy);
 		}
 	}
-	nvgLineTo(vg, x+w, y+h);
-	nvgFillColor(vg, nvgRGBA(255,192,0,128));
-	nvgFill(vg);
+	lineTo(vg, x+w, y+h);
+	fillColor(vg, rgba(255,192,0,128));
+	fill(vg);
 
-	nvgFontFace(vg, "sans");
+	fontFace(vg, "sans");
 
 	if (fps->name[0] != '\0') {
-		nvgFontSize(vg, 12.0f);
-		nvgTextAlign(vg, static_cast<int>(Align::Left | Align::Top));
-		nvgFillColor(vg, nvgRGBA(240,240,240,192));
-		nvgText(vg, x+3,y+3, fps->name, NULL);
+		fontSize(vg, 12.0f);
+		textAlign(vg, static_cast<int>(Align::Left | Align::Top));
+		fillColor(vg, rgba(240,240,240,192));
+		::text(vg, x+3,y+3, fps->name, NULL);
 	}
 
 	if (fps->style == GRAPH_RENDER_FPS) {
-		nvgFontSize(vg, 15.0f);
-		nvgTextAlign(vg, static_cast<int>(Align::Right | Align::Top));
-		nvgFillColor(vg, nvgRGBA(240,240,240,255));
+		fontSize(vg, 15.0f);
+		textAlign(vg, static_cast<int>(Align::Right | Align::Top));
+		fillColor(vg, rgba(240,240,240,255));
 		sprintf(str, "%.2f FPS", 1.0f / avg);
-		nvgText(vg, x+w-3,y+3, str, NULL);
+		::text(vg, x+w-3,y+3, str, NULL);
 
-		nvgFontSize(vg, 13.0f);
-		nvgTextAlign(vg, static_cast<int>(Align::Right | Align::Baseline));
-		nvgFillColor(vg, nvgRGBA(240,240,240,160));
+		fontSize(vg, 13.0f);
+		textAlign(vg, static_cast<int>(Align::Right | Align::Baseline));
+		fillColor(vg, rgba(240,240,240,160));
 		sprintf(str, "%.2f ms", avg * 1000.0f);
-		nvgText(vg, x+w-3,y+h-3, str, NULL);
+		::text(vg, x+w-3,y+h-3, str, NULL);
 	}
 	else if (fps->style == GRAPH_RENDER_PERCENT) {
-		nvgFontSize(vg, 15.0f);
-		nvgTextAlign(vg, static_cast<int>(Align::Right | Align::Top));
-		nvgFillColor(vg, nvgRGBA(240,240,240,255));
+		fontSize(vg, 15.0f);
+		textAlign(vg, static_cast<int>(Align::Right | Align::Top));
+		fillColor(vg, rgba(240,240,240,255));
 		sprintf(str, "%.1f %%", avg * 1.0f);
-		nvgText(vg, x+w-3,y+3, str, NULL);
+		::text(vg, x+w-3,y+3, str, NULL);
 	} else {
-		nvgFontSize(vg, 15.0f);
-		nvgTextAlign(vg, static_cast<int>(Align::Right | Align::Top));
-		nvgFillColor(vg, nvgRGBA(240,240,240,255));
+		fontSize(vg, 15.0f);
+		textAlign(vg, static_cast<int>(Align::Right | Align::Top));
+		fillColor(vg, rgba(240,240,240,255));
 		sprintf(str, "%.2f ms", avg * 1000.0f);
-		nvgText(vg, x+w-3,y+3, str, NULL);
+		::text(vg, x+w-3,y+3, str, NULL);
 	}
 }
