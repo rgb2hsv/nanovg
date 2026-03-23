@@ -25,9 +25,9 @@
 #include <cmath>
 
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <memory.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
 #define FONTSTASH_IMPLEMENTATION
 #include "fontstash.h"
@@ -194,29 +194,29 @@ static float normalize(float *x, float* y)
 }
 static void deletePathCache(PathCache* c)
 {
-	if (c == NULL) return;
-	if (c->points != NULL) free(c->points);
-	if (c->paths != NULL) free(c->paths);
-	if (c->verts != NULL) free(c->verts);
-	free(c);
+	if (c == nullptr) return;
+	if (c->points != nullptr) std::free(c->points);
+	if (c->paths != nullptr) std::free(c->paths);
+	if (c->verts != nullptr) std::free(c->verts);
+	std::free(c);
 }
 static PathCache* allocPathCache(void)
 {
-	PathCache* c = (PathCache*)malloc(sizeof(PathCache));
-	if (c == NULL) goto error;
-	memset(c, 0, sizeof(PathCache));
+	PathCache* c = static_cast<PathCache*>(std::malloc(sizeof(PathCache)));
+	if (c == nullptr) goto error;
+	std::memset(c, 0, sizeof(PathCache));
 
-	c->points = (Point*)malloc(sizeof(Point)*NVG_INIT_POINTS_SIZE);
+	c->points = static_cast<Point*>(std::malloc(sizeof(Point)*NVG_INIT_POINTS_SIZE));
 	if (!c->points) goto error;
 	c->npoints = 0;
 	c->cpoints = NVG_INIT_POINTS_SIZE;
 
-	c->paths = (Path*)malloc(sizeof(Path)*NVG_INIT_PATHS_SIZE);
+	c->paths = static_cast<Path*>(std::malloc(sizeof(Path)*NVG_INIT_PATHS_SIZE));
 	if (!c->paths) goto error;
 	c->npaths = 0;
 	c->cpaths = NVG_INIT_PATHS_SIZE;
 
-	c->verts = (Vertex*)malloc(sizeof(Vertex)*NVG_INIT_VERTS_SIZE);
+	c->verts = static_cast<Vertex*>(std::malloc(sizeof(Vertex)*NVG_INIT_VERTS_SIZE));
 	if (!c->verts) goto error;
 	c->nverts = 0;
 	c->cverts = NVG_INIT_VERTS_SIZE;
@@ -224,7 +224,7 @@ static PathCache* allocPathCache(void)
 	return c;
 error:
 	deletePathCache(c);
-	return NULL;
+	return nullptr;
 }
 static void setDeviceM_PIxelRatio(Context* ctx, float ratio)
 {
@@ -373,8 +373,8 @@ static void appendCommands(Context* ctx, float* vals, int nvals)
 	if (ctx->ncommands+nvals > ctx->ccommands) {
 		float* commands;
 		int ccommands = ctx->ncommands+nvals + ctx->ccommands/2;
-		commands = (float*)realloc(ctx->commands, sizeof(float)*ccommands);
-		if (commands == NULL) return;
+		commands = static_cast<float*>(std::realloc(ctx->commands, sizeof(float)*ccommands));
+		if (commands == nullptr) return;
 		ctx->commands = commands;
 		ctx->ccommands = ccommands;
 	}
@@ -427,7 +427,7 @@ static Path* lastPath(Context* ctx)
 {
 	if (ctx->cache->npaths > 0)
 		return &ctx->cache->paths[ctx->cache->npaths-1];
-	return NULL;
+	return nullptr;
 }
 static void addPath(Context* ctx)
 {
@@ -435,8 +435,8 @@ static void addPath(Context* ctx)
 	if (ctx->cache->npaths+1 > ctx->cache->cpaths) {
 		Path* paths;
 		int cpaths = ctx->cache->npaths+1 + ctx->cache->cpaths/2;
-		paths = (Path*)realloc(ctx->cache->paths, sizeof(Path)*cpaths);
-		if (paths == NULL) return;
+		paths = static_cast<Path*>(std::realloc(ctx->cache->paths, sizeof(Path)*cpaths));
+		if (paths == nullptr) return;
 		ctx->cache->paths = paths;
 		ctx->cache->cpaths = cpaths;
 	}
@@ -451,13 +451,13 @@ static Point* lastPoint(Context* ctx)
 {
 	if (ctx->cache->npoints > 0)
 		return &ctx->cache->points[ctx->cache->npoints-1];
-	return NULL;
+	return nullptr;
 }
 static void addPoint(Context* ctx, float x, float y, int flags)
 {
 	Path* path = lastPath(ctx);
 	Point* pt;
-	if (path == NULL) return;
+	if (path == nullptr) return;
 
 	if (path->count > 0 && ctx->cache->npoints > 0) {
 		pt = lastPoint(ctx);
@@ -470,8 +470,8 @@ static void addPoint(Context* ctx, float x, float y, int flags)
 	if (ctx->cache->npoints+1 > ctx->cache->cpoints) {
 		Point* points;
 		int cpoints = ctx->cache->npoints+1 + ctx->cache->cpoints/2;
-		points = (Point*)realloc(ctx->cache->points, sizeof(Point)*cpoints);
-		if (points == NULL) return;
+		points = static_cast<Point*>(std::realloc(ctx->cache->points, sizeof(Point)*cpoints));
+		if (points == nullptr) return;
 		ctx->cache->points = points;
 		ctx->cache->cpoints = cpoints;
 	}
@@ -489,13 +489,13 @@ static void addPoint(Context* ctx, float x, float y, int flags)
 static void closePath(Context* ctx)
 {
 	Path* path = lastPath(ctx);
-	if (path == NULL) return;
+	if (path == nullptr) return;
 	path->closed = 1;
 }
 static void pathWinding(Context* ctx, int winding)
 {
 	Path* path = lastPath(ctx);
-	if (path == NULL) return;
+	if (path == nullptr) return;
 	path->winding = winding;
 }
 static float getAverageScale(float *t)
@@ -509,8 +509,8 @@ static Vertex* allocTempVerts(Context* ctx, int nverts)
 	if (nverts > ctx->cache->cverts) {
 		Vertex* verts;
 		int cverts = (nverts + 0xff) & ~0xff; // Round up to prevent allocations when things change just slightly.
-		verts = (Vertex*)realloc(ctx->cache->verts, sizeof(Vertex)*cverts);
-		if (verts == NULL) return NULL;
+		verts = static_cast<Vertex*>(std::realloc(ctx->cache->verts, sizeof(Vertex)*cverts));
+		if (verts == nullptr) return nullptr;
 		ctx->cache->verts = verts;
 		ctx->cache->cverts = cverts;
 	}
@@ -1356,22 +1356,22 @@ static int isTransformFlipped(const float *xform)
 Context* createInternal(Params* params)
 {
 	FONSparams fontParams;
-	Context* ctx = (Context*)malloc(sizeof(Context));
+	Context* ctx = static_cast<Context*>(std::malloc(sizeof(Context)));
 	int i;
-	if (ctx == NULL) goto error;
-	memset(ctx, 0, sizeof(Context));
+	if (ctx == nullptr) goto error;
+	std::memset(ctx, 0, sizeof(Context));
 
 	ctx->params = *params;
 	for (i = 0; i < NVG_MAX_FONTIMAGES; i++)
 		ctx->fontImages[i] = 0;
 
-	ctx->commands = (float*)malloc(sizeof(float)*NVG_INIT_COMMANDS_SIZE);
+	ctx->commands = static_cast<float*>(std::malloc(sizeof(float)*NVG_INIT_COMMANDS_SIZE));
 	if (!ctx->commands) goto error;
 	ctx->ncommands = 0;
 	ctx->ccommands = NVG_INIT_COMMANDS_SIZE;
 
 	ctx->cache = detail::allocPathCache();
-	if (ctx->cache == NULL) goto error;
+	if (ctx->cache == nullptr) goto error;
 
 	save(ctx);
 	reset(ctx);
@@ -1381,20 +1381,20 @@ Context* createInternal(Params* params)
 	if (ctx->params.renderCreate(ctx->params.userPtr) == 0) goto error;
 
 	// Init font rendering
-	memset(&fontParams, 0, sizeof(fontParams));
+	std::memset(&fontParams, 0, sizeof(fontParams));
 	fontParams.width = NVG_INIT_FONTIMAGE_SIZE;
 	fontParams.height = NVG_INIT_FONTIMAGE_SIZE;
 	fontParams.flags = FONS_ZERO_TOPLEFT;
-	fontParams.renderCreate = NULL;
-	fontParams.renderUpdate = NULL;
-	fontParams.renderDraw = NULL;
-	fontParams.renderDelete = NULL;
-	fontParams.userPtr = NULL;
+	fontParams.renderCreate = nullptr;
+	fontParams.renderUpdate = nullptr;
+	fontParams.renderDraw = nullptr;
+	fontParams.renderDelete = nullptr;
+	fontParams.userPtr = nullptr;
 	ctx->fs = fonsCreateInternal(&fontParams);
-	if (ctx->fs == NULL) goto error;
+	if (ctx->fs == nullptr) goto error;
 
 	// Create font texture
-	ctx->fontImages[0] = ctx->params.renderCreateTexture(ctx->params.userPtr, static_cast<int>(Texture::Alpha), fontParams.width, fontParams.height, 0, NULL);
+	ctx->fontImages[0] = ctx->params.renderCreateTexture(ctx->params.userPtr, static_cast<int>(Texture::Alpha), fontParams.width, fontParams.height, 0, nullptr);
 	if (ctx->fontImages[0] == 0) goto error;
 	ctx->fontImageIdx = 0;
 	ctx->scissor = ScissorBounds{0.0f, 0.0f, -1.0f, -1.0f};
@@ -1402,7 +1402,7 @@ Context* createInternal(Params* params)
 
 error:
 	deleteInternal(ctx);
-	return 0;
+	return nullptr;
 }
 
 int getImageTextureId(Context* ctx, int handle)
@@ -1422,9 +1422,9 @@ ScissorBounds currentScissor(Context* ctx) {
 void deleteInternal(Context* ctx)
 {
 	int i;
-	if (ctx == NULL) return;
-	if (ctx->commands != NULL) free(ctx->commands);
-	if (ctx->cache != NULL) detail::deletePathCache(ctx->cache);
+	if (ctx == nullptr) return;
+	if (ctx->commands != nullptr) std::free(ctx->commands);
+	if (ctx->cache != nullptr) detail::deletePathCache(ctx->cache);
 
 	if (ctx->fs)
 		fonsDeleteInternal(ctx->fs);
@@ -1436,10 +1436,10 @@ void deleteInternal(Context* ctx)
 		}
 	}
 
-	if (ctx->params.renderDelete != NULL)
+	if (ctx->params.renderDelete != nullptr)
 		ctx->params.renderDelete(ctx->params.userPtr);
 
-	free(ctx);
+	std::free(ctx);
 }
 
 void beginFrame(Context* ctx, float windowWidth, float windowHeight, float deviceM_PIxelRatio)

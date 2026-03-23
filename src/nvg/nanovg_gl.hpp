@@ -366,7 +366,7 @@ static void glnvg__blendFuncSeparate(GLContext* gl, const GlBlend* blend)
 
 static GlTexture* glnvg__allocTexture(GLContext* gl)
 {
-	GlTexture* tex = NULL;
+	GlTexture* tex = nullptr;
 	int i;
 
 	for (i = 0; i < gl->ntextures; i++) {
@@ -375,12 +375,12 @@ static GlTexture* glnvg__allocTexture(GLContext* gl)
 			break;
 		}
 	}
-	if (tex == NULL) {
+	if (tex == nullptr) {
 		if (gl->ntextures+1 > gl->ctextures) {
 			GlTexture* textures;
 			int ctextures = glnvg__maxi(gl->ntextures+1, 4) +  gl->ctextures/2; // 1.5x Overallocate
-			textures = (GlTexture*)std::realloc(gl->textures, sizeof(GlTexture)*ctextures);
-			if (textures == NULL) return NULL;
+			textures = static_cast<GlTexture*>(std::realloc(gl->textures, sizeof(GlTexture)*ctextures));
+			if (textures == nullptr) return nullptr;
 			gl->textures = textures;
 			gl->ctextures = ctextures;
 		}
@@ -399,7 +399,7 @@ static GlTexture* glnvg__findTexture(GLContext* gl, int id)
 	for (i = 0; i < gl->ntextures; i++)
 		if (gl->textures[i].id == id)
 			return &gl->textures[i];
-	return NULL;
+	return nullptr;
 }
 
 static int glnvg__deleteTexture(GLContext* gl, int id)
@@ -1358,8 +1358,8 @@ static GlCall* glnvg__allocCall(GLContext* gl)
 	if (gl->ncalls+1 > gl->ccalls) {
 		GlCall* calls;
 		int ccalls = glnvg__maxi(gl->ncalls+1, 128) + gl->ccalls/2; // 1.5x Overallocate
-		calls = (GlCall*)std::realloc(gl->calls, sizeof(GlCall) * ccalls);
-		if (calls == NULL) return NULL;
+		calls = static_cast<GlCall*>(std::realloc(gl->calls, sizeof(GlCall) * ccalls));
+		if (calls == nullptr) return nullptr;
 		gl->calls = calls;
 		gl->ccalls = ccalls;
 	}
@@ -1374,8 +1374,8 @@ static int glnvg__allocPaths(GLContext* gl, int n)
 	if (gl->npaths+n > gl->cpaths) {
 		GLPath* paths;
 		int cpaths = glnvg__maxi(gl->npaths + n, 128) + gl->cpaths/2; // 1.5x Overallocate
-		paths = (GLPath*)std::realloc(gl->paths, sizeof(GLPath) * cpaths);
-		if (paths == NULL) return -1;
+		paths = static_cast<GLPath*>(std::realloc(gl->paths, sizeof(GLPath) * cpaths));
+		if (paths == nullptr) return -1;
 		gl->paths = paths;
 		gl->cpaths = cpaths;
 	}
@@ -1390,8 +1390,8 @@ static int glnvg__allocVerts(GLContext* gl, int n)
 	if (gl->nverts+n > gl->cverts) {
 		Vertex* verts;
 		int cverts = glnvg__maxi(gl->nverts + n, 4096) + gl->cverts/2; // 1.5x Overallocate
-		verts = (Vertex*)std::realloc(gl->verts, sizeof(Vertex) * cverts);
-		if (verts == NULL) return -1;
+		verts = static_cast<Vertex*>(std::realloc(gl->verts, sizeof(Vertex) * cverts));
+		if (verts == nullptr) return -1;
 		gl->verts = verts;
 		gl->cverts = cverts;
 	}
@@ -1406,8 +1406,8 @@ static int glnvg__allocFragUniforms(GLContext* gl, int n)
 	if (gl->nuniforms+n > gl->cuniforms) {
 		unsigned char* uniforms;
 		int cuniforms = glnvg__maxi(gl->nuniforms+n, 128) + gl->cuniforms/2; // 1.5x Overallocate
-		uniforms = (unsigned char*)std::realloc(gl->uniforms, structSize * cuniforms);
-		if (uniforms == NULL) return -1;
+		uniforms = static_cast<unsigned char*>(std::realloc(gl->uniforms, structSize * cuniforms));
+		if (uniforms == nullptr) return -1;
 		gl->uniforms = uniforms;
 		gl->cuniforms = cuniforms;
 	}
@@ -1419,7 +1419,7 @@ static int glnvg__allocFragUniforms(GLContext* gl, int n)
 namespace detail {
 static GlFragUniforms* fragUniformPtr(GLContext* gl, int i)
 {
-	return (GlFragUniforms*)&gl->uniforms[i];
+	return reinterpret_cast<GlFragUniforms*>(&gl->uniforms[i]);
 }
 } // namespace detail
 
@@ -1434,7 +1434,7 @@ static void glnvg__vset(Vertex* vtx, float x, float y, float u, float v)
 static void glnvg__renderFill(void* uptr, Paint* paint, CompositeOperationState compositeOperation, Scissor* scissor, float fringe,
 							  const float* bounds, const Path* paths, int npaths)
 {
-	GLContext* gl = (GLContext*)uptr;
+	GLContext* gl = static_cast<GLContext*>(uptr);
 	GlCall* call = glnvg__allocCall(gl);
 	Vertex* quad;
 	GlFragUniforms* frag;
@@ -1649,9 +1649,9 @@ Context* createGLES3(int flags)
 #endif
 {
 	Params params{};
-	Context* ctx = NULL;
+	Context* ctx = nullptr;
 	GLContext* gl = static_cast<GLContext*>(std::malloc(sizeof(GLContext)));
-	if (gl == NULL) goto error;
+	if (gl == nullptr) goto error;
 	*gl = GLContext{};
 
 	params.renderCreate = glnvg__renderCreate;

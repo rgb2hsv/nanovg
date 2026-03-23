@@ -43,10 +43,10 @@ void nvgDeleteGL3(struct NVGcontext* ctx);
 
 #ifdef NANOVG_GL3_IMPLEMENTATION
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <math.h>
+#include <cmath>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include "nanovg.hpp"
 
 enum class GLNVGuniformLoc : int {
@@ -102,7 +102,7 @@ struct GLNVGcontext {
 
 static struct GLNVGtexture* glnvg__allocTexture(struct GLNVGcontext* gl)
 {
-	struct GLNVGtexture* tex = NULL;
+	struct GLNVGtexture* tex = nullptr;
 	int i;
 
 	for (i = 0; i < gl->ntextures; i++) {
@@ -111,16 +111,16 @@ static struct GLNVGtexture* glnvg__allocTexture(struct GLNVGcontext* gl)
 			break;
 		}
 	}
-	if (tex == NULL) {
+	if (tex == nullptr) {
 		if (gl->ntextures+1 > gl->ctextures) {
 			gl->ctextures = (gl->ctextures == 0) ? 2 : gl->ctextures*2;
-			gl->textures = (struct GLNVGtexture*)realloc(gl->textures, sizeof(struct GLNVGtexture)*gl->ctextures);
-			if (gl->textures == NULL) return NULL;
+			gl->textures = static_cast<struct GLNVGtexture*>(std::realloc(gl->textures, sizeof(struct GLNVGtexture)*gl->ctextures));
+			if (gl->textures == nullptr) return nullptr;
 		}
 		tex = &gl->textures[gl->ntextures++];
 	}
 	
-	memset(tex, 0, sizeof(*tex));
+	std::memset(tex, 0, sizeof(*tex));
 	tex->id = ++gl->textureId;
 	
 	return tex;
@@ -132,7 +132,7 @@ static struct GLNVGtexture* glnvg__findTexture(struct GLNVGcontext* gl, int id)
 	for (i = 0; i < gl->ntextures; i++)
 		if (gl->textures[i].id == id)
 			return &gl->textures[i];
-	return NULL;
+	return nullptr;
 }
 
 static int glnvg__deleteTexture(struct GLNVGcontext* gl, int id)
@@ -257,7 +257,7 @@ static void glnvg__getUniforms(struct GLNVGshader* shader)
 
 static int glnvg__renderCreate(void* uptr)
 {
-	struct GLNVGcontext* gl = (struct GLNVGcontext*)uptr;
+	struct GLNVGcontext* gl = static_cast<struct GLNVGcontext*>(uptr);
 
 	static const char* fillVertShader =
 #ifdef NANOVG_GLES3
@@ -879,7 +879,7 @@ static void glnvg__renderDelete(void* uptr)
 {
 	struct GLNVGcontext* gl = (struct GLNVGcontext*)uptr;
 	int i;
-	if (gl == NULL) return;
+	if (gl == nullptr) return;
 
 	glnvg__deleteShader(&gl->shader);
 
@@ -887,9 +887,9 @@ static void glnvg__renderDelete(void* uptr)
 		if (gl->textures[i].tex != 0)
 			glDeleteTextures(1, &gl->textures[i].tex);
 	}
-	free(gl->textures);
+	std::free(gl->textures);
 
-	free(gl);
+	std::free(gl);
 }
 
 
@@ -900,12 +900,12 @@ struct NVGcontext* nvgCreateGL3(int atlasw, int atlash, int edgeaa)
 #endif
 {
 	struct NVGparams params;
-	struct NVGcontext* ctx = NULL;
-	struct GLNVGcontext* gl = (struct GLNVGcontext*)malloc(sizeof(struct GLNVGcontext));
-	if (gl == NULL) goto error;
-	memset(gl, 0, sizeof(struct GLNVGcontext));
+	struct NVGcontext* ctx = nullptr;
+	struct GLNVGcontext* gl = static_cast<struct GLNVGcontext*>(std::malloc(sizeof(struct GLNVGcontext)));
+	if (gl == nullptr) goto error;
+	std::memset(gl, 0, sizeof(struct GLNVGcontext));
 
-	memset(&params, 0, sizeof(params));
+	std::memset(&params, 0, sizeof(params));
 	params.renderCreate = glnvg__renderCreate;
 	params.renderCreateTexture = glnvg__renderCreateTexture;
 	params.renderDeleteTexture = glnvg__renderDeleteTexture;
