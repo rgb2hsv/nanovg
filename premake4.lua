@@ -7,10 +7,10 @@ solution "nanovg"
 	platforms {"native", "x64", "x32"}
 
    	project "nanovg"
-		language "C"
+		language "C++"
 		kind "StaticLib"
 		includedirs { "src" }
-		files { "src/*.c" }
+		files { "src/*.cpp" }
 		targetdir("build")
 		defines { "_CRT_SECURE_NO_WARNINGS" } --,"FONS_USE_FREETYPE" } Uncomment to compile with FreeType support
 
@@ -25,8 +25,8 @@ solution "nanovg"
 	project "example_gl2"
 
 		kind "ConsoleApp"
-		language "C"
-		files { "example/example_gl2.c", "example/demo.c", "example/perf.c" }
+		language "C++"
+		files { "example/example_gl2.cpp", "example/demo.cpp", "example/perf.cpp" }
 		includedirs { "src", "example" }
 		targetdir("build")
 		links { "nanovg" }
@@ -54,8 +54,8 @@ solution "nanovg"
 
 	project "example_gl3"
 		kind "ConsoleApp"
-		language "C"
-		files { "example/example_gl3.c", "example/demo.c", "example/perf.c" }
+		language "C++"
+		files { "example/example_gl3.cpp", "example/demo.cpp", "example/perf.cpp" }
 		includedirs { "src", "example" }
 		targetdir("build")
 		links { "nanovg" }
@@ -83,9 +83,9 @@ solution "nanovg"
 
 	project "example_gl2_msaa"
 		kind "ConsoleApp"
-		language "C"
+		language "C++"
 		defines { "DEMO_MSAA" }
-		files { "example/example_gl2.c", "example/demo.c", "example/perf.c" }
+		files { "example/example_gl2.cpp", "example/demo.cpp", "example/perf.cpp" }
 		includedirs { "src", "example" }
 		targetdir("build")
 		links { "nanovg" }
@@ -113,9 +113,9 @@ solution "nanovg"
 
 	project "example_gl3_msaa"
 		kind "ConsoleApp"
-		language "C"
+		language "C++"
 		defines { "DEMO_MSAA" }
-		files { "example/example_gl3.c", "example/demo.c", "example/perf.c" }
+		files { "example/example_gl3.cpp", "example/demo.cpp", "example/perf.cpp" }
 		includedirs { "src", "example" }
 		targetdir("build")
 		links { "nanovg" }
@@ -143,8 +143,8 @@ solution "nanovg"
 
 	project "example_fbo"
 		kind "ConsoleApp"
-		language "C"
-		files { "example/example_fbo.c", "example/perf.c" }
+		language "C++"
+		files { "example/example_fbo.cpp", "example/perf.cpp" }
 		includedirs { "src", "example" }
 		targetdir("build")
 		links { "nanovg" }
@@ -171,8 +171,8 @@ solution "nanovg"
 
 	project "example_gles2"
 		kind "ConsoleApp"
-		language "C"
-		files { "example/example_gles2.c", "example/demo.c", "example/perf.c" }
+		language "C++"
+		files { "example/example_gles2.cpp", "example/demo.cpp", "example/perf.cpp" }
 		includedirs { "src", "example" }
 		targetdir("build")
 		links { "nanovg" }
@@ -199,8 +199,8 @@ solution "nanovg"
 
 	project "example_gles3"
 		kind "ConsoleApp"
-		language "C"
-		files { "example/example_gles3.c", "example/demo.c", "example/perf.c" }
+		language "C++"
+		files { "example/example_gles3.cpp", "example/demo.cpp", "example/perf.cpp" }
 		includedirs { "src", "example" }
 		targetdir("build")
 		links { "nanovg" }

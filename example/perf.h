@@ -1,11 +1,7 @@
 #ifndef PERF_H
 #define PERF_H
 
-#include "nanovg.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "nanovg.hpp"
 
 enum GraphrenderStyle {
     GRAPH_RENDER_FPS,
@@ -24,7 +20,7 @@ typedef struct PerfGraph PerfGraph;
 
 void initGraph(PerfGraph* fps, int style, const char* name);
 void updateGraph(PerfGraph* fps, float frameTime);
-void renderGraph(NVGcontext* vg, float x, float y, PerfGraph* fps);
+void renderGraph(nvg::NVGcontext* vg, float x, float y, PerfGraph* fps);
 float getGraphAverage(PerfGraph* fps);
 
 #define GPU_QUERY_COUNT 5
@@ -38,9 +34,5 @@ typedef struct GPUtimer GPUtimer;
 void initGPUTimer(GPUtimer* timer);
 void startGPUTimer(GPUtimer* timer);
 int stopGPUTimer(GPUtimer* timer, float* times, int maxTimes);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif // PERF_H

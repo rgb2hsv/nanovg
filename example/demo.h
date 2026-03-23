@@ -1,11 +1,7 @@
 #ifndef DEMO_H
 #define DEMO_H
 
-#include "nanovg.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "nanovg.hpp"
 
 struct DemoData {
 	int fontNormal, fontBold, fontIcons, fontEmoji;
@@ -13,14 +9,10 @@ struct DemoData {
 };
 typedef struct DemoData DemoData;
 
-int loadDemoData(NVGcontext* vg, DemoData* data);
-void freeDemoData(NVGcontext* vg, DemoData* data);
-void renderDemo(NVGcontext* vg, float mx, float my, float width, float height, float t, int blowup, DemoData* data);
+int loadDemoData(nvg::NVGcontext* vg, DemoData* data);
+void freeDemoData(nvg::NVGcontext* vg, DemoData* data);
+void renderDemo(nvg::NVGcontext* vg, float mx, float my, float width, float height, float t, int blowup, DemoData* data);
 
 void saveScreenShot(int w, int h, int premult, const char* name);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif // DEMO_H

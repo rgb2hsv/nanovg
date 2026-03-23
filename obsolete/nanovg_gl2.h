@@ -58,7 +58,7 @@ void nvgDeleteGL2(struct NVGcontext* ctx);
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
-#include "nanovg.h"
+#include "nanovg.hpp"
 
 enum GLNVGuniformLoc {
 	GLNVG_LOC_VIEWSIZE,

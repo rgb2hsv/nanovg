@@ -24,5 +24,8 @@ Thumbs.db
 ## Build dir
 build/*
 
+## Local prebuilt SDKs (optional; used with -DGLFW_ROOT / -DGLEW_ROOT)
+third_party/
+
 ## xcode specific
 *xcuserdata*
