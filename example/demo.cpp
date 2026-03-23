@@ -530,7 +530,7 @@ void drawGraph(Context* vg, float x, float y, float w, float h, float t)
 void drawSpinner(Context* vg, float cx, float cy, float r, float t)
 {
 	float a0 = 0.0f + t*6;
-	float a1 = Pi + t*6;
+	float a1 = M_PI + t*6;
 	float r0 = r;
 	float r1 = r * 0.75f;
 	float ax,ay, bx,by;
@@ -619,7 +619,7 @@ void drawThumbnails(Context* vg, float x, float y, float w, float h, const int* 
 		if (a < 1.0f)
 			drawSpinner(vg, tx+thumb/2,ty+thumb/2, thumb*0.25f, t);
 
-		imgPaint = imagePattern(vg, tx+ix, ty+iy, iw,ih, 0.0f/180.0f*Pi, images[i], a);
+		imgPaint = imagePattern(vg, tx+ix, ty+iy, iw,ih, 0.0f/180.0f*M_PI, images[i], a);
 		beginPath(vg);
 		roundedRect(vg, tx,ty, thumb,thumb, 5);
 		fillPaint(vg, imgPaint);
@@ -694,8 +694,8 @@ void drawColorwheel(Context* vg, float x, float y, float w, float h, float t)
 	aeps = 0.5f / r1;	// half a pixel arc length in radians (2pi cancels out).
 
 	for (i = 0; i < 6; i++) {
-		float a0 = (float)i / 6.0f * Pi * 2.0f - aeps;
-		float a1 = (float)(i+1.0f) / 6.0f * Pi * 2.0f + aeps;
+		float a0 = (float)i / 6.0f * M_PI * 2.0f - aeps;
+		float a1 = (float)(i+1.0f) / 6.0f * M_PI * 2.0f + aeps;
 		beginPath(vg);
 		arc(vg, cx,cy, r0, a0, a1, static_cast<int>(Winding::CW));
 		arc(vg, cx,cy, r1, a1, a0, static_cast<int>(Winding::CCW));
@@ -704,7 +704,7 @@ void drawColorwheel(Context* vg, float x, float y, float w, float h, float t)
 		ay = cy + sinf(a0) * (r0+r1)*0.5f;
 		bx = cx + cosf(a1) * (r0+r1)*0.5f;
 		by = cy + sinf(a1) * (r0+r1)*0.5f;
-		paint = linearGradient(vg, ax,ay, bx,by, hsla(a0/(Pi*2),1.0f,0.55f,255), hsla(a1/(Pi*2),1.0f,0.55f,255));
+		paint = linearGradient(vg, ax,ay, bx,by, hsla(a0/(M_PI*2),1.0f,0.55f,255), hsla(a1/(M_PI*2),1.0f,0.55f,255));
 		fillPaint(vg, paint);
 		fill(vg);
 	}
@@ -719,7 +719,7 @@ void drawColorwheel(Context* vg, float x, float y, float w, float h, float t)
 	// Selector
 	save(vg);
 	translate(vg, cx,cy);
-	rotate(vg, hue*Pi*2);
+	rotate(vg, hue*M_PI*2);
 
 	// Marker on
 	strokeWidth(vg, 2.0f);
@@ -738,10 +738,10 @@ void drawColorwheel(Context* vg, float x, float y, float w, float h, float t)
 
 	// Center triangle
 	r = r0 - 6;
-	ax = cosf(120.0f/180.0f*Pi) * r;
-	ay = sinf(120.0f/180.0f*Pi) * r;
-	bx = cosf(-120.0f/180.0f*Pi) * r;
-	by = sinf(-120.0f/180.0f*Pi) * r;
+	ax = cosf(120.0f/180.0f*M_PI) * r;
+	ay = sinf(120.0f/180.0f*M_PI) * r;
+	bx = cosf(-120.0f/180.0f*M_PI) * r;
+	by = sinf(-120.0f/180.0f*M_PI) * r;
 	beginPath(vg);
 	moveTo(vg, r,0);
 	lineTo(vg, ax,ay);
@@ -757,8 +757,8 @@ void drawColorwheel(Context* vg, float x, float y, float w, float h, float t)
 	stroke(vg);
 
 	// Select circle on triangle
-	ax = cosf(120.0f/180.0f*Pi) * r*0.3f;
-	ay = sinf(120.0f/180.0f*Pi) * r*0.4f;
+	ax = cosf(120.0f/180.0f*M_PI) * r*0.3f;
+	ay = sinf(120.0f/180.0f*M_PI) * r*0.4f;
 	strokeWidth(vg, 2.0f);
 	beginPath(vg);
 	circle(vg, ax,ay,5);
@@ -781,8 +781,8 @@ void drawColorwheel(Context* vg, float x, float y, float w, float h, float t)
 	r1 += 0.5f*sqrt(tw*tw+th*th);
 	beginPath(vg);
 	fillColor(vg, rgb(32,32,32));
-	ax = cx + r1*cosf(hue*Pi*2);
-	ay = cy + r1*sinf(hue*Pi*2);
+	ax = cx + r1*cosf(hue*M_PI*2);
+	ay = cy + r1*sinf(hue*M_PI*2);
 	roundedRect(vg, ax - tw*0.5f, ay -th*0.5f, tw, th,5.0f);
 	fill(vg);
 
@@ -1128,8 +1128,8 @@ void drawScissor(Context* vg, float x, float y, float t)
 
 void drawBezierCurve(Context* vg, float x0, float y0, float radius, float t){
 
-	float x1 = x0 + radius*cos(2*Pi*t/5);
-	float y1 = y0 + radius*sin(2*Pi*t/5);
+	float x1 = x0 + radius*cos(2*M_PI*t/5);
+	float y1 = y0 + radius*sin(2*M_PI*t/5);
 
 	float cx0 = x0;
 	float cy0 = y0 + ((y1 - y0) * 0.75f);
@@ -1172,7 +1172,7 @@ void drawBezierCurve(Context* vg, float x0, float y0, float radius, float t){
 
 void drawScaledText(Context* vg, float x0, float y0, float t){
 	save(vg);
-	const float textScale = (cos(2 * Pi * t * 0.25)+1.0) + 0.1;
+	const float textScale = (cos(2 * M_PI * t * 0.25)+1.0) + 0.1;
 	translate(vg, x0, y0);
 	scale(vg, textScale, textScale);
 	fontSize(vg, 24.0f);
@@ -1224,7 +1224,7 @@ void renderDemo(Context* vg, float mx, float my, float width, float height,
 
 	save(vg);
 	if (blowup) {
-		rotate(vg, sinf(t*0.3f)*5.0f/180.0f*Pi);
+		rotate(vg, sinf(t*0.3f)*5.0f/180.0f*M_PI);
 		scale(vg, 2.0f, 2.0f);
 	}
 

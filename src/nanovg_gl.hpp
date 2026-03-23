@@ -112,8 +112,6 @@ inline constexpr int operator&(int a, ImageFlagsGl b) noexcept { return a & to_u
 
 } // namespace nvg
 
-#endif /* NANOVG_GL_HPP */
-
 #ifdef NANOVG_GL_IMPLEMENTATION
 
 #include <algorithm>
