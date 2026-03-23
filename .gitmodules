@@ -1,0 +1,6 @@
+[submodule "external/glew"]
+	path = external/glew
+	url = git@github.com:rgb2hsv/glew.git
+[submodule "external/glfw"]
+	path = external/glfw
+	url = https://github.com/glfw/glfw.git
