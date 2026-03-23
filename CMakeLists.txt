@@ -28,13 +28,16 @@ if(WIN32)
 endif()
 
 set(SRC_DIR "./src")
-file(GLOB SRCS ${SRC_DIR}/*.cpp)
-file(GLOB HDRS ${SRC_DIR}/*.h ${SRC_DIR}/*.hpp)
+set(NVG_SRC_DIR "${SRC_DIR}/nvg")
+set(NVG_THIRD_PARTY_DIR "${SRC_DIR}/thirdParty")
+file(GLOB SRCS ${NVG_SRC_DIR}/*.cpp)
+file(GLOB HDRS ${NVG_SRC_DIR}/*.h ${NVG_SRC_DIR}/*.hpp ${NVG_THIRD_PARTY_DIR}/*.h ${NVG_THIRD_PARTY_DIR}/*.hpp)
 
 install(FILES ${HDRS} DESTINATION include/${PROJECT_NAME}/)
 
 add_library(${PROJECT_NAME} ${SRCS})
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
+target_include_directories(${PROJECT_NAME} PUBLIC ${NVG_SRC_DIR} ${NVG_THIRD_PARTY_DIR})
 
 find_package(glfw3 CONFIG QUIET)
 if(NOT glfw3_FOUND)
@@ -122,7 +125,7 @@ foreach(EXAMPLE_PROJ IN ITEMS ${NANOVG_EXAMPLE_PROJECTS})
         list(APPEND TARGETS example_${EXAMPLE_PROJ})
         target_compile_definitions(example_${EXAMPLE_PROJ} PUBLIC ${DEFS})
         target_link_libraries(example_${EXAMPLE_PROJ} ${PROJECT_NAME} ${LIBS})
-        target_include_directories(example_${EXAMPLE_PROJ} PUBLIC ${SRC_DIR})
+        target_include_directories(example_${EXAMPLE_PROJ} PUBLIC ${NVG_SRC_DIR} ${NVG_THIRD_PARTY_DIR})
         target_compile_features(example_${EXAMPLE_PROJ} PRIVATE cxx_std_20)
 endforeach()
 
