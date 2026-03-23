@@ -1,10 +1,11 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.15)
 
-set(PROJECT_NAME nanovg)
+project(nanovg LANGUAGES CXX C)
+
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_C_STANDARD 11)
-
-project(${PROJECT_NAME})
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGL_GLEXT_PROTOTYPES=1 -O3 -Wall -Wreturn-type -Wno-reorder -Wno-implicit-fallthrough -Wno-unused-variable -Wno-unused-parameter -Wno-unused-function -Wno-deprecated -fmessage-length=0")
@@ -33,6 +34,7 @@ file(GLOB HDRS ${SRC_DIR}/*.h ${SRC_DIR}/*.hpp)
 install(FILES ${HDRS} DESTINATION include/${PROJECT_NAME}/)
 
 add_library(${PROJECT_NAME} ${SRCS})
+target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 
 set(DEFS "")
 if(APPLE)
@@ -76,7 +78,7 @@ else()
 endif()
 foreach(EXAMPLE_PROJ IN ITEMS ${NANOVG_EXAMPLE_PROJECTS})
         add_executable(example_${EXAMPLE_PROJ} "example/example_${EXAMPLE_PROJ}.cpp" ${COMMON_FILES})
-        list(APPEND ${TARGETS} example_${EXAMPLE_PROJ})
+        list(APPEND TARGETS example_${EXAMPLE_PROJ})
         target_compile_definitions(example_${EXAMPLE_PROJ} PUBLIC ${DEFS})
         target_link_libraries(example_${EXAMPLE_PROJ} ${PROJECT_NAME} ${LIBS})
         if(WIN32 AND GLFW_ROOT AND GLEW_ROOT AND EXISTS "${GLFW_ROOT}/include/GLFW/glfw3.h")
@@ -84,6 +86,7 @@ foreach(EXAMPLE_PROJ IN ITEMS ${NANOVG_EXAMPLE_PROJECTS})
         else()
                 target_include_directories(example_${EXAMPLE_PROJ} PUBLIC ${SRC_DIR})
         endif()
+        target_compile_features(example_${EXAMPLE_PROJ} PRIVATE cxx_std_20)
 endforeach()
 
 install(TARGETS ${TARGETS}

@@ -83,7 +83,7 @@ void drawWindow(NVGcontext* vg, const char* title, float x, float y, float w, fl
 	nvgBeginPath(vg);
 	nvgRect(vg, x-10,y-10, w+20,h+30);
 	nvgRoundedRect(vg, x,y, w,h, cornerRadius);
-	nvgPathWinding(vg, NVG_HOLE);
+	nvgPathWinding(vg, static_cast<int>(Solidity::Hole));
 	nvgFillPaint(vg, shadowPaint);
 	nvgFill(vg);
 
@@ -101,7 +101,7 @@ void drawWindow(NVGcontext* vg, const char* title, float x, float y, float w, fl
 
 	nvgFontSize(vg, 15.0f);
 	nvgFontFace(vg, "sans-bold");
-	nvgTextAlign(vg,NVG_ALIGN_CENTER|NVG_ALIGN_MIDDLE);
+	nvgTextAlign(vg,static_cast<int>(Align::Center | Align::Middle));
 
 	nvgFontBlur(vg,2);
 	nvgFillColor(vg, nvgRGBA(0,0,0,128));
@@ -135,20 +135,20 @@ void drawSearchBox(NVGcontext* vg, const char* text, float x, float y, float w, 
 	nvgFontSize(vg, h*1.3f);
 	nvgFontFace(vg, "icons");
 	nvgFillColor(vg, nvgRGBA(255,255,255,64));
-	nvgTextAlign(vg,NVG_ALIGN_CENTER|NVG_ALIGN_MIDDLE);
+	nvgTextAlign(vg,static_cast<int>(Align::Center | Align::Middle));
 	nvgText(vg, x+h*0.55f, y+h*0.55f, cpToUTF8(ICON_SEARCH,icon), NULL);
 
 	nvgFontSize(vg, 17.0f);
 	nvgFontFace(vg, "sans");
 	nvgFillColor(vg, nvgRGBA(255,255,255,32));
 
-	nvgTextAlign(vg,NVG_ALIGN_LEFT|NVG_ALIGN_MIDDLE);
+	nvgTextAlign(vg,static_cast<int>(Align::Left | Align::Middle));
 	nvgText(vg, x+h*1.05f,y+h*0.5f,text, NULL);
 
 	nvgFontSize(vg, h*1.3f);
 	nvgFontFace(vg, "icons");
 	nvgFillColor(vg, nvgRGBA(255,255,255,32));
-	nvgTextAlign(vg,NVG_ALIGN_CENTER|NVG_ALIGN_MIDDLE);
+	nvgTextAlign(vg,static_cast<int>(Align::Center | Align::Middle));
 	nvgText(vg, x+w-h*0.55f, y+h*0.55f, cpToUTF8(ICON_CIRCLED_CROSS,icon), NULL);
 }
 
@@ -172,13 +172,13 @@ void drawDropDown(NVGcontext* vg, const char* text, float x, float y, float w, f
 	nvgFontSize(vg, 17.0f);
 	nvgFontFace(vg, "sans");
 	nvgFillColor(vg, nvgRGBA(255,255,255,160));
-	nvgTextAlign(vg,NVG_ALIGN_LEFT|NVG_ALIGN_MIDDLE);
+	nvgTextAlign(vg,static_cast<int>(Align::Left | Align::Middle));
 	nvgText(vg, x+h*0.3f,y+h*0.5f,text, NULL);
 
 	nvgFontSize(vg, h*1.3f);
 	nvgFontFace(vg, "icons");
 	nvgFillColor(vg, nvgRGBA(255,255,255,64));
-	nvgTextAlign(vg,NVG_ALIGN_CENTER|NVG_ALIGN_MIDDLE);
+	nvgTextAlign(vg,static_cast<int>(Align::Center | Align::Middle));
 	nvgText(vg, x+w-h*0.5f, y+h*0.5f, cpToUTF8(ICON_CHEVRON_RIGHT,icon), NULL);
 }
 
@@ -190,7 +190,7 @@ void drawLabel(NVGcontext* vg, const char* text, float x, float y, float w, floa
 	nvgFontFace(vg, "sans");
 	nvgFillColor(vg, nvgRGBA(255,255,255,128));
 
-	nvgTextAlign(vg,NVG_ALIGN_LEFT|NVG_ALIGN_MIDDLE);
+	nvgTextAlign(vg,static_cast<int>(Align::Left | Align::Middle));
 	nvgText(vg, x,y+h*0.5f,text, NULL);
 }
 
@@ -218,7 +218,7 @@ void drawEditBox(NVGcontext* vg, const char* text, float x, float y, float w, fl
 	nvgFontSize(vg, 17.0f);
 	nvgFontFace(vg, "sans");
 	nvgFillColor(vg, nvgRGBA(255,255,255,64));
-	nvgTextAlign(vg,NVG_ALIGN_LEFT|NVG_ALIGN_MIDDLE);
+	nvgTextAlign(vg,static_cast<int>(Align::Left | Align::Middle));
 	nvgText(vg, x+h*0.3f,y+h*0.5f,text, NULL);
 }
 
@@ -234,13 +234,13 @@ void drawEditBoxNum(NVGcontext* vg,
 	nvgFontSize(vg, 15.0f);
 	nvgFontFace(vg, "sans");
 	nvgFillColor(vg, nvgRGBA(255,255,255,64));
-	nvgTextAlign(vg,NVG_ALIGN_RIGHT|NVG_ALIGN_MIDDLE);
+	nvgTextAlign(vg,static_cast<int>(Align::Right | Align::Middle));
 	nvgText(vg, x+w-h*0.3f,y+h*0.5f,units, NULL);
 
 	nvgFontSize(vg, 17.0f);
 	nvgFontFace(vg, "sans");
 	nvgFillColor(vg, nvgRGBA(255,255,255,128));
-	nvgTextAlign(vg,NVG_ALIGN_RIGHT|NVG_ALIGN_MIDDLE);
+	nvgTextAlign(vg,static_cast<int>(Align::Right | Align::Middle));
 	nvgText(vg, x+w-uw-h*0.5f,y+h*0.5f,text, NULL);
 }
 
@@ -254,7 +254,7 @@ void drawCheckBox(NVGcontext* vg, const char* text, float x, float y, float w, f
 	nvgFontFace(vg, "sans");
 	nvgFillColor(vg, nvgRGBA(255,255,255,160));
 
-	nvgTextAlign(vg,NVG_ALIGN_LEFT|NVG_ALIGN_MIDDLE);
+	nvgTextAlign(vg,static_cast<int>(Align::Left | Align::Middle));
 	nvgText(vg, x+28,y+h*0.5f,text, NULL);
 
 	bg = nvgBoxGradient(vg, x+1,y+(int)(h*0.5f)-9+1, 18,18, 3,3, nvgRGBA(0,0,0,32), nvgRGBA(0,0,0,92));
@@ -266,7 +266,7 @@ void drawCheckBox(NVGcontext* vg, const char* text, float x, float y, float w, f
 	nvgFontSize(vg, 33);
 	nvgFontFace(vg, "icons");
 	nvgFillColor(vg, nvgRGBA(255,255,255,128));
-	nvgTextAlign(vg,NVG_ALIGN_CENTER|NVG_ALIGN_MIDDLE);
+	nvgTextAlign(vg,static_cast<int>(Align::Center | Align::Middle));
 	nvgText(vg, x+9+2, y+h*0.5f, cpToUTF8(ICON_CHECK,icon), NULL);
 }
 
@@ -306,13 +306,13 @@ void drawButton(NVGcontext* vg, int preicon, const char* text, float x, float y,
 		nvgFontSize(vg, h*1.3f);
 		nvgFontFace(vg, "icons");
 		nvgFillColor(vg, nvgRGBA(255,255,255,96));
-		nvgTextAlign(vg,NVG_ALIGN_LEFT|NVG_ALIGN_MIDDLE);
+		nvgTextAlign(vg,static_cast<int>(Align::Left | Align::Middle));
 		nvgText(vg, x+w*0.5f-tw*0.5f-iw*0.75f, y+h*0.5f, cpToUTF8(preicon,icon), NULL);
 	}
 
 	nvgFontSize(vg, 17.0f);
 	nvgFontFace(vg, "sans-bold");
-	nvgTextAlign(vg,NVG_ALIGN_LEFT|NVG_ALIGN_MIDDLE);
+	nvgTextAlign(vg,static_cast<int>(Align::Left | Align::Middle));
 	nvgFillColor(vg, nvgRGBA(0,0,0,160));
 	nvgText(vg, x+w*0.5f-tw*0.5f+iw*0.25f,y+h*0.5f-1,text, NULL);
 	nvgFillColor(vg, nvgRGBA(255,255,255,160));
@@ -340,7 +340,7 @@ void drawSlider(NVGcontext* vg, float pos, float x, float y, float w, float h)
 	nvgBeginPath(vg);
 	nvgRect(vg, x+(int)(pos*w)-kr-5,cy-kr-5,kr*2+5+5,kr*2+5+5+3);
 	nvgCircle(vg, x+(int)(pos*w),cy, kr);
-	nvgPathWinding(vg, NVG_HOLE);
+	nvgPathWinding(vg, static_cast<int>(Solidity::Hole));
 	nvgFillPaint(vg, bg);
 	nvgFill(vg);
 
@@ -364,7 +364,7 @@ void drawSlider(NVGcontext* vg, float pos, float x, float y, float w, float h)
 void drawFancyText(NVGcontext* vg, float x, float y){
 	nvgFontSize(vg, 30.0f);
 	nvgFontFace(vg, "sans-bold");
-	nvgTextAlign(vg,NVG_ALIGN_CENTER|NVG_ALIGN_MIDDLE);
+	nvgTextAlign(vg,static_cast<int>(Align::Center | Align::Middle));
 
 	nvgFontBlur(vg, 10);
 	nvgFillColor(vg, nvgRGB(255, 0, 102));
@@ -539,8 +539,8 @@ void drawSpinner(NVGcontext* vg, float cx, float cy, float r, float t)
 	nvgSave(vg);
 
 	nvgBeginPath(vg);
-	nvgArc(vg, cx,cy, r0, a0, a1, NVG_CW);
-	nvgArc(vg, cx,cy, r1, a1, a0, NVG_CCW);
+	nvgArc(vg, cx,cy, r0, a0, a1, static_cast<int>(Winding::CW));
+	nvgArc(vg, cx,cy, r1, a1, a0, static_cast<int>(Winding::CCW));
 	nvgClosePath(vg);
 	ax = cx + cosf(a0) * (r0+r1)*0.5f;
 	ay = cy + sinf(a0) * (r0+r1)*0.5f;
@@ -575,7 +575,7 @@ void drawThumbnails(NVGcontext* vg, float x, float y, float w, float h, const in
 	nvgBeginPath(vg);
 	nvgRect(vg, x-10,y-10, w+20,h+30);
 	nvgRoundedRect(vg, x,y, w,h, cornerRadius);
-	nvgPathWinding(vg, NVG_HOLE);
+	nvgPathWinding(vg, static_cast<int>(Solidity::Hole));
 	nvgFillPaint(vg, shadowPaint);
 	nvgFill(vg);
 
@@ -629,7 +629,7 @@ void drawThumbnails(NVGcontext* vg, float x, float y, float w, float h, const in
 		nvgBeginPath(vg);
 		nvgRect(vg, tx-5,ty-5, thumb+10,thumb+10);
 		nvgRoundedRect(vg, tx,ty, thumb,thumb, 6);
-		nvgPathWinding(vg, NVG_HOLE);
+		nvgPathWinding(vg, static_cast<int>(Solidity::Hole));
 		nvgFillPaint(vg, shadowPaint);
 		nvgFill(vg);
 
@@ -697,8 +697,8 @@ void drawColorwheel(NVGcontext* vg, float x, float y, float w, float h, float t)
 		float a0 = (float)i / 6.0f * NVG_PI * 2.0f - aeps;
 		float a1 = (float)(i+1.0f) / 6.0f * NVG_PI * 2.0f + aeps;
 		nvgBeginPath(vg);
-		nvgArc(vg, cx,cy, r0, a0, a1, NVG_CW);
-		nvgArc(vg, cx,cy, r1, a1, a0, NVG_CCW);
+		nvgArc(vg, cx,cy, r0, a0, a1, static_cast<int>(Winding::CW));
+		nvgArc(vg, cx,cy, r1, a1, a0, static_cast<int>(Winding::CCW));
 		nvgClosePath(vg);
 		ax = cx + cosf(a0) * (r0+r1)*0.5f;
 		ay = cy + sinf(a0) * (r0+r1)*0.5f;
@@ -732,7 +732,7 @@ void drawColorwheel(NVGcontext* vg, float x, float y, float w, float h, float t)
 	nvgBeginPath(vg);
 	nvgRect(vg, r0-2-10,-4-10,r1-r0+4+20,8+20);
 	nvgRect(vg, r0-2,-4,r1-r0+4,8);
-	nvgPathWinding(vg, NVG_HOLE);
+	nvgPathWinding(vg, static_cast<int>(Solidity::Hole));
 	nvgFillPaint(vg, paint);
 	nvgFill(vg);
 
@@ -769,7 +769,7 @@ void drawColorwheel(NVGcontext* vg, float x, float y, float w, float h, float t)
 	nvgBeginPath(vg);
 	nvgRect(vg, ax-20,ay-20,40,40);
 	nvgCircle(vg, ax,ay,7);
-	nvgPathWinding(vg, NVG_HOLE);
+	nvgPathWinding(vg, static_cast<int>(Solidity::Hole));
 	nvgFillPaint(vg, paint);
 	nvgFill(vg);
 
@@ -790,7 +790,7 @@ void drawColorwheel(NVGcontext* vg, float x, float y, float w, float h, float t)
 	nvgTranslate(vg, ax, ay);
 	nvgScale(vg, 2.0f, 2.0f); // Check that local transforms work with text
 	nvgFontSize(vg, 0.5f * th);
-	nvgTextAlign(vg, NVG_ALIGN_CENTER|NVG_ALIGN_TOP);
+	nvgTextAlign(vg, static_cast<int>(Align::Center | Align::Top));
 	nvgFontFace(vg, "sans");
 	nvgFillColor(vg, nvgRGB(255,255,255));
 	char str[128];
@@ -804,14 +804,14 @@ void drawColorwheel(NVGcontext* vg, float x, float y, float w, float h, float t)
 }
 
 void drawStylizedLines(NVGcontext* vg, float x, float y, float w, float h){
-	nvgLineJoin(vg, NVG_ROUND);
-	nvgLineStyle(vg, NVG_LINE_DASHED);
+	nvgLineJoin(vg, static_cast<int>(LineCap::Round));
+	nvgLineStyle(vg, static_cast<int>(LineStyle::Dashed));
 	nvgStrokeColor(vg,nvgRGBAf(0.6f,0.6f,1.0f,1.0f));
 	nvgStrokeWidth(vg, 5.0f);
 	nvgBeginPath(vg);
 	nvgRect(vg, x, y, w, h);
 	nvgStroke(vg);
-	nvgLineStyle(vg, NVG_LINE_SOLID);
+	nvgLineStyle(vg, static_cast<int>(LineStyle::Solid));
 }
 
 void drawLines(NVGcontext* vg, float x, float y, float w, float h, float strokeWidth, NVGcolor color, float t)
@@ -819,8 +819,8 @@ void drawLines(NVGcontext* vg, float x, float y, float w, float h, float strokeW
 	int i, j;
 	float pad = 5.0f, s = w/9.0f - pad*2;
 	float pts[4*2], fx, fy;
-	int joins[3] = {NVG_MITER, NVG_ROUND, NVG_BEVEL};
-	int caps[3] = {NVG_BUTT, NVG_ROUND, NVG_SQUARE};
+	int joins[3] = {static_cast<int>(LineCap::Miter), static_cast<int>(LineCap::Round), static_cast<int>(LineCap::Bevel)};
+	int caps[3] = {static_cast<int>(LineCap::Butt), static_cast<int>(LineCap::Round), static_cast<int>(LineCap::Square)};
 	NVG_NOTUSED(h);
 
 	nvgSave(vg);
@@ -849,8 +849,8 @@ void drawLines(NVGcontext* vg, float x, float y, float w, float h, float strokeW
 			nvgLineTo(vg, fx+pts[6], fy+pts[7]);
 			nvgStroke(vg);
 
-			nvgLineCap(vg, NVG_BUTT);
-			nvgLineJoin(vg, NVG_BEVEL);
+			nvgLineCap(vg, static_cast<int>(LineCap::Butt));
+			nvgLineJoin(vg, static_cast<int>(LineCap::Bevel));
 
 			nvgStrokeWidth(vg, 1.0f);
 			nvgStrokeColor(vg, nvgRGBA(0,192,255,255));
@@ -942,7 +942,7 @@ void drawParagraph(NVGcontext* vg, float x, float y, float width, float height, 
 
 	nvgFontSize(vg, 15.0f);
 	nvgFontFace(vg, "sans");
-	nvgTextAlign(vg, NVG_ALIGN_LEFT|NVG_ALIGN_TOP);
+	nvgTextAlign(vg, static_cast<int>(Align::Left | Align::Top));
 	nvgTextMetrics(vg, NULL, NULL, &lineh);
 
 	// The text break API can be used to fill a large buffer of rows,
@@ -995,7 +995,7 @@ void drawParagraph(NVGcontext* vg, float x, float y, float width, float height, 
 		char txt[16];
 		snprintf(txt, sizeof(txt), "%d", gutter);
 		nvgFontSize(vg, 12.0f);
-		nvgTextAlign(vg, NVG_ALIGN_RIGHT|NVG_ALIGN_MIDDLE);
+		nvgTextAlign(vg, static_cast<int>(Align::Right | Align::Middle));
 
 		nvgTextBounds(vg, gx,gy, txt, NULL, bounds);
 
@@ -1011,7 +1011,7 @@ void drawParagraph(NVGcontext* vg, float x, float y, float width, float height, 
 	y += 20.0f;
 
 	nvgFontSize(vg, 11.0f);
-	nvgTextAlign(vg, NVG_ALIGN_LEFT|NVG_ALIGN_TOP);
+	nvgTextAlign(vg, static_cast<int>(Align::Left | Align::Top));
 	nvgTextLineHeight(vg, 1.2f);
 
 	nvgTextBoxBounds(vg, x,y, 150, hoverText, NULL, bounds);
@@ -1062,7 +1062,7 @@ void drawWidths(NVGcontext* vg, float x, float y, float width)
 void drawCaps(NVGcontext* vg, float x, float y, float width)
 {
 	int i;
-	int caps[3] = {NVG_BUTT, NVG_ROUND, NVG_SQUARE};
+	int caps[3] = {static_cast<int>(LineCap::Butt), static_cast<int>(LineCap::Round), static_cast<int>(LineCap::Square)};
 	float lineWidth = 8.0f;
 
 	nvgSave(vg);
@@ -1145,18 +1145,18 @@ void drawBezierCurve(NVGcontext* vg, float x0, float y0, float radius, float t){
 	nvgStrokeWidth(vg,2.0f);
 	nvgStroke(vg);
 
-	nvgLineCap(vg, NVG_ROUND);
+	nvgLineCap(vg, static_cast<int>(LineCap::Round));
 	nvgStrokeWidth(vg,5);
-	nvgLineJoin(vg, NVG_ROUND);
+	nvgLineJoin(vg, static_cast<int>(LineCap::Round));
 
 	nvgBeginPath(vg);
 	nvgMoveTo(vg, x0, y0);
 	nvgBezierTo(vg, cx0, cy0, cx1, cy1, x1, y1);
-	nvgLineStyle(vg, NVG_LINE_SOLID);
+	nvgLineStyle(vg, static_cast<int>(LineStyle::Solid));
 	nvgStrokeColor(vg, nvgRGBA(40, 53, 147,255));
 	nvgStroke(vg);
 
-	nvgLineStyle(vg, NVG_LINE_DASHED);
+	nvgLineStyle(vg, static_cast<int>(LineStyle::Dashed));
 	nvgStrokeColor(vg, nvgRGBA(255, 195, 0,255));
 	nvgStroke(vg);
 	
@@ -1165,7 +1165,7 @@ void drawBezierCurve(NVGcontext* vg, float x0, float y0, float radius, float t){
 	nvgCircle(vg,cx0,cy0,5.0f);
 	nvgCircle(vg,cx1,cy1,5.0f);
 	nvgCircle(vg,x1,y1,5.0f);
-	nvgLineStyle(vg, NVG_LINE_SOLID);
+	nvgLineStyle(vg, static_cast<int>(LineStyle::Solid));
 	nvgFillColor(vg,nvgRGBA(64,192,64,255));
 	nvgFill(vg);
 }
@@ -1177,7 +1177,7 @@ void drawScaledText(NVGcontext* vg, float x0, float y0, float t){
 ;	nvgScale(vg, scale, scale);
 	nvgFontSize(vg, 24.0f);
 	nvgFontFace(vg, "sans-bold");
-	nvgTextAlign(vg,NVG_ALIGN_CENTER|NVG_ALIGN_MIDDLE);
+	nvgTextAlign(vg,static_cast<int>(Align::Center | Align::Middle));
 	nvgFillColor(vg, nvgRGBA(255,255,255,255));
 	nvgBeginPath(vg);
 	nvgText(vg, 0.0f, 0.0f, "NanoVG", NULL);
@@ -1201,17 +1201,17 @@ void renderDemo(NVGcontext* vg, float mx, float my, float width, float height,
 
 	switch((int)(t/5.0)%3){
 		case 0:
-			nvgLineStyle(vg, NVG_LINE_DASHED);break;
+			nvgLineStyle(vg, static_cast<int>(LineStyle::Dashed));break;
 		case 1:
-			nvgLineStyle(vg, NVG_LINE_DOTTED);break;
+			nvgLineStyle(vg, static_cast<int>(LineStyle::Dotted));break;
 		case 2:
-			nvgLineStyle(vg, NVG_LINE_GLOW);break;
+			nvgLineStyle(vg, static_cast<int>(LineStyle::Glow));break;
 		default:
-			nvgLineStyle(vg, NVG_LINE_SOLID);
+			nvgLineStyle(vg, static_cast<int>(LineStyle::Solid));
 	}
 	drawLines(vg, 100, height-5, 800, 100, 10.0f, nvgRGBA(255, 153, 0, 255), t*3);
 
-	nvgLineStyle(vg, NVG_LINE_SOLID);
+	nvgLineStyle(vg, static_cast<int>(LineStyle::Solid));
 	drawLines(vg, 120, height-75, 600, 50, 17.0f, nvgRGBA(0,0,0,160), t);
 
 	// Line caps

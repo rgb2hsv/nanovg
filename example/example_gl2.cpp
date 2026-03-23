@@ -94,9 +94,9 @@ int main()
 #endif
 
 #ifdef DEMO_MSAA
-	vg = nvgCreateGL2(NVG_STENCIL_STROKES | NVG_DEBUG);
+	vg = nvgCreateGL2(static_cast<int>(CreateFlags::StencilStrokes | CreateFlags::Debug));
 #else
-	vg = nvgCreateGL2(NVG_ANTIALIAS | NVG_STENCIL_STROKES | NVG_DEBUG);
+	vg = nvgCreateGL2(static_cast<int>(CreateFlags::Antialias | CreateFlags::StencilStrokes | CreateFlags::Debug));
 #endif
 	if (vg == NULL) {
 		printf("Could not init nanovg.\n");

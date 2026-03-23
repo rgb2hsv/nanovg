@@ -26,7 +26,8 @@ namespace nvg {
 inline constexpr float NVG_PI = 3.14159265358979323846264338327f;
 
 template<typename E>
-constexpr std::underlying_type_t<E> to_underlying(E e) noexcept {
+	requires std::is_enum_v<E>
+[[nodiscard]] constexpr std::underlying_type_t<E> to_underlying(E e) noexcept {
 	return static_cast<std::underlying_type_t<E>>(e);
 }
 

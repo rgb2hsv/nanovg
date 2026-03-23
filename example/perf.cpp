@@ -153,33 +153,33 @@ void renderGraph(NVGcontext* vg, float x, float y, PerfGraph* fps)
 
 	if (fps->name[0] != '\0') {
 		nvgFontSize(vg, 12.0f);
-		nvgTextAlign(vg, NVG_ALIGN_LEFT|NVG_ALIGN_TOP);
+		nvgTextAlign(vg, static_cast<int>(Align::Left | Align::Top));
 		nvgFillColor(vg, nvgRGBA(240,240,240,192));
 		nvgText(vg, x+3,y+3, fps->name, NULL);
 	}
 
 	if (fps->style == GRAPH_RENDER_FPS) {
 		nvgFontSize(vg, 15.0f);
-		nvgTextAlign(vg,NVG_ALIGN_RIGHT|NVG_ALIGN_TOP);
+		nvgTextAlign(vg, static_cast<int>(Align::Right | Align::Top));
 		nvgFillColor(vg, nvgRGBA(240,240,240,255));
 		sprintf(str, "%.2f FPS", 1.0f / avg);
 		nvgText(vg, x+w-3,y+3, str, NULL);
 
 		nvgFontSize(vg, 13.0f);
-		nvgTextAlign(vg,NVG_ALIGN_RIGHT|NVG_ALIGN_BASELINE);
+		nvgTextAlign(vg, static_cast<int>(Align::Right | Align::Baseline));
 		nvgFillColor(vg, nvgRGBA(240,240,240,160));
 		sprintf(str, "%.2f ms", avg * 1000.0f);
 		nvgText(vg, x+w-3,y+h-3, str, NULL);
 	}
 	else if (fps->style == GRAPH_RENDER_PERCENT) {
 		nvgFontSize(vg, 15.0f);
-		nvgTextAlign(vg,NVG_ALIGN_RIGHT|NVG_ALIGN_TOP);
+		nvgTextAlign(vg, static_cast<int>(Align::Right | Align::Top));
 		nvgFillColor(vg, nvgRGBA(240,240,240,255));
 		sprintf(str, "%.1f %%", avg * 1.0f);
 		nvgText(vg, x+w-3,y+3, str, NULL);
 	} else {
 		nvgFontSize(vg, 15.0f);
-		nvgTextAlign(vg,NVG_ALIGN_RIGHT|NVG_ALIGN_TOP);
+		nvgTextAlign(vg, static_cast<int>(Align::Right | Align::Top));
 		nvgFillColor(vg, nvgRGBA(240,240,240,255));
 		sprintf(str, "%.2f ms", avg * 1000.0f);
 		nvgText(vg, x+w-3,y+3, str, NULL);

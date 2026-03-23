@@ -414,7 +414,7 @@ static int glnvg__deleteTexture(GLNVGcontext* gl, int id)
 	int i;
 	for (i = 0; i < gl->ntextures; i++) {
 		if (gl->textures[i].id == id) {
-			if (gl->textures[i].tex != 0 && (gl->textures[i].flags & NVG_IMAGE_NODELETE) == 0)
+			if (gl->textures[i].tex != 0 && (gl->textures[i].flags & ImageFlagsGl::NoDelete) == 0)
 				glDeleteTextures(1, &gl->textures[i].tex);
 			memset(&gl->textures[i], 0, sizeof(gl->textures[i]));
 			return 1;
@@ -446,7 +446,7 @@ static void glnvg__dumpProgramError(GLuint prog, const char* name)
 static void glnvg__checkError(GLNVGcontext* gl, const char* str)
 {
 	GLenum err;
-	if ((gl->flags & NVG_DEBUG) == 0) return;
+	if ((gl->flags & CreateFlags::Debug) == 0) return;
 	err = glGetError();
 	if (err != GL_NO_ERROR) {
 		printf("Error %08x after %s\n", err, str);
@@ -740,7 +740,7 @@ static int glnvg__renderCreate(void* uptr)
 
 	glnvg__checkError(gl, "init");
 
-	if (gl->flags & NVG_ANTIALIAS) {
+	if (gl->flags & CreateFlags::Antialias) {
 		if (glnvg__createShader(&gl->shader, "shader", shaderHeader, "#define EDGE_AA 1\n", fillVertShader, fillFragShader) == 0)
 			return 0;
 	} else {
@@ -767,7 +767,7 @@ static int glnvg__renderCreate(void* uptr)
 
 	// Some platforms does not allow to have samples to unset textures.
 	// Create empty one which is bound when there's no texture specified.
-	gl->dummyTex = glnvg__renderCreateTexture(gl, NVG_TEXTURE_ALPHA, 1, 1, 0, NULL);
+	gl->dummyTex = glnvg__renderCreateTexture(gl, static_cast<int>(Texture::Alpha), 1, 1, 0, NULL);
 
 	glnvg__checkError(gl, "create done");
 
@@ -787,14 +787,14 @@ static int glnvg__renderCreateTexture(void* uptr, int type, int w, int h, int im
 	// Check for non-power of 2.
 	if (glnvg__nearestPow2(w) != (unsigned int)w || glnvg__nearestPow2(h) != (unsigned int)h) {
 		// No repeat
-		if ((imageFlags & NVG_IMAGE_REPEATX) != 0 || (imageFlags & NVG_IMAGE_REPEATY) != 0) {
+		if ((imageFlags & ImageFlags::RepeatX) != 0 || (imageFlags & ImageFlags::RepeatY) != 0) {
 			printf("Repeat X/Y is not supported for non power-of-two textures (%d x %d)\n", w, h);
-			imageFlags &= ~(NVG_IMAGE_REPEATX | NVG_IMAGE_REPEATY);
+			imageFlags &= ~(static_cast<int>(ImageFlags::RepeatX) | static_cast<int>(ImageFlags::RepeatY));
 		}
 		// No mips.
-		if (imageFlags & NVG_IMAGE_GENERATE_MIPMAPS) {
+		if (imageFlags & ImageFlags::GenerateMipmaps) {
 			printf("Mip-maps is not support for non power-of-two textures (%d x %d)\n", w, h);
-			imageFlags &= ~NVG_IMAGE_GENERATE_MIPMAPS;
+			imageFlags &= ~static_cast<int>(ImageFlags::GenerateMipmaps);
 		}
 	}
 #endif
@@ -815,12 +815,12 @@ static int glnvg__renderCreateTexture(void* uptr, int type, int w, int h, int im
 
 #if defined (NANOVG_GL2)
 	// GL 1.4 and later has support for generating mipmaps using a tex parameter.
-	if (imageFlags & NVG_IMAGE_GENERATE_MIPMAPS) {
+	if (imageFlags & ImageFlags::GenerateMipmaps) {
 		glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
 	}
 #endif
 
-	if (type == NVG_TEXTURE_RGBA)
+	if (type == static_cast<int>(Texture::Rgba))
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 	else
 #if defined(NANOVG_GLES2) || defined (NANOVG_GL2)
@@ -831,32 +831,32 @@ static int glnvg__renderCreateTexture(void* uptr, int type, int w, int h, int im
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, w, h, 0, GL_RED, GL_UNSIGNED_BYTE, data);
 #endif
 
-	if (imageFlags & NVG_IMAGE_GENERATE_MIPMAPS) {
-		if (imageFlags & NVG_IMAGE_NEAREST) {
+	if (imageFlags & ImageFlags::GenerateMipmaps) {
+		if (imageFlags & ImageFlags::Nearest) {
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
 		} else {
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		}
 	} else {
-		if (imageFlags & NVG_IMAGE_NEAREST) {
+		if (imageFlags & ImageFlags::Nearest) {
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		} else {
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		}
 	}
 
-	if (imageFlags & NVG_IMAGE_NEAREST) {
+	if (imageFlags & ImageFlags::Nearest) {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	} else {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	}
 
-	if (imageFlags & NVG_IMAGE_REPEATX)
+	if (imageFlags & ImageFlags::RepeatX)
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	else
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 
-	if (imageFlags & NVG_IMAGE_REPEATY)
+	if (imageFlags & ImageFlags::RepeatY)
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	else
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -870,7 +870,7 @@ static int glnvg__renderCreateTexture(void* uptr, int type, int w, int h, int im
 
 	// The new way to build mipmaps on GLES and GL3
 #if !defined(NANOVG_GL2)
-	if (imageFlags & NVG_IMAGE_GENERATE_MIPMAPS) {
+	if (imageFlags & ImageFlags::GenerateMipmaps) {
 		glGenerateMipmap(GL_TEXTURE_2D);
 	}
 #endif
@@ -904,7 +904,7 @@ static int glnvg__renderUpdateTexture(void* uptr, int image, int x, int y, int w
 	glPixelStorei(GL_UNPACK_SKIP_ROWS, y);
 #else
 	// No support for all of skip, need to update a whole row at a time.
-	if (tex->type == NVG_TEXTURE_RGBA)
+	if (tex->type == static_cast<int>(Texture::Rgba))
 		data += y*tex->width*4;
 	else
 		data += y*tex->width;
@@ -912,7 +912,7 @@ static int glnvg__renderUpdateTexture(void* uptr, int image, int x, int y, int w
 	w = tex->width;
 #endif
 
-	if (tex->type == NVG_TEXTURE_RGBA)
+	if (tex->type == static_cast<int>(Texture::Rgba))
 		glTexSubImage2D(GL_TEXTURE_2D, 0, x,y, w,h, GL_RGBA, GL_UNSIGNED_BYTE, data);
 	else
 #if defined(NANOVG_GLES2) || defined(NANOVG_GL2)
@@ -1011,7 +1011,7 @@ static int glnvg__convertPaint(GLNVGcontext* gl, GLNVGfragUniforms* frag, NVGpai
 	if (paint->image != 0) {
 		tex = glnvg__findTexture(gl, paint->image);
 		if (tex == NULL) return 0;
-		if ((tex->flags & NVG_IMAGE_FLIPY) != 0) {
+		if ((tex->flags & ImageFlags::Flipy) != 0) {
 			float m1[6], m2[6];
 			nvgTransformTranslate(m1, 0.0f, frag->extent[1] * 0.5f);
 			nvgTransformMultiply(m1, paint->xform);
@@ -1026,13 +1026,13 @@ static int glnvg__convertPaint(GLNVGcontext* gl, GLNVGfragUniforms* frag, NVGpai
 		frag->type = NSVG_SHADER_FILLIMG;
 
 		#if NANOVG_GL_USE_UNIFORMBUFFER
-		if (tex->type == NVG_TEXTURE_RGBA)
-			frag->texType = (tex->flags & NVG_IMAGE_PREMULTIPLIED) ? 0 : 1;
+		if (tex->type == static_cast<int>(Texture::Rgba))
+			frag->texType = (tex->flags & ImageFlags::Premultiplied) ? 0 : 1;
 		else
 			frag->texType = 2;
 		#else
-		if (tex->type == NVG_TEXTURE_RGBA)
-			frag->texType = (tex->flags & NVG_IMAGE_PREMULTIPLIED) ? 0.0f : 1.0f;
+		if (tex->type == static_cast<int>(Texture::Rgba))
+			frag->texType = (tex->flags & ImageFlags::Premultiplied) ? 0.0f : 1.0f;
 		else
 			frag->texType = 2.0f;
 		#endif
@@ -1108,7 +1108,7 @@ static void glnvg__fill(GLNVGcontext* gl, GLNVGcall* call)
 	glnvg__setUniforms(gl, call->uniformOffset + gl->fragSize, call->image);
 	glnvg__checkError(gl, "fill fill");
 
-	if (gl->flags & NVG_ANTIALIAS) {
+	if (gl->flags & CreateFlags::Antialias) {
 		glnvg__stencilFunc(gl, GL_EQUAL, 0x00, 0xff);
 		glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
 		// Draw fringes
@@ -1146,7 +1146,7 @@ static void glnvg__stroke(GLNVGcontext* gl, GLNVGcall* call)
 	GLNVGpath* paths = &gl->paths[call->pathOffset];
 	int npaths = call->pathCount, i;
 
-	if (gl->flags & NVG_STENCIL_STROKES) {
+	if (gl->flags & CreateFlags::StencilStrokes) {
 
 		glEnable(GL_STENCIL_TEST);
 		glnvg__stencilMask(gl, 0xff);
@@ -1206,27 +1206,27 @@ static void glnvg__renderCancel(void* uptr) {
 
 static GLenum glnvg_convertBlendFuncFactor(int factor)
 {
-	if (factor == NVG_ZERO)
+	if (factor == static_cast<int>(BlendFactor::Zero))
 		return GL_ZERO;
-	if (factor == NVG_ONE)
+	if (factor == static_cast<int>(BlendFactor::One))
 		return GL_ONE;
-	if (factor == NVG_SRC_COLOR)
+	if (factor == static_cast<int>(BlendFactor::SrcColor))
 		return GL_SRC_COLOR;
-	if (factor == NVG_ONE_MINUS_SRC_COLOR)
+	if (factor == static_cast<int>(BlendFactor::OneMinusSrcColor))
 		return GL_ONE_MINUS_SRC_COLOR;
-	if (factor == NVG_DST_COLOR)
+	if (factor == static_cast<int>(BlendFactor::DstColor))
 		return GL_DST_COLOR;
-	if (factor == NVG_ONE_MINUS_DST_COLOR)
+	if (factor == static_cast<int>(BlendFactor::OneMinusDstColor))
 		return GL_ONE_MINUS_DST_COLOR;
-	if (factor == NVG_SRC_ALPHA)
+	if (factor == static_cast<int>(BlendFactor::SrcAlpha))
 		return GL_SRC_ALPHA;
-	if (factor == NVG_ONE_MINUS_SRC_ALPHA)
+	if (factor == static_cast<int>(BlendFactor::OneMinusSrcAlpha))
 		return GL_ONE_MINUS_SRC_ALPHA;
-	if (factor == NVG_DST_ALPHA)
+	if (factor == static_cast<int>(BlendFactor::DstAlpha))
 		return GL_DST_ALPHA;
-	if (factor == NVG_ONE_MINUS_DST_ALPHA)
+	if (factor == static_cast<int>(BlendFactor::OneMinusDstAlpha))
 		return GL_ONE_MINUS_DST_ALPHA;
-	if (factor == NVG_SRC_ALPHA_SATURATE)
+	if (factor == static_cast<int>(BlendFactor::SrcAlphaSaturate))
 		return GL_SRC_ALPHA_SATURATE;
 	return GL_INVALID_ENUM;
 }
@@ -1540,7 +1540,7 @@ static void glnvg__renderStroke(void* uptr, NVGpaint* paint, NVGcompositeOperati
 		}
 	}
 
-	if (gl->flags & NVG_STENCIL_STROKES) {
+	if (gl->flags & CreateFlags::StencilStrokes) {
 		// Fill shader
 		call->uniformOffset = glnvg__allocFragUniforms(gl, 2);
 		if (call->uniformOffset == -1) goto error;
@@ -1618,7 +1618,7 @@ static void glnvg__renderDelete(void* uptr)
 		glDeleteBuffers(1, &gl->vertBuf);
 
 	for (i = 0; i < gl->ntextures; i++) {
-		if (gl->textures[i].tex != 0 && (gl->textures[i].flags & NVG_IMAGE_NODELETE) == 0)
+		if (gl->textures[i].tex != 0 && (gl->textures[i].flags & ImageFlagsGl::NoDelete) == 0)
 			glDeleteTextures(1, &gl->textures[i].tex);
 	}
 	free(gl->textures);
@@ -1663,7 +1663,7 @@ NVGcontext* nvgCreateGLES3(int flags)
 	params.renderTriangles = glnvg__renderTriangles;
 	params.renderDelete = glnvg__renderDelete;
 	params.userPtr = gl;
-	params.edgeAntiAlias = flags & NVG_ANTIALIAS ? 1 : 0;
+	params.edgeAntiAlias = flags & CreateFlags::Antialias ? 1 : 0;
 
 	gl->flags = flags;
 
@@ -1706,7 +1706,7 @@ int nvglCreateImageFromHandleGLES3(NVGcontext* ctx, GLuint textureId, int w, int
 
 	if (tex == NULL) return 0;
 
-	tex->type = NVG_TEXTURE_RGBA;
+	tex->type = static_cast<int>(Texture::Rgba);
 	tex->tex = textureId;
 	tex->flags = imageFlags;
 	tex->width = w;

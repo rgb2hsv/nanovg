@@ -1155,7 +1155,7 @@ static void nvg__appendCommands(NVGcontext* ctx, float* vals, int nvals)
 		ctx->ccommands = ccommands;
 	}
 
-	if ((int)vals[0] != static_cast<float>(to_underlying(PathCommand::Close)) && (int)vals[0] != static_cast<float>(to_underlying(PathCommand::Winding))) {
+	if ((int)vals[0] != static_cast<int>(PathCommand::Close) && (int)vals[0] != static_cast<int>(PathCommand::Winding)) {
 		ctx->commandx = vals[nvals-2];
 		ctx->commandy = vals[nvals-1];
 	}
@@ -1165,24 +1165,24 @@ static void nvg__appendCommands(NVGcontext* ctx, float* vals, int nvals)
 	while (i < nvals) {
 		int cmd = (int)vals[i];
 		switch (cmd) {
-		case static_cast<float>(to_underlying(PathCommand::MoveTo)):
+		case static_cast<int>(PathCommand::MoveTo):
 			nvgTransformPoint(&vals[i+1],&vals[i+2], state->xform, vals[i+1],vals[i+2]);
 			i += 3;
 			break;
-		case static_cast<float>(to_underlying(PathCommand::LineTo)):
+		case static_cast<int>(PathCommand::LineTo):
 			nvgTransformPoint(&vals[i+1],&vals[i+2], state->xform, vals[i+1],vals[i+2]);
 			i += 3;
 			break;
-		case static_cast<float>(to_underlying(PathCommand::BezierTo)):
+		case static_cast<int>(PathCommand::BezierTo):
 			nvgTransformPoint(&vals[i+1],&vals[i+2], state->xform, vals[i+1],vals[i+2]);
 			nvgTransformPoint(&vals[i+3],&vals[i+4], state->xform, vals[i+3],vals[i+4]);
 			nvgTransformPoint(&vals[i+5],&vals[i+6], state->xform, vals[i+5],vals[i+6]);
 			i += 7;
 			break;
-		case static_cast<float>(to_underlying(PathCommand::Close)):
+		case static_cast<int>(PathCommand::Close):
 			i++;
 			break;
-		case static_cast<float>(to_underlying(PathCommand::Winding)):
+		case static_cast<int>(PathCommand::Winding):
 			i += 2;
 			break;
 		default:
@@ -1223,7 +1223,7 @@ static void nvg__addPath(NVGcontext* ctx)
 	path = &ctx->cache->paths[ctx->cache->npaths];
 	memset(path, 0, sizeof(*path));
 	path->first = ctx->cache->npoints;
-	path->winding = NVG_CCW;
+	path->winding = static_cast<int>(Winding::CCW);
 
 	ctx->cache->npaths++;
 }
@@ -1415,32 +1415,32 @@ static void nvg__flattenPaths(NVGcontext* ctx)
 	while (i < ctx->ncommands) {
 		int cmd = (int)ctx->commands[i];
 		switch (cmd) {
-		case static_cast<float>(to_underlying(PathCommand::MoveTo)):
+		case static_cast<int>(PathCommand::MoveTo):
 			nvg__addPath(ctx);
 			p = &ctx->commands[i+1];
-			nvg__addPoint(ctx, p[0], p[1], NVG_PT_CORNER);
+			nvg__addPoint(ctx, p[0], p[1], static_cast<int>(PointFlags::Corner));
 			i += 3;
 			break;
-		case static_cast<float>(to_underlying(PathCommand::LineTo)):
+		case static_cast<int>(PathCommand::LineTo):
 			p = &ctx->commands[i+1];
-			nvg__addPoint(ctx, p[0], p[1], NVG_PT_CORNER);
+			nvg__addPoint(ctx, p[0], p[1], static_cast<int>(PointFlags::Corner));
 			i += 3;
 			break;
-		case static_cast<float>(to_underlying(PathCommand::BezierTo)):
+		case static_cast<int>(PathCommand::BezierTo):
 			last = nvg__lastPoint(ctx);
 			if (last != NULL) {
 				cp1 = &ctx->commands[i+1];
 				cp2 = &ctx->commands[i+3];
 				p = &ctx->commands[i+5];
-				nvg__tesselateBezier(ctx, last->x,last->y, cp1[0],cp1[1], cp2[0],cp2[1], p[0],p[1], 0, NVG_PT_CORNER);
+				nvg__tesselateBezier(ctx, last->x,last->y, cp1[0],cp1[1], cp2[0],cp2[1], p[0],p[1], 0, static_cast<int>(PointFlags::Corner));
 			}
 			i += 7;
 			break;
-		case static_cast<float>(to_underlying(PathCommand::Close)):
+		case static_cast<int>(PathCommand::Close):
 			nvg__closePath(ctx);
 			i++;
 			break;
-		case static_cast<float>(to_underlying(PathCommand::Winding)):
+		case static_cast<int>(PathCommand::Winding):
 			nvg__pathWinding(ctx, (int)ctx->commands[i+1]);
 			i += 2;
 			break;
@@ -1470,11 +1470,11 @@ static void nvg__flattenPaths(NVGcontext* ctx)
 		path->reversed = 0;
 		if (path->count > 2) {
 			area = nvg__polyArea(pts, path->count);
-			if (path->winding == NVG_CCW && area < 0.0f) {
+			if (path->winding == static_cast<int>(Winding::CCW) && area < 0.0f) {
 				nvg__polyReverse(pts, path->count);
 				path->reversed = 1;
 			}
-			if (path->winding == NVG_CW && area > 0.0f) {
+			if (path->winding == static_cast<int>(Winding::CW) && area > 0.0f) {
 				nvg__polyReverse(pts, path->count);
 				path->reversed = 1;
 			}
@@ -1529,9 +1529,9 @@ static NVGvertex* nvg__roundJoin(NVGvertex* dst, NVGpoint* p0, NVGpoint* p1,
 	float dly1 = -p1->dx;
 	NVG_NOTUSED(fringe);
 
-	if (p1->flags & NVG_PT_LEFT) {
+	if (p1->flags & PointFlags::Left) {
 		float lx0,ly0,lx1,ly1,a0,a1;
-		nvg__chooseBevel(p1->flags & NVG_PR_INNERBEVEL, p0, p1, lw, &lx0,&ly0, &lx1,&ly1);
+		nvg__chooseBevel(p1->flags & PointFlags::InnerBevel, p0, p1, lw, &lx0,&ly0, &lx1,&ly1);
 		a0 = atan2f(-dly0, -dlx0);
 		a1 = atan2f(-dly1, -dlx1);
 		if (a1 > a0) a1 -= NVG_PI*2;
@@ -1554,7 +1554,7 @@ static NVGvertex* nvg__roundJoin(NVGvertex* dst, NVGpoint* p0, NVGpoint* p1,
 
 	} else {
 		float rx0,ry0,rx1,ry1,a0,a1;
-		nvg__chooseBevel(p1->flags & NVG_PR_INNERBEVEL, p0, p1, -rw, &rx0,&ry0, &rx1,&ry1);
+		nvg__chooseBevel(p1->flags & PointFlags::InnerBevel, p0, p1, -rw, &rx0,&ry0, &rx1,&ry1);
 		a0 = atan2f(dly0, dlx0);
 		a1 = atan2f(dly1, dlx1);
 		if (a1 < a0) a1 += NVG_PI*2;
@@ -1590,13 +1590,13 @@ static NVGvertex* nvg__bevelJoin(NVGvertex* dst, NVGpoint* p0, NVGpoint* p1,
 	float dly1 = -p1->dx;
 	NVG_NOTUSED(fringe);
 
-	if (p1->flags & NVG_PT_LEFT) {
-		nvg__chooseBevel(p1->flags & NVG_PR_INNERBEVEL, p0, p1, lw, &lx0,&ly0, &lx1,&ly1);
+	if (p1->flags & PointFlags::Left) {
+		nvg__chooseBevel(p1->flags & PointFlags::InnerBevel, p0, p1, lw, &lx0,&ly0, &lx1,&ly1);
 
 		nvg__vset(dst, lx0, ly0, lu, 1, -1, t);  dst++;
 		nvg__vset(dst, p1->x - dlx0*rw, p1->y - dly0*rw, ru, 1, 1, t);  dst++;
 
-		if (p1->flags & NVG_PT_BEVEL) {
+		if (p1->flags & PointFlags::Bevel) {
 			nvg__vset(dst, lx0, ly0, lu, 1, -1, t);  dst++;
 			nvg__vset(dst, p1->x - dlx0*rw, p1->y - dly0*rw, ru, 1, 1, t);  dst++;
 
@@ -1620,12 +1620,12 @@ static NVGvertex* nvg__bevelJoin(NVGvertex* dst, NVGpoint* p0, NVGpoint* p1,
 		nvg__vset(dst, p1->x - dlx1*rw, p1->y - dly1*rw, ru,1, 1, t);  dst++;
 
 	} else {
-		nvg__chooseBevel(p1->flags & NVG_PR_INNERBEVEL, p0, p1, -rw, &rx0,&ry0, &rx1,&ry1);
+		nvg__chooseBevel(p1->flags & PointFlags::InnerBevel, p0, p1, -rw, &rx0,&ry0, &rx1,&ry1);
 
 		nvg__vset(dst, p1->x + dlx0*lw, p1->y + dly0*lw, lu, 1, 1, t);  dst++;
 		nvg__vset(dst, rx0, ry0, ru, 1, -1, t);  dst++;
 
-		if (p1->flags & NVG_PT_BEVEL) {
+		if (p1->flags & PointFlags::Bevel) {
 			nvg__vset(dst, p1->x + dlx0*lw, p1->y + dly0*lw, lu, 1, 1, t);  dst++;
 			nvg__vset(dst, rx0, ry0, ru, 1, -1, t);  dst++;
 
@@ -1774,28 +1774,28 @@ static void nvg__calculateJoins(NVGcontext* ctx, float w, int lineJoin, float mi
 			}
 
 			// Clear flags, but keep the corner.
-			p1->flags = (p1->flags & NVG_PT_CORNER) ? NVG_PT_CORNER : 0;
+			p1->flags = (p1->flags & PointFlags::Corner) ? static_cast<unsigned char>(PointFlags::Corner) : 0u;
 
 			// Keep track of left turns.
 			cross = p1->dx * p0->dy - p0->dx * p1->dy;
 			if (cross > 0.0f) {
 				nleft++;
-				p1->flags |= NVG_PT_LEFT;
+				p1->flags |= PointFlags::Left;
 			}
 
 			// Calculate if we should use bevel or miter for inner join.
 			limit = nvg__maxf(1.01f, nvg__minf(p0->len, p1->len) * iw);
 			if ((dmr2 * limit*limit) < 1.0f)
-				p1->flags |= NVG_PR_INNERBEVEL;
+				p1->flags |= PointFlags::InnerBevel;
 
 			// Check to see if the corner needs to be beveled.
-			if (p1->flags & NVG_PT_CORNER) {
-				if ((dmr2 * miterLimit*miterLimit) < 1.0f || lineJoin == NVG_BEVEL || lineJoin == NVG_ROUND) {
-					p1->flags |= NVG_PT_BEVEL;
+			if (p1->flags & PointFlags::Corner) {
+				if ((dmr2 * miterLimit*miterLimit) < 1.0f || lineJoin == static_cast<int>(LineCap::Bevel) || lineJoin == static_cast<int>(LineCap::Round)) {
+					p1->flags |= PointFlags::Bevel;
 				}
 			}
 
-			if ((p1->flags & (NVG_PT_BEVEL | NVG_PR_INNERBEVEL)) != 0)
+			if ((p1->flags & (PointFlags::Bevel | PointFlags::InnerBevel)) != 0)
 				path->nbevel++;
 
 			p0 = p1++;
@@ -1827,7 +1827,7 @@ static int nvg__expandStroke(NVGcontext* ctx, float w, float fringe, int lineCap
 	}
 
 	// Force round join to minimize distortion
-	if(lineStyle > 1) lineJoin = NVG_ROUND;
+	if(lineStyle > 1) lineJoin = static_cast<int>(LineCap::Round);
 
 	nvg__calculateJoins(ctx, w, lineJoin, miterLimit);
 	// Calculate max vertex usage.
@@ -1835,7 +1835,7 @@ static int nvg__expandStroke(NVGcontext* ctx, float w, float fringe, int lineCap
 	for (i = 0; i < cache->npaths; i++) {
 		NVGpath* path = &cache->paths[i];
 		int loop = (path->closed == 0) ? 0 : 1;
-		if (lineJoin == NVG_ROUND) {
+		if (lineJoin == static_cast<int>(LineCap::Round)) {
 			cverts += (path->count + path->nbevel*(ncap+2) + 1) * 2; // plus one for loop
 		} else {
 			cverts += (path->count + path->nbevel*5 + 1) * 2; // plus one for loop
@@ -1843,7 +1843,7 @@ static int nvg__expandStroke(NVGcontext* ctx, float w, float fringe, int lineCap
 		if(lineStyle > 1) cverts += 4 * path->count; // extra vertices for spacers
 		if (loop == 0) {
 			// space for caps
-			if (lineCap == NVG_ROUND) {
+			if (lineCap == static_cast<int>(LineCap::Round)) {
 				cverts += (ncap*2 + 2)*2;
 			} else {
 				cverts += (3+3)*2;
@@ -1911,11 +1911,11 @@ static int nvg__expandStroke(NVGcontext* ctx, float w, float fringe, int lineCap
 			dx = p1->x - p0->x;
 			dy = p1->y - p0->y;
 			nvg__normalize(&dx, &dy);
-			if (lineCap == NVG_BUTT)
+			if (lineCap == static_cast<int>(LineCap::Butt))
 				dst = nvg__buttCapStart(dst, p0, dx, dy, w, -aa*0.5f, aa, u0, u1, t, dir);
-			else if (lineCap == NVG_BUTT || lineCap == NVG_SQUARE)
+			else if (lineCap == static_cast<int>(LineCap::Butt) || lineCap == static_cast<int>(LineCap::Square))
 				dst = nvg__buttCapStart(dst, p0, dx, dy, w, w-aa, aa, u0, u1, t, dir);
-			else if (lineCap == NVG_ROUND)
+			else if (lineCap == static_cast<int>(LineCap::Round))
 				dst = nvg__roundCapStart(dst, p0, dx, dy, w, ncap, aa, u0, u1, t, dir);
 		}
 		for (j = s; j < e; ++j) {
@@ -1927,8 +1927,8 @@ static int nvg__expandStroke(NVGcontext* ctx, float w, float fringe, int lineCap
 				t+=dir*dt*invStrokeWidth;
 				dst = nvg_insertSpacer(dst, p1, dx, dy, w, u0, u1, t);
 			}
-			if ((p1->flags & (NVG_PT_BEVEL | NVG_PR_INNERBEVEL)) != 0) {
-				if (lineJoin == NVG_ROUND) {
+			if ((p1->flags & (PointFlags::Bevel | PointFlags::InnerBevel)) != 0) {
+				if (lineJoin == static_cast<int>(LineCap::Round)) {
 					dst = nvg__roundJoin(dst, p0, p1, w, w, u0, u1, ncap, aa, t);
 				} else {
 					dst = nvg__bevelJoin(dst, p0, p1, w, w, u0, u1, aa, t);
@@ -1954,11 +1954,11 @@ static int nvg__expandStroke(NVGcontext* ctx, float w, float fringe, int lineCap
 				dst = nvg_insertSpacer(dst, p1, dx, dy, w, u0, u1, t);
 			}
 			// Add cap
-			if (lineCap == NVG_BUTT)
+			if (lineCap == static_cast<int>(LineCap::Butt))
 				dst = nvg__buttCapEnd(dst, p1, dx, dy, w, -aa*0.5f, aa, u0, u1, t, dir);
-			else if (lineCap == NVG_BUTT || lineCap == NVG_SQUARE)
+			else if (lineCap == static_cast<int>(LineCap::Butt) || lineCap == static_cast<int>(LineCap::Square))
 				dst = nvg__buttCapEnd(dst, p1, dx, dy, w, w-aa, aa, u0, u1, t, dir);
-			else if (lineCap == NVG_ROUND)
+			else if (lineCap == static_cast<int>(LineCap::Round))
 				dst = nvg__roundCapEnd(dst, p1, dx, dy, w, ncap, aa, u0, u1, t, dir);
 		}
 		path->nstroke = (int)(dst - verts);
@@ -2011,12 +2011,12 @@ static int nvg__expandFill(NVGcontext* ctx, float w, int lineJoin, float miterLi
 			p0 = &pts[path->count-1];
 			p1 = &pts[0];
 			for (j = 0; j < path->count; ++j) {
-				if (p1->flags & NVG_PT_BEVEL) {
+				if (p1->flags & PointFlags::Bevel) {
 					float dlx0 = p0->dy;
 					float dly0 = -p0->dx;
 					float dlx1 = p1->dy;
 					float dly1 = -p1->dx;
-					if (p1->flags & NVG_PT_LEFT) {
+					if (p1->flags & PointFlags::Left) {
 						float lx = p1->x + p1->dmx * woff;
 						float ly = p1->y + p1->dmy * woff;
 						nvg__vset(dst, lx, ly, 0.5f, 1, 0, 0); dst++;
@@ -2064,7 +2064,7 @@ static int nvg__expandFill(NVGcontext* ctx, float w, int lineJoin, float miterLi
 			p1 = &pts[0];
 
 			for (j = 0; j < path->count; ++j) {
-				if ((p1->flags & (NVG_PT_BEVEL | NVG_PR_INNERBEVEL)) != 0) {
+				if ((p1->flags & (PointFlags::Bevel | PointFlags::InnerBevel)) != 0) {
 					dst = nvg__bevelJoin(dst, p0, p1, lw, rw, lu, ru, ctx->fringeWidth, 0);
 				} else {
 					nvg__vset(dst, p1->x + (p1->dmx * lw), p1->y + (p1->dmy * lw), lu,1,0, 0); dst++;
@@ -2167,14 +2167,14 @@ void nvgArcTo(NVGcontext* ctx, float x1, float y1, float x2, float y2, float rad
 		cy = y1 + dy0*d + -dx0*radius;
 		a0 = nvg__atan2f(dx0, -dy0);
 		a1 = nvg__atan2f(-dx1, dy1);
-		dir = NVG_CW;
+		dir = static_cast<int>(Winding::CW);
 //		printf("CW c=(%f, %f) a0=%f° a1=%f°\n", cx, cy, a0/NVG_PI*180.0f, a1/NVG_PI*180.0f);
 	} else {
 		cx = x1 + dx0*d + -dy0*radius;
 		cy = y1 + dy0*d + dx0*radius;
 		a0 = nvg__atan2f(-dx0, dy0);
 		a1 = nvg__atan2f(dx1, -dy1);
-		dir = NVG_CCW;
+		dir = static_cast<int>(Winding::CCW);
 //		printf("CCW c=(%f, %f) a0=%f° a1=%f°\n", cx, cy, a0/NVG_PI*180.0f, a1/NVG_PI*180.0f);
 	}
 
@@ -2200,11 +2200,11 @@ void nvgArc(NVGcontext* ctx, float cx, float cy, float r, float a0, float a1, in
 	float px = 0, py = 0, ptanx = 0, ptany = 0;
 	float vals[3 + 5*7 + 100];
 	int i, ndivs, nvals;
-	int move = ctx->ncommands > 0 ? static_cast<float>(to_underlying(PathCommand::LineTo)) : static_cast<float>(to_underlying(PathCommand::MoveTo));
+	int move = ctx->ncommands > 0 ? static_cast<int>(PathCommand::LineTo) : static_cast<int>(PathCommand::MoveTo);
 
 	// Clamp angles
 	da = a1 - a0;
-	if (dir == NVG_CW) {
+	if (dir == static_cast<int>(Winding::CW)) {
 		if (nvg__absf(da) >= NVG_PI*2) {
 			da = NVG_PI*2;
 		} else {
@@ -2223,7 +2223,7 @@ void nvgArc(NVGcontext* ctx, float cx, float cy, float r, float a0, float a1, in
 	hda = (da / (float)ndivs) / 2.0f;
 	kappa = nvg__absf(4.0f / 3.0f * (1.0f - nvg__cosf(hda)) / nvg__sinf(hda));
 
-	if (dir == NVG_CCW)
+	if (dir == static_cast<int>(Winding::CCW))
 		kappa = -kappa;
 
 	nvals = 0;
@@ -2352,9 +2352,9 @@ void nvgFill(NVGcontext* ctx)
 
 	nvg__flattenPaths(ctx);
 	if (ctx->params.edgeAntiAlias && state->shapeAntiAlias)
-		nvg__expandFill(ctx, ctx->fringeWidth, NVG_MITER, 2.4f);
+		nvg__expandFill(ctx, ctx->fringeWidth, static_cast<int>(LineCap::Miter), 2.4f);
 	else
-		nvg__expandFill(ctx, 0.0f, NVG_MITER, 2.4f);
+		nvg__expandFill(ctx, 0.0f, static_cast<int>(LineCap::Miter), 2.4f);
 
 	// Apply global alpha
 	fillPaint.innerColor.a *= state->alpha;
@@ -2557,7 +2557,7 @@ static int nvg__allocTextAtlas(NVGcontext* ctx)
 			iw *= 2;
 		if (iw > NVG_MAX_FONTIMAGE_SIZE || ih > NVG_MAX_FONTIMAGE_SIZE)
 			iw = ih = NVG_MAX_FONTIMAGE_SIZE;
-		ctx->fontImages[ctx->fontImageIdx+1] = ctx->params.renderCreateTexture(ctx->params.userPtr, NVG_TEXTURE_ALPHA, iw, ih, 0, NULL);
+		ctx->fontImages[ctx->fontImageIdx+1] = ctx->params.renderCreateTexture(ctx->params.userPtr, static_cast<int>(Texture::Alpha), iw, ih, 0, NULL);
 	}
 	++ctx->fontImageIdx;
 	fonsResetAtlas(ctx->fs, iw, ih);
@@ -2668,24 +2668,24 @@ void nvgTextBox(NVGcontext* ctx, float x, float y, float breakRowWidth, const ch
 	NVGtextRow rows[2];
 	int nrows = 0, i;
 	int oldAlign = state->textAlign;
-	int halign = state->textAlign & (NVG_ALIGN_LEFT | NVG_ALIGN_CENTER | NVG_ALIGN_RIGHT);
-	int valign = state->textAlign & (NVG_ALIGN_TOP | NVG_ALIGN_MIDDLE | NVG_ALIGN_MIDDLE_ASCENT | NVG_ALIGN_BOTTOM | NVG_ALIGN_BASELINE);
+	int halign = state->textAlign & static_cast<int>(Align::Left | Align::Center | Align::Right);
+	int valign = state->textAlign & static_cast<int>(Align::Top | Align::Middle | Align::MiddleAscent | Align::Bottom | Align::Baseline);
 	float lineh = 0;
 
 	if (state->fontId == FONS_INVALID) return;
 
 	nvgTextMetrics(ctx, NULL, NULL, &lineh);
 
-	state->textAlign = NVG_ALIGN_LEFT | valign;
+	state->textAlign = static_cast<int>(Align::Left) | valign;
 
 	while ((nrows = nvgTextBreakLines(ctx, string, end, breakRowWidth, rows, 2, 0))) {
 		for (i = 0; i < nrows; i++) {
 			NVGtextRow* row = &rows[i];
-			if (halign & NVG_ALIGN_LEFT)
+			if (halign & Align::Left)
 				nvgText(ctx, x, y, row->start, row->end);
-			else if (halign & NVG_ALIGN_CENTER)
+			else if (halign & Align::Center)
 				nvgText(ctx, x + breakRowWidth*0.5f - row->width*0.5f, y, row->start, row->end);
-			else if (halign & NVG_ALIGN_RIGHT)
+			else if (halign & Align::Right)
 				nvgText(ctx, x + breakRowWidth - row->width, y, row->start, row->end);
 			y += lineh * state->lineHeight;
 		}
@@ -2738,11 +2738,11 @@ int nvgTextGlyphPositions(NVGcontext* ctx, float x, float y, const char* string,
 	return npos;
 }
 
-enum NVGcodepointType {
-	NVG_SPACE,
-	NVG_NEWLINE,
-	NVG_CHAR,
-	NVG_CJK_CHAR,
+enum class CodepointType : int {
+	Space,
+	Newline,
+	Char,
+	CjkChar,
 };
 
 int nvgTextBreakLines(NVGcontext* ctx, const char* string, const char* end, float breakRowWidth, NVGtextRow* rows, int maxRows, int skipSpaces)
@@ -2765,7 +2765,7 @@ int nvgTextBreakLines(NVGcontext* ctx, const char* string, const char* end, floa
 	const char* breakEnd = NULL;
 	float breakWidth = 0;
 	float breakMaxX = 0;
-	int type = NVG_SPACE, ptype = NVG_SPACE;
+	CodepointType type = CodepointType::Space, ptype = CodepointType::Space;
 	unsigned int pcodepoint = 0;
 
 	if (maxRows == 0) return 0;
@@ -2799,16 +2799,16 @@ int nvgTextBreakLines(NVGcontext* ctx, const char* string, const char* end, floa
 			case 12:		// \f
 			case 32:		// space
 			case 0x00a0:	// NBSP
-				type = NVG_SPACE;
+				type = CodepointType::Space;
 				break;
 			case 10:		// \n
-				type = pcodepoint == 13 ? NVG_SPACE : NVG_NEWLINE;
+				type = pcodepoint == 13 ? CodepointType::Space : CodepointType::Newline;
 				break;
 			case 13:		// \r
-				type = pcodepoint == 10 ? NVG_SPACE : NVG_NEWLINE;
+				type = pcodepoint == 10 ? CodepointType::Space : CodepointType::Newline;
 				break;
 			case 0x0085:	// NEL
-				type = NVG_NEWLINE;
+				type = CodepointType::Newline;
 				break;
 			default:
 				if ((iter.codepoint >= 0x4E00 && iter.codepoint <= 0x9FFF) ||
@@ -2817,13 +2817,13 @@ int nvgTextBreakLines(NVGcontext* ctx, const char* string, const char* end, floa
 					(iter.codepoint >= 0x1100 && iter.codepoint <= 0x11FF) ||
 					(iter.codepoint >= 0x3130 && iter.codepoint <= 0x318F) ||
 					(iter.codepoint >= 0xAC00 && iter.codepoint <= 0xD7AF))
-					type = NVG_CJK_CHAR;
+					type = CodepointType::CjkChar;
 				else
-					type = NVG_CHAR;
+					type = CodepointType::Char;
 				break;
 		}
 
-		if (type == NVG_NEWLINE) {
+		if (type == CodepointType::Newline) {
 			// Always handle new lines.
 			rows[nrows].start = rowStart != NULL ? rowStart : iter.str;
 			rows[nrows].end = rowEnd != NULL ? rowEnd : iter.str;
@@ -2846,7 +2846,7 @@ int nvgTextBreakLines(NVGcontext* ctx, const char* string, const char* end, floa
 		} else {
 			if (rowStart == NULL) {
 				// Skip white space until the beginning of the line
-				if (type == NVG_CHAR || type == NVG_CJK_CHAR) {
+				if (type == CodepointType::Char || type == CodepointType::CjkChar) {
 					// The current char is the row so far
 					rowStartX = iter.x;
 					rowStart = iter.str;
@@ -2866,26 +2866,26 @@ int nvgTextBreakLines(NVGcontext* ctx, const char* string, const char* end, floa
 				float nextWidth = iter.nextx - rowStartX;
 
 				// track last non-white space character
-				if (type == NVG_CHAR || type == NVG_CJK_CHAR) {
+				if (type == CodepointType::Char || type == CodepointType::CjkChar) {
 					rowEnd = iter.next;
 					rowWidth = iter.nextx - rowStartX;
 					rowMaxX = q.x1 - rowStartX;
 				}
 				// track last end of a word
-				if (((ptype == NVG_CHAR || ptype == NVG_CJK_CHAR) && type == NVG_SPACE) || type == NVG_CJK_CHAR) {
+				if (((ptype == CodepointType::Char || ptype == CodepointType::CjkChar) && type == CodepointType::Space) || type == CodepointType::CjkChar) {
 					breakEnd = iter.str;
 					breakWidth = rowWidth;
 					breakMaxX = rowMaxX;
 				}
 				// track last beginning of a word
-				if ((ptype == NVG_SPACE && (type == NVG_CHAR || type == NVG_CJK_CHAR)) || type == NVG_CJK_CHAR) {
+				if ((ptype == CodepointType::Space && (type == CodepointType::Char || type == CodepointType::CjkChar)) || type == CodepointType::CjkChar) {
 					wordStart = iter.str;
 					wordStartX = iter.x;
 					wordMinX = q.x0;
 				}
 
 				// Break to new line when a character is beyond break width.
-				if ((type == NVG_CHAR || type == NVG_CJK_CHAR) && nextWidth > breakRowWidth) {
+				if ((type == CodepointType::Char || type == CodepointType::CjkChar) && nextWidth > breakRowWidth) {
 					// The run length is too long, need to break to new line.
 					if (breakEnd == rowStart) {
 						// The current word is longer than the row length, just break it from here.
@@ -2997,8 +2997,8 @@ void nvgTextBoxBounds(NVGcontext* ctx, float x, float y, float breakRowWidth, co
 	float yoff = 0;
 	int nrows = 0, i;
 	int oldAlign = state->textAlign;
-	int halign = state->textAlign & (NVG_ALIGN_LEFT | NVG_ALIGN_CENTER | NVG_ALIGN_RIGHT);
-	int valign = state->textAlign & (NVG_ALIGN_TOP | NVG_ALIGN_MIDDLE | NVG_ALIGN_MIDDLE_ASCENT | NVG_ALIGN_BOTTOM | NVG_ALIGN_BASELINE);
+	int halign = state->textAlign & static_cast<int>(Align::Left | Align::Center | Align::Right);
+	int valign = state->textAlign & static_cast<int>(Align::Top | Align::Middle | Align::MiddleAscent | Align::Bottom | Align::Baseline);
 	float lineh = 0, rminy = 0, rmaxy = 0;
 	float minx, miny, maxx, maxy;
 
@@ -3010,7 +3010,7 @@ void nvgTextBoxBounds(NVGcontext* ctx, float x, float y, float breakRowWidth, co
 
 	nvgTextMetrics(ctx, NULL, NULL, &lineh);
 
-	state->textAlign = NVG_ALIGN_LEFT | valign;
+	state->textAlign = static_cast<int>(Align::Left) | valign;
 
 	minx = maxx = 0;
 	miny = maxy = 0;
@@ -3030,11 +3030,11 @@ void nvgTextBoxBounds(NVGcontext* ctx, float x, float y, float breakRowWidth, co
 			NVGtextRow* row = &rows[i];
 			float rminx, rmaxx, dx = 0;
 			// Horizontal bounds
-			if (halign & NVG_ALIGN_LEFT)
+			if (halign & Align::Left)
 				dx = 0;
-			else if (halign & NVG_ALIGN_CENTER)
+			else if (halign & Align::Center)
 				dx = breakRowWidth*0.5f - row->width*0.5f;
-			else if (halign & NVG_ALIGN_RIGHT)
+			else if (halign & Align::Right)
 				dx = breakRowWidth - row->width;
 			rminx = row->minx + dx;
 			rmaxx = row->maxx + dx;

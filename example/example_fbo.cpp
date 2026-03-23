@@ -154,9 +154,9 @@ int main()
 #endif
 
 #ifdef DEMO_MSAA
-	vg = nvgCreateGL3(NVG_STENCIL_STROKES | NVG_DEBUG);
+	vg = nvgCreateGL3(static_cast<int>(CreateFlags::StencilStrokes | CreateFlags::Debug));
 #else
-	vg = nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES | NVG_DEBUG);
+	vg = nvgCreateGL3(static_cast<int>(CreateFlags::Antialias | CreateFlags::StencilStrokes | CreateFlags::Debug));
 #endif
 	if (vg == NULL) {
 		printf("Could not init nanovg.\n");
@@ -170,7 +170,7 @@ int main()
 	pxRatio = (float)fbWidth / (float)winWidth;
 
 	// The image pattern is tiled, set repeat on x and y.
-	fb = nvgluCreateFramebuffer(vg, (int)(100*pxRatio), (int)(100*pxRatio), NVG_IMAGE_REPEATX | NVG_IMAGE_REPEATY);
+	fb = nvgluCreateFramebuffer(vg, (int)(100*pxRatio), (int)(100*pxRatio), static_cast<int>(ImageFlags::RepeatX | ImageFlags::RepeatY));
 	if (fb == NULL) {
 		printf("Could not create FBO.\n");
 		return -1;
