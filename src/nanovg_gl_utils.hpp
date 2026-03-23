@@ -33,13 +33,10 @@ void nvgluBindFramebuffer(GlUtilsFramebuffer* fb);
 GlUtilsFramebuffer* nvgluCreateFramebuffer(nvg::Context* ctx, int w, int h, int imageFlags);
 void nvgluDeleteFramebuffer(GlUtilsFramebuffer* fb);
 
-#endif // NANOVG_GL_UTILS_HPP
-
 #ifdef NANOVG_GL_IMPLEMENTATION
 
 #include <new>
 
-using namespace nvg;
 
 #if defined(NANOVG_GL3) || defined(NANOVG_GLES2) || defined(NANOVG_GLES3)
 // FBO is core in OpenGL 3>.
@@ -67,16 +64,16 @@ GlUtilsFramebuffer* nvgluCreateFramebuffer(nvg::Context* ctx, int w, int h, int 
 	fb = new (std::nothrow) GlUtilsFramebuffer{};
 	if (fb == NULL) goto error;
 
-	fb->image = createImageRGBA(ctx, w, h, imageFlags | static_cast<int>(ImageFlags::Flipy | ImageFlags::Premultiplied), NULL);
+	fb->image = nvg::createImageRGBA(ctx, w, h, imageFlags | static_cast<int>(nvg::ImageFlags::Flipy | nvg::ImageFlags::Premultiplied), NULL);
 
 #if defined NANOVG_GL2
-	fb->texture = nvglImageHandleGL2(ctx, fb->image);
+	fb->texture = nvg::nvglImageHandleGL2(ctx, fb->image);
 #elif defined NANOVG_GL3
-	fb->texture = nvglImageHandleGL3(ctx, fb->image);
+	fb->texture = nvg::nvglImageHandleGL3(ctx, fb->image);
 #elif defined NANOVG_GLES2
-	fb->texture = nvglImageHandleGLES2(ctx, fb->image);
+	fb->texture = nvg::nvglImageHandleGLES2(ctx, fb->image);
 #elif defined NANOVG_GLES3
-	fb->texture = nvglImageHandleGLES3(ctx, fb->image);
+	fb->texture = nvg::nvglImageHandleGLES3(ctx, fb->image);
 #endif
 
 	fb->ctx = ctx;
@@ -143,7 +140,7 @@ void nvgluDeleteFramebuffer(GlUtilsFramebuffer* fb)
 	if (fb->rbo != 0)
 		glDeleteRenderbuffers(1, &fb->rbo);
 	if (fb->image >= 0)
-		deleteImage(fb->ctx, fb->image);
+		nvg::deleteImage(fb->ctx, fb->image);
 	fb->ctx = NULL;
 	fb->fbo = 0;
 	fb->rbo = 0;
@@ -154,4 +151,8 @@ void nvgluDeleteFramebuffer(GlUtilsFramebuffer* fb)
 	UNUSED(fb);
 #endif
 }
+
+#endif // NANOVG_GL_IMPLEMENTATION
+
+
 

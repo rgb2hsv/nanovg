@@ -24,7 +24,6 @@
 #define NANOVG_GLES3_IMPLEMENTATION
 #include "nanovg_gl.hpp"
 #include "nanovg_gl_utils.hpp"
-using namespace nvg;
 #include "demo.h"
 #include "perf.h"
 
@@ -84,7 +83,7 @@ int main()
 
 	glfwMakeContextCurrent(window);
 
-	vg = createGLES3(static_cast<int>(CreateFlags::Antialias | CreateFlags::StencilStrokes | CreateFlags::Debug));
+	vg = nvg::createGLES3(static_cast<int>(nvg::CreateFlags::Antialias | nvg::CreateFlags::StencilStrokes | nvg::CreateFlags::Debug));
 	if (vg == NULL) {
 		printf("Could not init nanovg.\n");
 		return -1;
@@ -149,8 +148,13 @@ int main()
 
 	freeDemoData(vg, &data);
 
-	deleteGLES3(vg);
+	nvg::deleteGLES3(vg);
 
 	glfwTerminate();
 	return 0;
 }
+
+
+
+
+

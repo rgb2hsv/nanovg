@@ -28,7 +28,6 @@
 #include "nanovg.hpp"
 #define NANOVG_GL3_IMPLEMENTATION
 #include "nanovg_gl.hpp"
-using namespace nvg;
 #include "demo.h"
 #include "perf.h"
 
@@ -60,7 +59,7 @@ int main()
 {
 	GLFWwindow* window;
 	DemoData data;
-	Context* vg = NULL;
+	nvg::Context* vg = NULL;
 	GPUtimer gpuTimer;
 	PerfGraph fps, cpuGraph, gpuGraph;
 	double prevt = 0, cpuTime = 0;
@@ -107,9 +106,9 @@ int main()
 #endif
 
 #ifdef DEMO_MSAA
-	vg = createGL3(static_cast<int>(CreateFlags::StencilStrokes | CreateFlags::Debug));
+	vg = nvg::createGL3(static_cast<int>(nvg::CreateFlags::StencilStrokes | nvg::CreateFlags::Debug));
 #else
-	vg = createGL3(static_cast<int>(CreateFlags::Antialias | CreateFlags::StencilStrokes | CreateFlags::Debug));
+	vg = nvg::createGL3(static_cast<int>(nvg::CreateFlags::Antialias | nvg::CreateFlags::StencilStrokes | nvg::CreateFlags::Debug));
 #endif
 	if (vg == NULL) {
 		printf("Could not init nanovg.\n");
@@ -155,7 +154,7 @@ int main()
 			glClearColor(0.3f, 0.3f, 0.32f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT|GL_STENCIL_BUFFER_BIT);
 
-		beginFrame(vg, winWidth, winHeight, pxRatio);
+		nvg::beginFrame(vg, winWidth, winHeight, pxRatio);
 
 		renderDemo(vg, mx,my, winWidth,winHeight, t, blowup, &data);
 
@@ -164,7 +163,7 @@ int main()
 		if (gpuTimer.supported)
 			renderGraph(vg, 5+200+5+200+5,5, &gpuGraph);
 
-		endFrame(vg);
+		nvg::endFrame(vg);
 
 		// Measure the CPU time taken excluding swap buffers (as the swap may wait for GPU)
 		cpuTime = glfwGetTime() - t;
@@ -188,7 +187,7 @@ int main()
 
 	freeDemoData(vg, &data);
 
-	deleteGL3(vg);
+	nvg::deleteGL3(vg);
 
 	printf("Average Frame Time: %.2f ms\n", getGraphAverage(&fps) * 1000.0f);
 	printf("          CPU Time: %.2f ms\n", getGraphAverage(&cpuGraph) * 1000.0f);
@@ -197,3 +196,6 @@ int main()
 	glfwTerminate();
 	return 0;
 }
+
+
+

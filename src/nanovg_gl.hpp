@@ -54,45 +54,49 @@ inline constexpr int operator&(int a, CreateFlags b) noexcept { return a & to_un
 // Creates NanoVG contexts for different OpenGL (ES) versions.
 // Flags should be combination of the create flags above.
 
+namespace nvg {
+
 #if defined NANOVG_GL2
 
-nvg::Context* createGL2(int flags);
-void deleteGL2(nvg::Context* ctx);
+Context* createGL2(int flags);
+void deleteGL2(Context* ctx);
 
-int nvglCreateImageFromHandleGL2(nvg::Context* ctx, GLuint textureId, int w, int h, int flags);
-GLuint nvglImageHandleGL2(nvg::Context* ctx, int image);
+int nvglCreateImageFromHandleGL2(Context* ctx, GLuint textureId, int w, int h, int flags);
+GLuint nvglImageHandleGL2(Context* ctx, int image);
 
 #endif
 
 #if defined NANOVG_GL3
 
-nvg::Context* createGL3(int flags);
-void deleteGL3(nvg::Context* ctx);
+Context* createGL3(int flags);
+void deleteGL3(Context* ctx);
 
-int nvglCreateImageFromHandleGL3(nvg::Context* ctx, GLuint textureId, int w, int h, int flags);
-GLuint nvglImageHandleGL3(nvg::Context* ctx, int image);
+int nvglCreateImageFromHandleGL3(Context* ctx, GLuint textureId, int w, int h, int flags);
+GLuint nvglImageHandleGL3(Context* ctx, int image);
 
 #endif
 
 #if defined NANOVG_GLES2
 
-nvg::Context* createGLES2(int flags);
-void deleteGLES2(nvg::Context* ctx);
+Context* createGLES2(int flags);
+void deleteGLES2(Context* ctx);
 
-int nvglCreateImageFromHandleGLES2(nvg::Context* ctx, GLuint textureId, int w, int h, int flags);
-GLuint nvglImageHandleGLES2(nvg::Context* ctx, int image);
+int nvglCreateImageFromHandleGLES2(Context* ctx, GLuint textureId, int w, int h, int flags);
+GLuint nvglImageHandleGLES2(Context* ctx, int image);
 
 #endif
 
 #if defined NANOVG_GLES3
 
-nvg::Context* createGLES3(int flags);
-void deleteGLES3(nvg::Context* ctx);
+Context* createGLES3(int flags);
+void deleteGLES3(Context* ctx);
 
-int nvglCreateImageFromHandleGLES3(nvg::Context* ctx, GLuint textureId, int w, int h, int flags);
-GLuint nvglImageHandleGLES3(nvg::Context* ctx, int image);
+int nvglCreateImageFromHandleGLES3(Context* ctx, GLuint textureId, int w, int h, int flags);
+GLuint nvglImageHandleGLES3(Context* ctx, int image);
 
 #endif
+
+} // namespace nvg
 
 namespace nvg {
 
@@ -121,7 +125,7 @@ inline constexpr int operator&(int a, ImageFlagsGl b) noexcept { return a & to_u
 #include <cstring>
 #include "nanovg.hpp"
 
-using namespace nvg;
+namespace nvg {
 
 enum GlUniformLoc {
 	GlUniformLocViewSize,
@@ -1038,11 +1042,9 @@ static int glnvg__convertPaint(GLContext* gl, GlFragUniforms* frag, Paint* paint
 	return 1;
 }
 
-namespace nvg {
 namespace detail {
 static GlFragUniforms* fragUniformPtr(GLContext* gl, int i);
 } // namespace detail
-} // namespace nvg
 
 static void glnvg__setUniforms(GLContext* gl, int uniformOffset, int image)
 {
@@ -1405,14 +1407,12 @@ static int glnvg__allocFragUniforms(GLContext* gl, int n)
 	return ret;
 }
 
-namespace nvg {
 namespace detail {
 static GlFragUniforms* fragUniformPtr(GLContext* gl, int i)
 {
 	return (GlFragUniforms*)&gl->uniforms[i];
 }
 } // namespace detail
-} // namespace nvg
 
 static void glnvg__vset(Vertex* vtx, float x, float y, float u, float v)
 {
@@ -1725,3 +1725,7 @@ GLuint nvglImageHandleGLES3(Context* ctx, int image)
 	GlTexture* tex = glnvg__findTexture(gl, image);
 	return tex->tex;
 }
+
+} // namespace nvg
+
+#endif // NANOVG_GL_IMPLEMENTATION
