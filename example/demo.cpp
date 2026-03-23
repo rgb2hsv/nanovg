@@ -1,12 +1,18 @@
-#include "demo.h"
+#include "demo.hpp"
 #include <stdio.h>
 #include <string.h>
-#include <math.h>
+
+#ifdef _MSC_VER
+#ifndef _USE_MATH_DEFINES
+#define _USE_MATH_DEFINES
+#endif
+#endif
+#include <cmath>
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
 #ifdef NANOVG_GLEW
-#  include <GL/glew.h>
+#include <GL/glew.h>
 #endif
 #include <GLFW/glfw3.h>
 #include "nanovg.hpp"

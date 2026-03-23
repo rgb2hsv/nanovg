@@ -25,7 +25,7 @@
 #include "nanovg.hpp"
 #define NANOVG_GL2_IMPLEMENTATION
 #include "nanovg_gl.hpp"
-#include "demo.h"
+#include "demo.hpp"
 #include "perf.h"
 
 

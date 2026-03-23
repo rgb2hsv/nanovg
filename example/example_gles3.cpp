@@ -24,7 +24,7 @@
 #define NANOVG_GLES3_IMPLEMENTATION
 #include "nanovg_gl.hpp"
 #include "nanovg_gl_utils.hpp"
-#include "demo.h"
+#include "demo.hpp"
 #include "perf.h"
 
 
