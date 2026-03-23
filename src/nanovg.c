@@ -852,6 +852,8 @@ int nvgCreateImage(NVGcontext* ctx, const char* filename, int imageFlags)
 int nvgCreateImageMem(NVGcontext* ctx, int imageFlags, unsigned char* data, int ndata)
 {
 	int w, h, n, image;
+	stbi_set_unpremultiply_on_load(1);
+	stbi_convert_iphone_png_to_rgb(1);
 	unsigned char* img = stbi_load_from_memory(data, ndata, &w, &h, &n, 4);
 	if (img == NULL) {
 //		printf("Failed to load %s - %s\n", filename, stbi_failure_reason());
