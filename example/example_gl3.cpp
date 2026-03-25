@@ -17,6 +17,8 @@
 //
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #ifdef NANOVG_GLEW
 #	include <GL/glew.h>
 #endif
@@ -55,7 +57,7 @@ static void key(GLFWwindow* window, int key, int scancode, int action, int mods)
 		premult = !premult;
 }
 
-int main()
+int main(int argc, char** argv)
 {
 	GLFWwindow* window;
 	DemoData data;
@@ -63,6 +65,35 @@ int main()
 	GPUtimer gpuTimer;
 	PerfGraph fps, cpuGraph, gpuGraph;
 	double prevt = 0, cpuTime = 0;
+	int testCount = 0;
+	bool testSpecified = false;
+	for (int i = 1; i < argc; i++) {
+		if (!strcmp(argv[i], "--test")) {
+			if (i + 1 >= argc) {
+				printf("Missing value for --test N.\n");
+				return -1;
+			}
+			char* endptr = NULL;
+			long v = strtol(argv[i + 1], &endptr, 10);
+			if (endptr == argv[i + 1] || (endptr && *endptr != '\0') || v < 0) {
+				printf("Invalid --test N value.\n");
+				return -1;
+			}
+			testCount = static_cast<int>(v);
+			testSpecified = true;
+			i++;
+		} else if (!strncmp(argv[i], "--test=", 7)) {
+			char* endptr = NULL;
+			long v = strtol(argv[i] + 7, &endptr, 10);
+			if (endptr == argv[i] + 7 || (endptr && *endptr != '\0') || v < 0) {
+				printf("Invalid --test N value.\n");
+				return -1;
+			}
+			testCount = static_cast<int>(v);
+			testSpecified = true;
+		}
+	}
+	int testRemaining = testCount;
 
 	if (!glfwInit()) {
 		printf("Failed to init GLFW.");
@@ -118,13 +149,22 @@ int main()
 	if (loadDemoData(vg, &data) == -1)
 		return -1;
 
+	if (testSpecified && testCount == 0)
+		glfwSetWindowShouldClose(window, GL_TRUE);
+
 	glfwSwapInterval(0);
 
 	initGPUTimer(&gpuTimer);
 
 	glfwSetTime(0);
-	prevt = glfwGetTime();
-
+	long long frameCounter = 0;
+	int sampleRate = 5;
+	bool success= true;
+	if(testSpecified)
+		prevt = 0.0f;
+	else
+		prevt = glfwGetTime();
+	
 	while (!glfwWindowShouldClose(window))
 	{
 		double mx, my, t, dt;
@@ -134,15 +174,26 @@ int main()
 		float gpuTimes[3];
 		int i, n;
 
-		t = glfwGetTime();
+		if(testSpecified)
+			t=frameCounter/30.0f;
+		else
+			t = glfwGetTime();
+		
 		dt = t - prevt;
 		prevt = t;
 
 		startGPUTimer(&gpuTimer);
 
-		glfwGetCursorPos(window, &mx, &my);
+
 		glfwGetWindowSize(window, &winWidth, &winHeight);
 		glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
+		if(testSpecified){
+			float angle=2.0*nvg::PI*testRemaining/float(testCount);
+			mx=winWidth/2.0f+cos(angle)*winWidth/4.0f;
+			my=winHeight/2.0f+sin(angle)*winHeight/4.0f;
+		} else {
+			glfwGetCursorPos(window, &mx, &my);
+		}
 		// Calculate pixel ration for hi-dpi devices.
 		pxRatio = (float)fbWidth / (float)winWidth;
 
@@ -158,11 +209,13 @@ int main()
 
 		renderDemo(vg, mx,my, winWidth,winHeight, t, blowup, &data);
 
-		renderGraph(vg, 5,5, &fps);
-		renderGraph(vg, 5+200+5,5, &cpuGraph);
-		if (gpuTimer.supported)
-			renderGraph(vg, 5+200+5+200+5,5, &gpuGraph);
-
+		if(!testSpecified){
+			renderGraph(vg, 5,5, &fps);
+			renderGraph(vg, 5+200+5,5, &cpuGraph);
+			if (gpuTimer.supported) {
+				renderGraph(vg, 5+200+5+200+5,5, &gpuGraph);
+			}
+		}
 		nvg::endFrame(vg);
 
 		// Measure the CPU time taken excluding swap buffers (as the swap may wait for GPU)
@@ -176,11 +229,19 @@ int main()
 		for (i = 0; i < n; i++)
 			updateGraph(&gpuGraph, gpuTimes[i]);
 
-		if (screenshot) {
+		if (testRemaining > 0 && frameCounter % sampleRate ==0) {
+			char fileName[256];
+			printf("Capturing %d/%d at t = %0.2f sec\n", testCount - testRemaining + 1, testCount,t);
+			snprintf(fileName, 256, "screenshot%03d.png", testCount - testRemaining + 1);
+			success&=saveScreenShot(fbWidth, fbHeight, false, fileName, true);
+			testRemaining--;
+			if (testRemaining == 0)
+				glfwSetWindowShouldClose(window, GL_TRUE);
+		} else if (screenshot) {
 			screenshot = 0;
-			saveScreenShot(fbWidth, fbHeight, premult, "dump.png");
+			success&=saveScreenShot(fbWidth, fbHeight, premult, "dump.png");
 		}
-
+		frameCounter++;
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
@@ -189,12 +250,19 @@ int main()
 
 	nvg::deleteGL3(vg);
 
-	printf("Average Frame Time: %.2f ms\n", getGraphAverage(&fps) * 1000.0f);
-	printf("          CPU Time: %.2f ms\n", getGraphAverage(&cpuGraph) * 1000.0f);
-	printf("          GPU Time: %.2f ms\n", getGraphAverage(&gpuGraph) * 1000.0f);
+	if (!testSpecified) {
+		printf("Average Frame Time: %.2f ms\n", getGraphAverage(&fps) * 1000.0f);
+		printf("          CPU Time: %.2f ms\n", getGraphAverage(&cpuGraph) * 1000.0f);
+		printf("          GPU Time: %.2f ms\n", getGraphAverage(&gpuGraph) * 1000.0f);
+	} else {
+		if(success)
+			printf("Test passed!\n");
+		else
+			printf("Test failed!\n");
+	}
 
 	glfwTerminate();
-	return 0;
+	return (success)?EXIT_SUCCESS:EXIT_FAILURE;
 }
 
 

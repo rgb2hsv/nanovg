@@ -1,6 +1,8 @@
 #include "demo.hpp"
 #include <stdio.h>
 #include <string.h>
+#include <string>
+#include <vector>
 
 #ifdef _MSC_VER
 #ifndef _USE_MATH_DEFINES
@@ -15,11 +17,14 @@
 #include <GL/glew.h>
 #endif
 #include <GLFW/glfw3.h>
-#include "nanovg.hpp"
+
+
+#include "stb_image.h"
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
 
+#include "nanovg.hpp"
 #ifdef _MSC_VER
 #define snprintf _snprintf
 #elif !defined(__MINGW32__)
@@ -1362,17 +1367,80 @@ static void flipHorizontal(unsigned char* image, int w, int h, int stride)
 	}
 }
 
-void saveScreenShot(int w, int h, int premult, const char* name)
+bool comparePreviousScreenShot(int nw, int nh, int premult, unsigned char* nimg, const char* name)
 {
+	int w, h, n, image;
+	unsigned char* img;
+	stbi_set_unpremultiply_on_load(premult);
+	stbi_convert_iphone_png_to_rgb(1);
+	img = stbi_load(name, &w, &h, &n, 4);
+	if (img == NULL) {
+		printf("Skipped screenshot comparison since there is no previous screenshot to compare to.\n");
+		return true;
+	}
+
+	if (w!=nw||h!=nh||n!=4){
+		printf("Screenshot does not match previous screenshot size %d x %d vs %d x %d.\n", w, h, nw, nh);
+		return false;
+	}
+
+	size_t size= w*h*4;
+	const int Threshold= 2;
+	unsigned char* diff = (unsigned char*)malloc(size);
+	bool ret=true;
+	for(size_t idx=0;idx<size;idx+=4){
+			int rd=abs(img[idx] - nimg[idx]);
+			int gd=abs(img[idx+1] - nimg[idx+1]);
+			int bd=abs(img[idx+2] - nimg[idx+2]);
+			int ad=abs(img[idx+3] - nimg[idx+3]);
+			diff[idx]=std::min(rd*4,255);
+			diff[idx+1]=std::min(gd*4,255);
+			diff[idx+2]=std::min(bd*4,255);
+			diff[idx+3]=255;
+			if(rd > Threshold || gd > Threshold || bd > Threshold || ad > Threshold){
+				int i=(idx/4)%w;
+				int j=(idx/4)/w;
+				ret=false;
+				break;
+			}
+	}
+	stbi_image_free(img);	
+
+	if(!ret){
+		std::string fileName=name;
+		auto pos= fileName.find_last_of(".");
+		fileName=fileName.substr(0, pos)+"-diff"+fileName.substr(pos);
+		printf("Saving screenshot diff to '%s'\n", fileName.c_str());
+		stbi_write_png(fileName.c_str(), w, h, 4, diff, w*4);
+	}
+	return ret;
+}
+
+bool saveScreenShot(int w, int h, int premult, const char* name, bool compare)
+{
+	bool ret = true;
 	unsigned char* image = (unsigned char*)malloc(w*h*4);
 	if (image == NULL)
-		return;
+		return false;
+
 	glReadPixels(0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, image);
 	if (premult)
 		unpremultiplyAlpha(image, w, h, w*4);
 	else
 		setAlpha(image, w, h, w*4, 255);
 	flipHorizontal(image, w, h, w*4);
- 	stbi_write_png(name, w, h, 4, image, w*4);
+	
+	std::string fileName= name;	
+	if(compare) {
+		ret = comparePreviousScreenShot(w, h, premult, image, name);
+		if(!ret){ 
+					auto pos= fileName.find_last_of(".");
+				fileName=fileName.substr(0, pos)+"-failed"+fileName.substr(pos);
+		}
+	}
+
+	printf("Saving screenshot to '%s'\n", fileName.c_str());
+	stbi_write_png(fileName.c_str(), w, h, 4, image, w*4);
  	free(image);
+	return ret;
 }

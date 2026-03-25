@@ -11,4 +11,4 @@ int loadDemoData(nvg::Context* vg, DemoData* data);
 void freeDemoData(nvg::Context* vg, DemoData* data);
 void renderDemo(nvg::Context* vg, float mx, float my, float width, float height, float t, int blowup, DemoData* data);
 
-void saveScreenShot(int w, int h, int premult, const char* name);
+bool saveScreenShot(int w, int h, int premult, const char* name, bool compare = false);

@@ -47,7 +47,7 @@ struct Color {
 	};
 };
 typedef struct Color Color;
-
+constexpr float PI=3.14159265358979323846264338327f;
 
 struct Paint {
 	float xform[6];

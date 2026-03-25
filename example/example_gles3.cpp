@@ -95,6 +95,7 @@ int main()
 	glfwSwapInterval(0);
 
 	glfwSetTime(0);
+	if()
 	prevt = glfwGetTime();
 
 	while (!glfwWindowShouldClose(window))
