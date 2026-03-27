@@ -47,6 +47,7 @@ void nvgDeleteGL3(struct NVGcontext* ctx);
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <array>
 #include "nanovg.hpp"
 
 enum class GLNVGuniformLoc : int {
@@ -78,7 +79,7 @@ struct GLNVGshader {
 	GLuint prog;
 	GLuint frag;
 	GLuint vert;
-	GLint loc[static_cast<int>(GLNVGuniformLoc::GLNVG_MAX_LOCS)];
+	std::array<GLint, static_cast<int>(GLNVGuniformLoc::GLNVG_MAX_LOCS)> loc{};
 };
 
 struct GLNVGtexture {
@@ -151,22 +152,22 @@ static int glnvg__deleteTexture(struct GLNVGcontext* gl, int id)
 
 static void glnvg__dumpShaderError(GLuint shader, const char* name, const char* type)
 {
-	char str[512+1];
+	std::array<char, 512+1> str{};
 	int len = 0;
-	glGetShaderInfoLog(shader, 512, &len, str);
+	glGetShaderInfoLog(shader, 512, &len, str.data());
 	if (len > 512) len = 512;
 	str[len] = '\0';
-	printf("Shader %s/%s error:\n%s\n", name, type, str);
+	printf("Shader %s/%s error:\n%s\n", name, type, str.data());
 }
 
 static void glnvg__dumpProgramError(GLuint prog, const char* name)
 {
-	char str[512+1];
+	std::array<char, 512+1> str{};
 	int len = 0;
-	glGetProgramInfoLog(prog, 512, &len, str);
+	glGetProgramInfoLog(prog, 512, &len, str.data());
 	if (len > 512) len = 512;
 	str[len] = '\0';
-	printf("Program %s error:\n%s\n", name, str);
+	printf("Program %s error:\n%s\n", name, str.data());
 }
 
 static int glnvg__checkError(const char* str)
@@ -553,25 +554,27 @@ static int glnvg__setupPaint(struct GLNVGcontext* gl, struct NVGpaint* paint, st
 	struct NVGcolor innerCol;
 	struct NVGcolor outerCol;
 	struct GLNVGtexture* tex = NULL;
-	float invxform[6], paintMat[9], scissorMat[9];
+	std::array<float, 6> invxform{};
+	std::array<float, 9> paintMat{};
+	std::array<float, 9> scissorMat{};
 	float scissorx = 0, scissory = 0;
 	float scissorsx = 0, scissorsy = 0;
 
     innerCol = paint->innerColor;
 	outerCol = paint->outerColor;
 
-	glnvg__xformInverse(invxform, paint->xform);
-	glnvg__xformToMat3x3(paintMat, invxform);
+	glnvg__xformInverse(invxform.data(), paint->xform);
+	glnvg__xformToMat3x3(paintMat.data(), invxform.data());
 
 	if (scissor->extent[0] < 0.5f || scissor->extent[1] < 0.5f) {
-		memset(scissorMat, 0, sizeof(scissorMat));
+		scissorMat.fill(0.0f);
 		scissorx = 1.0f;
 		scissory = 1.0f;
 		scissorsx = 1.0f;
 		scissorsy = 1.0f;
 	} else {
-		glnvg__xformInverse(invxform, scissor->xform);
-		glnvg__xformToMat3x3(scissorMat, invxform);
+		glnvg__xformInverse(invxform.data(), scissor->xform);
+		glnvg__xformToMat3x3(scissorMat.data(), invxform.data());
 		scissorx = scissor->extent[0];
 		scissory = scissor->extent[1];
 		scissorsx = sqrtf(scissor->xform[0]*scissor->xform[0] + scissor->xform[2]*scissor->xform[2]) / fringe;
@@ -584,10 +587,10 @@ static int glnvg__setupPaint(struct GLNVGcontext* gl, struct NVGpaint* paint, st
 		glUseProgram(gl->shader.prog);
 		glUniform1i(gl->shader.loc[static_cast<int>(GLNVGuniformLoc::TYPE)], static_cast<int>(GLNVGshaderType::FILLIMG));
 		glUniform2f(gl->shader.loc[static_cast<int>(GLNVGuniformLoc::VIEWSIZE)], gl->viewWidth, gl->viewHeight);
-		glUniformMatrix3fv(gl->shader.loc[static_cast<int>(GLNVGuniformLoc::SCISSORMAT)], 1, GL_FALSE, scissorMat);
+		glUniformMatrix3fv(gl->shader.loc[static_cast<int>(GLNVGuniformLoc::SCISSORMAT)], 1, GL_FALSE, scissorMat.data());
 		glUniform2f(gl->shader.loc[static_cast<int>(GLNVGuniformLoc::SCISSOREXT)], scissorx, scissory);
 		glUniform2f(gl->shader.loc[static_cast<int>(GLNVGuniformLoc::SCISSORSCALE)], scissorsx, scissorsy);
-		glUniformMatrix3fv(gl->shader.loc[static_cast<int>(GLNVGuniformLoc::PAINTMAT)], 1, GL_FALSE, paintMat);
+		glUniformMatrix3fv(gl->shader.loc[static_cast<int>(GLNVGuniformLoc::PAINTMAT)], 1, GL_FALSE, paintMat.data());
 		glUniform2f(gl->shader.loc[static_cast<int>(GLNVGuniformLoc::EXTENT)], paint->extent[0], paint->extent[1]);
 		glUniform1f(gl->shader.loc[static_cast<int>(GLNVGuniformLoc::STROKEMULT)], (width*0.5f + fringe*0.5f)/fringe);
 		glUniform1i(gl->shader.loc[static_cast<int>(GLNVGuniformLoc::TEX)], 0);
@@ -599,10 +602,10 @@ static int glnvg__setupPaint(struct GLNVGcontext* gl, struct NVGpaint* paint, st
 		glUseProgram(gl->shader.prog);
 		glUniform1i(gl->shader.loc[static_cast<int>(GLNVGuniformLoc::TYPE)], static_cast<int>(GLNVGshaderType::FILLGRAD));
 		glUniform2f(gl->shader.loc[static_cast<int>(GLNVGuniformLoc::VIEWSIZE)], gl->viewWidth, gl->viewHeight);
-		glUniformMatrix3fv(gl->shader.loc[static_cast<int>(GLNVGuniformLoc::SCISSORMAT)], 1, GL_FALSE, scissorMat);
+		glUniformMatrix3fv(gl->shader.loc[static_cast<int>(GLNVGuniformLoc::SCISSORMAT)], 1, GL_FALSE, scissorMat.data());
 		glUniform2f(gl->shader.loc[static_cast<int>(GLNVGuniformLoc::SCISSOREXT)], scissorx, scissory);
 		glUniform2f(gl->shader.loc[static_cast<int>(GLNVGuniformLoc::SCISSORSCALE)], scissorsx, scissorsy);
-		glUniformMatrix3fv(gl->shader.loc[static_cast<int>(GLNVGuniformLoc::PAINTMAT)], 1, GL_FALSE, paintMat);
+		glUniformMatrix3fv(gl->shader.loc[static_cast<int>(GLNVGuniformLoc::PAINTMAT)], 1, GL_FALSE, paintMat.data());
 		glUniform2f(gl->shader.loc[static_cast<int>(GLNVGuniformLoc::EXTENT)], paint->extent[0], paint->extent[1]);
 		glUniform1f(gl->shader.loc[static_cast<int>(GLNVGuniformLoc::RADIUS)], paint->radius);
 		glUniform1f(gl->shader.loc[static_cast<int>(GLNVGuniformLoc::FEATHER)], paint->feather);
@@ -778,11 +781,11 @@ static void glnvg__renderFill(void* uptr, struct NVGpaint* paint, struct NVGscis
 
 		glDisableVertexAttribArray(1);
 
-		float quad[6*2] = {
+		const std::array<float, 12> quad = {
 			bounds[0], bounds[3], bounds[2], bounds[3], bounds[2], bounds[1],
 			bounds[0], bounds[3], bounds[2], bounds[1], bounds[0], bounds[1],
 		};
-		glBufferSubData(GL_ARRAY_BUFFER, 0, 6 * 2*sizeof(float), quad);
+		glBufferSubData(GL_ARRAY_BUFFER, 0, 6 * 2*sizeof(float), quad.data());
 		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2*sizeof(float), (const GLvoid*)0);
 		glVertexAttrib2f(1, 0.5f, 1.0f);
 		glDrawArrays(GL_TRIANGLES, 0, 6);

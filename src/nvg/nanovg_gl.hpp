@@ -17,6 +17,7 @@
 //
 #pragma once
 #include "nanovg.hpp"
+#include <array>
 
 namespace nvg {
 
@@ -151,7 +152,7 @@ struct GlShader {
 	GLuint prog;
 	GLuint frag;
 	GLuint vert;
-	GLint loc[GlUniformLocCount];
+	std::array<GLint, GlUniformLocCount> loc{};
 };
 typedef struct GlShader GlShader;
 
@@ -250,7 +251,7 @@ typedef struct GlFragUniforms GlFragUniforms;
 struct GLContext {
 	GlShader shader;
 	GlTexture* textures;
-	float view[2];
+	std::array<float, 2> view{};
 	int ntextures;
 	int ctextures;
 	int textureId;
@@ -418,22 +419,22 @@ static int glnvg__deleteTexture(GLContext* gl, int id)
 
 static void glnvg__dumpShaderError(GLuint shader, const char* name, const char* type)
 {
-	GLchar str[512+1];
+	std::array<GLchar, 512+1> str{};
 	GLsizei len = 0;
-	glGetShaderInfoLog(shader, 512, &len, str);
+	glGetShaderInfoLog(shader, 512, &len, str.data());
 	if (len > 512) len = 512;
 	str[len] = '\0';
-	printf("Shader %s/%s error:\n%s\n", name, type, str);
+	printf("Shader %s/%s error:\n%s\n", name, type, str.data());
 }
 
 static void glnvg__dumpProgramError(GLuint prog, const char* name)
 {
-	GLchar str[512+1];
+	std::array<GLchar, 512+1> str{};
 	GLsizei len = 0;
-	glGetProgramInfoLog(prog, 512, &len, str);
+	glGetProgramInfoLog(prog, 512, &len, str.data());
 	if (len > 512) len = 512;
 	str[len] = '\0';
-	printf("Program %s error:\n%s\n", name, str);
+	printf("Program %s error:\n%s\n", name, str.data());
 }
 
 static void glnvg__checkError(GLContext* gl, const char* str)
@@ -984,7 +985,7 @@ static int glnvg__convertPaint(GLContext* gl, GlFragUniforms* frag, Paint* paint
 							   Scissor* scissor, float width, float fringe, float strokeThr, int lineStyle)
 {
 	GlTexture* tex = NULL;
-	float invxform[6];
+	std::array<float, 6> invxform{};
 
 	std::memset(frag, 0, sizeof(*frag));
 
@@ -998,8 +999,8 @@ static int glnvg__convertPaint(GLContext* gl, GlFragUniforms* frag, Paint* paint
 		frag->scissorScale[0] = 1.0f;
 		frag->scissorScale[1] = 1.0f;
 	} else {
-		transformInverse(invxform, scissor->xform);
-		glnvg__xformToMat3x4(frag->scissorMat, invxform);
+		transformInverse(invxform.data(), scissor->xform);
+		glnvg__xformToMat3x4(frag->scissorMat, invxform.data());
 		frag->scissorExt[0] = scissor->extent[0];
 		frag->scissorExt[1] = scissor->extent[1];
 		frag->scissorScale[0] = sqrtf(scissor->xform[0]*scissor->xform[0] + scissor->xform[2]*scissor->xform[2]) / fringe;
@@ -1014,16 +1015,17 @@ static int glnvg__convertPaint(GLContext* gl, GlFragUniforms* frag, Paint* paint
 		tex = glnvg__findTexture(gl, paint->image);
 		if (tex == NULL) return 0;
 		if ((tex->flags & ImageFlags::Flipy) != 0) {
-			float m1[6], m2[6];
-			transformTranslate(m1, 0.0f, frag->extent[1] * 0.5f);
-			transformMultiply(m1, paint->xform);
-			transformScale(m2, 1.0f, -1.0f);
-			transformMultiply(m2, m1);
-			transformTranslate(m1, 0.0f, -frag->extent[1] * 0.5f);
-			transformMultiply(m1, m2);
-			transformInverse(invxform, m1);
+			std::array<float, 6> m1{};
+			std::array<float, 6> m2{};
+			transformTranslate(m1.data(), 0.0f, frag->extent[1] * 0.5f);
+			transformMultiply(m1.data(), paint->xform);
+			transformScale(m2.data(), 1.0f, -1.0f);
+			transformMultiply(m2.data(), m1.data());
+			transformTranslate(m1.data(), 0.0f, -frag->extent[1] * 0.5f);
+			transformMultiply(m1.data(), m2.data());
+			transformInverse(invxform.data(), m1.data());
 		} else {
-			transformInverse(invxform, paint->xform);
+			transformInverse(invxform.data(), paint->xform);
 		}
 		frag->type = NSVG_SHADER_FILLIMG;
 
@@ -1043,10 +1045,10 @@ static int glnvg__convertPaint(GLContext* gl, GlFragUniforms* frag, Paint* paint
 		frag->type = NSVG_SHADER_FILLGRAD;
 		frag->radius = paint->radius;
 		frag->feather = paint->feather;
-		transformInverse(invxform, paint->xform);
+		transformInverse(invxform.data(), paint->xform);
 	}
 
-	glnvg__xformToMat3x4(frag->paintMat, invxform);
+	glnvg__xformToMat3x4(frag->paintMat, invxform.data());
 
 	return 1;
 }
@@ -1305,7 +1307,7 @@ static void glnvg__renderFlush(void* uptr)
 
 		// Set view and texture just once per frame.
 		glUniform1i(gl->shader.loc[GlUniformLocTex], 0);
-		glUniform2fv(gl->shader.loc[GlUniformLocViewSize], 1, gl->view);
+		glUniform2fv(gl->shader.loc[GlUniformLocViewSize], 1, gl->view.data());
 
 #if NANOVG_GL_USE_UNIFORMBUFFER
 		glBindBuffer(GL_UNIFORM_BUFFER, gl->fragBuf);

@@ -19,6 +19,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <array>
 #ifdef NANOVG_GLEW
 #	include <GL/glew.h>
 #endif
@@ -146,8 +147,10 @@ int main(int argc, char** argv)
 		return -1;
 	}
 
-	if (loadDemoData(vg, &data) == -1)
+	if (loadDemoData(vg, &data) == -1) {
+		printf("Could not load demo data.\n");
 		return -1;
+	}
 
 	if (testSpecified && testCount == 0)
 		glfwSetWindowShouldClose(window, GL_TRUE);
@@ -171,7 +174,7 @@ int main(int argc, char** argv)
 		int winWidth, winHeight;
 		int fbWidth, fbHeight;
 		float pxRatio;
-		float gpuTimes[3];
+		std::array<float, 3> gpuTimes{};
 		int i, n;
 
 		if(testSpecified)
@@ -225,15 +228,15 @@ int main(int argc, char** argv)
 		updateGraph(&cpuGraph, (float)cpuTime);
 
 		// We may get multiple results.
-		n = stopGPUTimer(&gpuTimer, gpuTimes, 3);
+		n = stopGPUTimer(&gpuTimer, gpuTimes.data(), (int)gpuTimes.size());
 		for (i = 0; i < n; i++)
 			updateGraph(&gpuGraph, gpuTimes[i]);
 
 		if (testRemaining > 0 && frameCounter % sampleRate ==0) {
-			char fileName[256];
+			std::array<char, 256> fileName{};
 			printf("Capturing %d/%d at t = %0.2f sec\n", testCount - testRemaining + 1, testCount,t);
-			snprintf(fileName, 256, "screenshot%03d.png", testCount - testRemaining + 1);
-			success&=saveScreenShot(fbWidth, fbHeight, false, fileName, true);
+			snprintf(fileName.data(), (int)fileName.size(), "screenshot%03d.png", testCount - testRemaining + 1);
+			success&=saveScreenShot(fbWidth, fbHeight, false, fileName.data(), true);
 			testRemaining--;
 			if (testRemaining == 0)
 				glfwSetWindowShouldClose(window, GL_TRUE);

@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <string>
+#include <array>
 #include <vector>
 
 #ifdef _MSC_VER
@@ -130,7 +131,7 @@ void drawWindow(nvg::Context* vg, const char* title, float x, float y, float w, 
 void drawSearchBox(nvg::Context* vg, const char* text, float x, float y, float w, float h)
 {
 	nvg::Paint bg;
-	char icon[8];
+	std::array<char, 8> icon{};
 	float cornerRadius = h/2-1;
 
 	// Edit
@@ -149,7 +150,7 @@ void drawSearchBox(nvg::Context* vg, const char* text, float x, float y, float w
 	nvg::fontFace(vg, "icons");
 	nvg::fillColor(vg, nvg::rgba(255,255,255,64));
 	nvg::textAlign(vg,static_cast<int>(nvg::Align::Center | nvg::Align::Middle));
-	nvg::text(vg, x+h*0.55f, y+h*0.55f, cpToUTF8(ICON_SEARCH,icon), NULL);
+	nvg::text(vg, x+h*0.55f, y+h*0.55f, cpToUTF8(ICON_SEARCH, icon.data()), NULL);
 
 	nvg::fontSize(vg, 17.0f);
 	nvg::fontFace(vg, "sans");
@@ -162,13 +163,13 @@ void drawSearchBox(nvg::Context* vg, const char* text, float x, float y, float w
 	nvg::fontFace(vg, "icons");
 	nvg::fillColor(vg, nvg::rgba(255,255,255,32));
 	nvg::textAlign(vg,static_cast<int>(nvg::Align::Center | nvg::Align::Middle));
-	nvg::text(vg, x+w-h*0.55f, y+h*0.55f, cpToUTF8(ICON_CIRCLED_CROSS,icon), NULL);
+	nvg::text(vg, x+w-h*0.55f, y+h*0.55f, cpToUTF8(ICON_CIRCLED_CROSS, icon.data()), NULL);
 }
 
 void drawDropDown(nvg::Context* vg, const char* text, float x, float y, float w, float h)
 {
 	nvg::Paint bg;
-	char icon[8];
+	std::array<char, 8> icon{};
 	float cornerRadius = 4.0f;
 
 	bg = nvg::linearGradient(vg, x,y,x,y+h, nvg::rgba(255,255,255,16), nvg::rgba(0,0,0,16));
@@ -192,7 +193,7 @@ void drawDropDown(nvg::Context* vg, const char* text, float x, float y, float w,
 	nvg::fontFace(vg, "icons");
 	nvg::fillColor(vg, nvg::rgba(255,255,255,64));
 	nvg::textAlign(vg,static_cast<int>(nvg::Align::Center | nvg::Align::Middle));
-	nvg::text(vg, x+w-h*0.5f, y+h*0.5f, cpToUTF8(ICON_CHEVRON_RIGHT,icon), NULL);
+	nvg::text(vg, x+w-h*0.5f, y+h*0.5f, cpToUTF8(ICON_CHEVRON_RIGHT, icon.data()), NULL);
 }
 
 void drawLabel(nvg::Context* vg, const char* text, float x, float y, float w, float h)
@@ -260,7 +261,7 @@ void drawEditBoxNum(nvg::Context* vg,
 void drawCheckBox(nvg::Context* vg, const char* text, float x, float y, float w, float h)
 {
 	nvg::Paint bg;
-	char icon[8];
+	std::array<char, 8> icon{};
 	UNUSED(w);
 
 	nvg::fontSize(vg, 15.0f);
@@ -280,13 +281,13 @@ void drawCheckBox(nvg::Context* vg, const char* text, float x, float y, float w,
 	nvg::fontFace(vg, "icons");
 	nvg::fillColor(vg, nvg::rgba(255,255,255,128));
 	nvg::textAlign(vg,static_cast<int>(nvg::Align::Center | nvg::Align::Middle));
-	nvg::text(vg, x+9+2, y+h*0.5f, cpToUTF8(ICON_CHECK,icon), NULL);
+	nvg::text(vg, x+9+2, y+h*0.5f, cpToUTF8(ICON_CHECK, icon.data()), NULL);
 }
 
 void drawButton(nvg::Context* vg, int preicon, const char* text, float x, float y, float w, float h, nvg::Color col)
 {
 	nvg::Paint bg;
-	char icon[8];
+	std::array<char, 8> icon{};
 	float cornerRadius = 4.0f;
 	float tw = 0, iw = 0;
 
@@ -311,7 +312,7 @@ void drawButton(nvg::Context* vg, int preicon, const char* text, float x, float 
 	if (preicon != 0) {
 		nvg::fontSize(vg, h*1.3f);
 		nvg::fontFace(vg, "icons");
-		iw = nvg::textBounds(vg, 0,0, cpToUTF8(preicon,icon), NULL, NULL);
+		iw = nvg::textBounds(vg, 0,0, cpToUTF8(preicon, icon.data()), NULL, NULL);
 		iw += h*0.15f;
 	}
 
@@ -320,7 +321,7 @@ void drawButton(nvg::Context* vg, int preicon, const char* text, float x, float 
 		nvg::fontFace(vg, "icons");
 		nvg::fillColor(vg, nvg::rgba(255,255,255,96));
 		nvg::textAlign(vg,static_cast<int>(nvg::Align::Left | nvg::Align::Middle));
-		nvg::text(vg, x+w*0.5f-tw*0.5f-iw*0.75f, y+h*0.5f, cpToUTF8(preicon,icon), NULL);
+		nvg::text(vg, x+w*0.5f-tw*0.5f-iw*0.75f, y+h*0.5f, cpToUTF8(preicon, icon.data()), NULL);
 	}
 
 	nvg::fontSize(vg, 17.0f);
@@ -472,8 +473,8 @@ void drawEyes(nvg::Context* vg, float x, float y, float w, float h, float mx, fl
 void drawGraph(nvg::Context* vg, float x, float y, float w, float h, float t)
 {
 	nvg::Paint bg;
-	float samples[6];
-	float sx[6], sy[6];
+	std::array<float, 6> samples{};
+	std::array<float, 6> sx{}, sy{};
 	float dx = w/5.0f;
 	int i;
 
@@ -808,10 +809,10 @@ void drawColorwheel(nvg::Context* vg, float x, float y, float w, float h, float 
 	nvg::textAlign(vg, static_cast<int>(nvg::Align::Center | nvg::Align::Top));
 	nvg::fontFace(vg, "sans");
 	nvg::fillColor(vg, nvg::rgb(255,255,255));
-	char str[128];
-	sprintf(str, "%d%%", (int)(100.0f * (hue + 1.0f)) % 100);
+	std::array<char, 128> str{};
+	sprintf(str.data(), "%d%%", (int)(100.0f * (hue + 1.0f)) % 100);
 	nvg::beginPath(vg);
-	nvg::text(vg, 0.0f, -0.2f * th, str, 0);
+	nvg::text(vg, 0.0f, -0.2f * th, str.data(), 0);
 	nvg::fill(vg);
 
 	nvg::restore(vg);
@@ -833,9 +834,10 @@ void drawLines(nvg::Context* vg, float x, float y, float w, float h, float lineW
 {
 	int i, j;
 	float pad = 5.0f, s = w/9.0f - pad*2;
-	float pts[4*2], fx, fy;
-	int joins[3] = {static_cast<int>(nvg::LineCap::Miter), static_cast<int>(nvg::LineCap::Round), static_cast<int>(nvg::LineCap::Bevel)};
-	int caps[3] = {static_cast<int>(nvg::LineCap::Butt), static_cast<int>(nvg::LineCap::Round), static_cast<int>(nvg::LineCap::Square)};
+	std::array<float, 8> pts{};
+	float fx, fy;
+	const std::array<int, 3> joins = {static_cast<int>(nvg::LineCap::Miter), static_cast<int>(nvg::LineCap::Round), static_cast<int>(nvg::LineCap::Bevel)};
+	const std::array<int, 3> caps = {static_cast<int>(nvg::LineCap::Butt), static_cast<int>(nvg::LineCap::Round), static_cast<int>(nvg::LineCap::Square)};
 	UNUSED(h);
 
 	nvg::save(vg);
@@ -890,11 +892,11 @@ int loadDemoData(nvg::Context* vg, DemoData* data)
 		return -1;
 
 	for (i = 0; i < 12; i++) {
-		char file[128];
-		snprintf(file, 128, "../example/images/image%d.jpg", i+1);
-		data->images[i] = nvg::createImage(vg, file, 0);
+		std::array<char, 128> file{};
+		snprintf(file.data(), (int)file.size(), "../example/images/image%d.jpg", i+1);
+		data->images[i] = nvg::createImage(vg, file.data(), 0);
 		if (data->images[i] == 0) {
-			printf("Could not load %s.\n", file);
+			printf("Could not load %s.\n", file.data());
 			return -1;
 		}
 	}
@@ -938,15 +940,15 @@ void freeDemoData(nvg::Context* vg, DemoData* data)
 
 void drawParagraph(nvg::Context* vg, float x, float y, float width, float height, float mx, float my)
 {
-	nvg::TextRow rows[3];
-	nvg::GlyphPosition glyphs[100];
+	std::array<nvg::TextRow, 3> rows{};
+	std::array<nvg::GlyphPosition, 100> glyphs{};
 	const char* text = "This is longer chunk of text.\n  \n  Would have used lorem ipsum but she    was busy jumping over the lazy dog with the fox and all the men who came to the aid of the party.🎉";
 	const char* start;
 	const char* end;
 	int nrows, i, nglyphs, j, lnum = 0;
 	float lineh;
 	float caretx, px;
-	float bounds[4];
+	std::array<float, 4> bounds{};
 	float a;
 	const char* hoverText = "Hover your mouse over the text to see calculated caret position.";
 	float gx,gy;
@@ -965,9 +967,9 @@ void drawParagraph(nvg::Context* vg, float x, float y, float width, float height
 	// The "next" variable of the last returned item tells where to continue.
 	start = text;
 	end = text + strlen(text);
-	while ((nrows = nvg::textBreakLines(vg, start, end, width, rows, 3, 0))) {
+	while ((nrows = nvg::textBreakLines(vg, start, end, width, rows.data(), (int)rows.size(), 0))) {
 		for (i = 0; i < nrows; i++) {
-			nvg::TextRow* row = &rows[i];
+			nvg::TextRow* row = &rows[(size_t)i];
 			int hit = mx > x && mx < (x+width) && my >= y && my < (y+lineh);
 
 			nvg::beginPath(vg);
@@ -981,13 +983,13 @@ void drawParagraph(nvg::Context* vg, float x, float y, float width, float height
 			if (hit) {
 				caretx = (mx < x+row->width/2) ? x : x+row->width;
 				px = x;
-				nglyphs = nvg::textGlyphPositions(vg, x, y, row->start, row->end, glyphs, 100);
+				nglyphs = nvg::textGlyphPositions(vg, x, y, row->start, row->end, glyphs.data(), (int)glyphs.size());
 				for (j = 0; j < nglyphs; j++) {
-					float x0 = glyphs[j].x;
-					float x1 = (j+1 < nglyphs) ? glyphs[j+1].x : x+row->width;
+					float x0 = glyphs[(size_t)j].x;
+					float x1 = (j+1 < nglyphs) ? glyphs[(size_t)j+1].x : x+row->width;
 					float gx = x0 * 0.3f + x1 * 0.7f;
 					if (mx >= px && mx < gx)
-						caretx = glyphs[j].x;
+						caretx = glyphs[(size_t)j].x;
 					px = gx;
 				}
 				nvg::beginPath(vg);
@@ -1003,16 +1005,16 @@ void drawParagraph(nvg::Context* vg, float x, float y, float width, float height
 			y += lineh;
 		}
 		// Keep going...
-		start = rows[nrows-1].next;
+		start = rows[(size_t)nrows-1].next;
 	}
 
 	if (gutter) {
-		char txt[16];
-		snprintf(txt, sizeof(txt), "%d", gutter);
+		std::array<char, 16> txt{};
+		snprintf(txt.data(), (int)txt.size(), "%d", gutter);
 		nvg::fontSize(vg, 12.0f);
 		nvg::textAlign(vg, static_cast<int>(nvg::Align::Right | nvg::Align::Middle));
 
-		nvg::textBounds(vg, gx,gy, txt, NULL, bounds);
+		nvg::textBounds(vg, gx,gy, txt.data(), NULL, bounds.data());
 
 		nvg::beginPath(vg);
 		nvg::fillColor(vg, nvg::rgba(255,192,0,255));
@@ -1025,7 +1027,7 @@ void drawParagraph(nvg::Context* vg, float x, float y, float width, float height
 		nvg::fill(vg);
 
 		nvg::fillColor(vg, nvg::rgba(32,32,32,255));
-		nvg::text(vg, gx,gy, txt, NULL);
+		nvg::text(vg, gx,gy, txt.data(), NULL);
 	}
 
 	y += 20.0f;
@@ -1034,7 +1036,7 @@ void drawParagraph(nvg::Context* vg, float x, float y, float width, float height
 	nvg::textAlign(vg, static_cast<int>(nvg::Align::Left | nvg::Align::Top));
 	nvg::textLineHeight(vg, 1.2f);
 
-	nvg::textBoxBounds(vg, x,y, 150, hoverText, NULL, bounds);
+	nvg::textBoxBounds(vg, x,y, 150, hoverText, NULL, bounds.data());
 
 	// Fade the tooltip out when close to it.
 	gx = clampf(mx, bounds[0], bounds[2]) - mx;
@@ -1082,7 +1084,7 @@ void drawWidths(nvg::Context* vg, float x, float y, float width)
 void drawCaps(nvg::Context* vg, float x, float y, float width)
 {
 	int i;
-	int caps[3] = {static_cast<int>(nvg::LineCap::Butt), static_cast<int>(nvg::LineCap::Round), static_cast<int>(nvg::LineCap::Square)};
+	const std::array<int, 3> caps = {static_cast<int>(nvg::LineCap::Butt), static_cast<int>(nvg::LineCap::Round), static_cast<int>(nvg::LineCap::Square)};
 	float lineWidth = 8.0f;
 
 	nvg::save(vg);
@@ -1280,7 +1282,7 @@ void renderDemo(nvg::Context* vg, float mx, float my, float width, float height,
 	drawButton(vg, 0, "Cancel", x+170, y, 110, 28, nvg::rgba(0,0,0,0));
 
 	// Thumbnails box
-	drawThumbnails(vg, 365, popy-30, 160, 300, data->images, 12, t);
+	drawThumbnails(vg, 365, popy-30, 160, 300, data->images.data(), (int)data->images.size(), t);
 
 	nvg::restore(vg);
 
@@ -1406,10 +1408,7 @@ bool comparePreviousScreenShot(int nw, int nh, int premult, unsigned char* nimg,
 			diff[idx+2]=std::min(bd*4,255);
 			diff[idx+3]=255;
 			if(rd > Threshold || gd > Threshold || bd > Threshold || ad > Threshold){
-				size_t i=(idx/4)% (size_t)w;
-				size_t j=(idx/4)/ (size_t)w;
 				ret=false;
-				break;
 			}
 	}
 	stbi_image_free(img);	

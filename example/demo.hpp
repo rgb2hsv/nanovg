@@ -1,9 +1,10 @@
 #pragma once
 #include "nanovg.hpp"
+#include <array>
 
 struct DemoData {
 	int fontNormal, fontBold, fontIcons, fontEmoji;
-	int images[12];
+	std::array<int, 12> images{};
 };
 typedef struct DemoData DemoData;
 

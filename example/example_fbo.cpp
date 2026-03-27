@@ -17,6 +17,7 @@
 //
 
 #include <stdio.h>
+#include <array>
 #ifdef NANOVG_GLEW
 #	include <GL/glew.h>
 #endif
@@ -190,7 +191,7 @@ int main()
 	while (!glfwWindowShouldClose(window))
 	{
 		double mx, my, t, dt;
-		float gpuTimes[3];
+		std::array<float, 3> gpuTimes{};
 		int i, n;
 
 		t = glfwGetTime();
@@ -251,7 +252,7 @@ int main()
 		updateGraph(&cpuGraph, cpuTime);
 
 		// We may get multiple results.
-		n = stopGPUTimer(&gpuTimer, gpuTimes, 3);
+		n = stopGPUTimer(&gpuTimer, gpuTimes.data(), (int)gpuTimes.size());
 		for (i = 0; i < n; i++)
 			updateGraph(&gpuGraph, gpuTimes[i]);
 

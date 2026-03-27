@@ -2,6 +2,7 @@
 #define PERF_H
 
 #include "nanovg.hpp"
+#include <array>
 
 enum GraphrenderStyle {
     GRAPH_RENDER_FPS,
@@ -12,8 +13,8 @@ enum GraphrenderStyle {
 #define GRAPH_HISTORY_COUNT 100
 struct PerfGraph {
 	int style;
-	char name[32];
-	float values[GRAPH_HISTORY_COUNT];
+	std::array<char, 32> name{};
+	std::array<float, GRAPH_HISTORY_COUNT> values{};
 	int head;
 };
 typedef struct PerfGraph PerfGraph;
@@ -27,7 +28,7 @@ float getGraphAverage(PerfGraph* fps);
 struct GPUtimer {
 	int supported;
 	int cur, ret;
-	unsigned int queries[GPU_QUERY_COUNT];
+	std::array<unsigned int, GPU_QUERY_COUNT> queries{};
 };
 typedef struct GPUtimer GPUtimer;
 

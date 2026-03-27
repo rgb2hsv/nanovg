@@ -28,6 +28,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <array>
 
 #define FONTSTASH_IMPLEMENTATION
 #include "fontstash.h"
@@ -106,7 +107,7 @@ struct State {
 	int lineCap;
 	int lineStyle;
 	float alpha;
-	float xform[6];
+	std::array<float, 6> xform{};
 	Scissor scissor;
 	float fontSize;
 	float letterSpacing;
@@ -137,7 +138,7 @@ struct PathCache {
 	Vertex* verts;
 	int nverts;
 	int cverts;
-	float bounds[4];
+	std::array<float, 4> bounds{};
 };
 typedef struct PathCache PathCache;
 
@@ -147,7 +148,7 @@ struct Context {
 	int ccommands;
 	int ncommands;
 	float commandx, commandy;
-	State states[NVG_MAX_STATES];
+	std::array<State, NVG_MAX_STATES> states{};
 	int nstates;
 	PathCache* cache;
 	float tessTol;
@@ -155,7 +156,7 @@ struct Context {
 	float fringeWidth;
 	float devicePxRatio;
 	struct FONScontext* fs;
-	int fontImages[NVG_MAX_FONTIMAGES];
+	std::array<int, NVG_MAX_FONTIMAGES> fontImages{};
 	int fontImageIdx;
 	int drawCallCount;
 	int fillTriCount;
@@ -365,7 +366,7 @@ static float distPtSeg(float x, float y, float px, float py, float qx, float qy)
 	dy = py + t*pqy - y;
 	return dx*dx + dy*dy;
 }
-static void appendCommands(Context* ctx, float* vals, int nvals)
+static void appendCommands(Context* ctx, const float* vals, int nvals)
 {
 	State* state = getState(ctx);
 	int i;
@@ -384,23 +385,28 @@ static void appendCommands(Context* ctx, float* vals, int nvals)
 		ctx->commandy = vals[nvals-1];
 	}
 
-	// transform commands
+	// transform commands into a local buffer
+	std::array<float, 64> tmpSmall{};
+	float* tmp = (nvals <= (int)tmpSmall.size()) ? tmpSmall.data() : static_cast<float*>(std::malloc((size_t)nvals * sizeof(float)));
+	if (tmp == nullptr) return;
+	std::memcpy(tmp, vals, (size_t)nvals * sizeof(float));
+
 	i = 0;
 	while (i < nvals) {
-		int cmd = (int)vals[i];
+		int cmd = (int)tmp[i];
 		switch (cmd) {
 		case static_cast<int>(PathCommand::MoveTo):
-			transformPoint(&vals[i+1],&vals[i+2], state->xform, vals[i+1],vals[i+2]);
+			transformPoint(&tmp[i+1],&tmp[i+2], state->xform.data(), tmp[i+1],tmp[i+2]);
 			i += 3;
 			break;
 		case static_cast<int>(PathCommand::LineTo):
-			transformPoint(&vals[i+1],&vals[i+2], state->xform, vals[i+1],vals[i+2]);
+			transformPoint(&tmp[i+1],&tmp[i+2], state->xform.data(), tmp[i+1],tmp[i+2]);
 			i += 3;
 			break;
 		case static_cast<int>(PathCommand::BezierTo):
-			transformPoint(&vals[i+1],&vals[i+2], state->xform, vals[i+1],vals[i+2]);
-			transformPoint(&vals[i+3],&vals[i+4], state->xform, vals[i+3],vals[i+4]);
-			transformPoint(&vals[i+5],&vals[i+6], state->xform, vals[i+5],vals[i+6]);
+			transformPoint(&tmp[i+1],&tmp[i+2], state->xform.data(), tmp[i+1],tmp[i+2]);
+			transformPoint(&tmp[i+3],&tmp[i+4], state->xform.data(), tmp[i+3],tmp[i+4]);
+			transformPoint(&tmp[i+5],&tmp[i+6], state->xform.data(), tmp[i+5],tmp[i+6]);
 			i += 7;
 			break;
 		case static_cast<int>(PathCommand::Close):
@@ -414,7 +420,8 @@ static void appendCommands(Context* ctx, float* vals, int nvals)
 		}
 	}
 
-	memcpy(&ctx->commands[ctx->ncommands], vals, nvals*sizeof(float));
+	std::memcpy(&ctx->commands[ctx->ncommands], tmp, (size_t)nvals * sizeof(float));
+	if (tmp != tmpSmall.data()) std::free(tmp);
 
 	ctx->ncommands += nvals;
 }
@@ -498,7 +505,7 @@ static void pathWinding(Context* ctx, int winding)
 	if (path == nullptr) return;
 	path->winding = winding;
 }
-static float getAverageScale(float *t)
+static float getAverageScale(const float *t)
 {
 	float sx = sqrtf(t[0]*t[0] + t[2]*t[2]);
 	float sy = sqrtf(t[1]*t[1] + t[3]*t[3]);
@@ -1285,13 +1292,13 @@ static float quantize(float a, float d)
 }
 static float getFontScale(State* state)
 {
-	return minf(quantize(getAverageScale(state->xform), 0.01f), 4.0f);
+	return minf(quantize(getAverageScale(state->xform.data()), 0.01f), 4.0f);
 }
 static void flushTextTexture(Context* ctx)
 {
-	int dirty[4];
+	std::array<int, 4> dirty{};
 
-	if (fonsValidateTexture(ctx->fs, dirty)) {
+	if (fonsValidateTexture(ctx->fs, dirty.data())) {
 		int fontImage = ctx->fontImages[ctx->fontImageIdx];
 		// Update texture
 		if (fontImage != 0) {
@@ -1638,10 +1645,10 @@ void transformMultiply(float* t, const float* s)
 
 void transformPremultiply(float* t, const float* s)
 {
-	float s2[6];
-	memcpy(s2, s, sizeof(float)*6);
-	transformMultiply(s2, t);
-	memcpy(t, s2, sizeof(float)*6);
+	std::array<float, 6> s2{};
+	memcpy(s2.data(), s, sizeof(float)*6);
+	transformMultiply(s2.data(), t);
+	memcpy(t, s2.data(), sizeof(float)*6);
 }
 
 int transformInverse(float* inv, const float* t)
@@ -1711,7 +1718,7 @@ void reset(Context* ctx)
 	state->lineJoin = static_cast<int>(LineCap::Miter);
 	state->lineStyle = static_cast<int>(LineStyle::Solid);
 	state->alpha = 1.0f;
-	transformIdentity(state->xform);
+	transformIdentity(state->xform.data());
 
 	state->scissor.extent[0] = -1.0f;
 	state->scissor.extent[1] = -1.0f;
@@ -1789,61 +1796,61 @@ void globalAlpha(Context* ctx, float alpha)
 void transform(Context* ctx, float a, float b, float c, float d, float e, float f)
 {
 	State* state = detail::getState(ctx);
-	float t[6] = { a, b, c, d, e, f };
-	transformPremultiply(state->xform, t);
+	const std::array<float, 6> t = { a, b, c, d, e, f };
+	transformPremultiply(state->xform.data(), t.data());
 }
 
 void resetTransform(Context* ctx)
 {
 	State* state = detail::getState(ctx);
-	transformIdentity(state->xform);
+	transformIdentity(state->xform.data());
 }
 
 void translate(Context* ctx, float x, float y)
 {
 	State* state = detail::getState(ctx);
-	float t[6];
-	transformTranslate(t, x,y);
-	transformPremultiply(state->xform, t);
+	std::array<float, 6> t{};
+	transformTranslate(t.data(), x,y);
+	transformPremultiply(state->xform.data(), t.data());
 }
 
 void rotate(Context* ctx, float angle)
 {
 	State* state = detail::getState(ctx);
-	float t[6];
-	transformRotate(t, angle);
-	transformPremultiply(state->xform, t);
+	std::array<float, 6> t{};
+	transformRotate(t.data(), angle);
+	transformPremultiply(state->xform.data(), t.data());
 }
 
 void skewX(Context* ctx, float angle)
 {
 	State* state = detail::getState(ctx);
-	float t[6];
-	transformSkewX(t, angle);
-	transformPremultiply(state->xform, t);
+	std::array<float, 6> t{};
+	transformSkewX(t.data(), angle);
+	transformPremultiply(state->xform.data(), t.data());
 }
 
 void skewY(Context* ctx, float angle)
 {
 	State* state = detail::getState(ctx);
-	float t[6];
-	transformSkewY(t, angle);
-	transformPremultiply(state->xform, t);
+	std::array<float, 6> t{};
+	transformSkewY(t.data(), angle);
+	transformPremultiply(state->xform.data(), t.data());
 }
 
 void scale(Context* ctx, float x, float y)
 {
 	State* state = detail::getState(ctx);
-	float t[6];
-	transformScale(t, x,y);
-	transformPremultiply(state->xform, t);
+	std::array<float, 6> t{};
+	transformScale(t.data(), x,y);
+	transformPremultiply(state->xform.data(), t.data());
 }
 
 void currentTransform(Context* ctx, float* xform)
 {
 	State* state = detail::getState(ctx);
 	if (xform == NULL) return;
-	memcpy(xform, state->xform, sizeof(float)*6);
+	memcpy(xform, state->xform.data(), sizeof(float)*6);
 }
 
 void strokeColor(Context* ctx, Color color)
@@ -1856,7 +1863,7 @@ void strokePaint(Context* ctx, Paint paint)
 {
 	State* state = detail::getState(ctx);
 	state->stroke = paint;
-	transformMultiply(state->stroke.xform, state->xform);
+	transformMultiply(state->stroke.xform, state->xform.data());
 }
 
 void fillColor(Context* ctx, Color color)
@@ -1869,7 +1876,7 @@ void fillPaint(Context* ctx, Paint paint)
 {
 	State* state = detail::getState(ctx);
 	state->fill = paint;
-	transformMultiply(state->fill.xform, state->xform);
+	transformMultiply(state->fill.xform, state->xform.data());
 }
 
 #ifndef NVG_NO_STB
@@ -2052,7 +2059,7 @@ void scissor(Context* ctx, float x, float y, float w, float h)
 	transformIdentity(state->scissor.xform);
 	state->scissor.xform[4] = x+w*0.5f;
 	state->scissor.xform[5] = y+h*0.5f;
-	transformMultiply(state->scissor.xform, state->xform);
+	transformMultiply(state->scissor.xform, state->xform.data());
 
 	state->scissor.extent[0] = w*0.5f;
 	state->scissor.extent[1] = h*0.5f;
@@ -2062,8 +2069,9 @@ void scissor(Context* ctx, float x, float y, float w, float h)
 void intersectScissor(Context* ctx, float x, float y, float w, float h)
 {
 	State* state = detail::getState(ctx);
-	float pxform[6], invxorm[6];
-	float rect[4];
+	std::array<float, 6> pxform{};
+	std::array<float, 6> invxorm{};
+	std::array<float, 4> rect{};
 	float ex, ey, tex, tey;
 
 	// If no previous scissor has been set, set the scissor as current scissor.
@@ -2074,16 +2082,16 @@ void intersectScissor(Context* ctx, float x, float y, float w, float h)
 
 	// Transform the current scissor rect into current transform space.
 	// If there is difference in rotation, this will be approximation.
-	memcpy(pxform, state->scissor.xform, sizeof(float)*6);
+	memcpy(pxform.data(), state->scissor.xform, sizeof(float)*6);
 	ex = state->scissor.extent[0];
 	ey = state->scissor.extent[1];
-	transformInverse(invxorm, state->xform);
-	transformMultiply(pxform, invxorm);
+	transformInverse(invxorm.data(), state->xform.data());
+	transformMultiply(pxform.data(), invxorm.data());
 	tex = ex*detail::absf(pxform[0]) + ey*detail::absf(pxform[2]);
 	tey = ex*detail::absf(pxform[1]) + ey*detail::absf(pxform[3]);
 
 	// Intersect rects.
-	detail::isectRects(rect, pxform[4]-tex,pxform[5]-tey,tex*2,tey*2, x,y,w,h);
+	detail::isectRects(rect.data(), pxform[4]-tex,pxform[5]-tey,tex*2,tey*2, x,y,w,h);
 
 	scissor(ctx, rect[0], rect[1], rect[2], rect[3]);
 }
@@ -2166,31 +2174,31 @@ void beginPath(Context* ctx)
 
 void moveTo(Context* ctx, float x, float y)
 {
-	float vals[] = { static_cast<float>(to_underlying(PathCommand::MoveTo)), x, y };
-	detail::appendCommands(ctx, vals, NVG_COUNTOF(vals));
+	const std::array<float, 3> vals = { static_cast<float>(to_underlying(PathCommand::MoveTo)), x, y };
+	detail::appendCommands(ctx, vals.data(), (int)vals.size());
 }
 
 void lineTo(Context* ctx, float x, float y)
 {
-	float vals[] = { static_cast<float>(to_underlying(PathCommand::LineTo)), x, y };
-	detail::appendCommands(ctx, vals, NVG_COUNTOF(vals));
+	const std::array<float, 3> vals = { static_cast<float>(to_underlying(PathCommand::LineTo)), x, y };
+	detail::appendCommands(ctx, vals.data(), (int)vals.size());
 }
 
 void bezierTo(Context* ctx, float c1x, float c1y, float c2x, float c2y, float x, float y)
 {
-	float vals[] = { static_cast<float>(to_underlying(PathCommand::BezierTo)), c1x, c1y, c2x, c2y, x, y };
-	detail::appendCommands(ctx, vals, NVG_COUNTOF(vals));
+	const std::array<float, 7> vals = { static_cast<float>(to_underlying(PathCommand::BezierTo)), c1x, c1y, c2x, c2y, x, y };
+	detail::appendCommands(ctx, vals.data(), (int)vals.size());
 }
 
 void quadTo(Context* ctx, float cx, float cy, float x, float y)
 {
     float x0 = ctx->commandx;
     float y0 = ctx->commandy;
-    float vals[] = { static_cast<float>(to_underlying(PathCommand::BezierTo)),
+    const std::array<float, 7> vals = { static_cast<float>(to_underlying(PathCommand::BezierTo)),
         x0 + 2.0f/3.0f*(cx - x0), y0 + 2.0f/3.0f*(cy - y0),
         x + 2.0f/3.0f*(cx - x), y + 2.0f/3.0f*(cy - y),
         x, y };
-   detail::appendCommands(ctx, vals, NVG_COUNTOF(vals));
+   detail::appendCommands(ctx, vals.data(), (int)vals.size());
 }
 
 void arcTo(Context* ctx, float x1, float y1, float x2, float y2, float radius)
@@ -2251,14 +2259,14 @@ void arcTo(Context* ctx, float x1, float y1, float x2, float y2, float radius)
 
 void closePath(Context* ctx)
 {
-	float vals[] = { static_cast<float>(to_underlying(PathCommand::Close)) };
-	detail::appendCommands(ctx, vals, NVG_COUNTOF(vals));
+	const std::array<float, 1> vals = { static_cast<float>(to_underlying(PathCommand::Close)) };
+	detail::appendCommands(ctx, vals.data(), (int)vals.size());
 }
 
 void pathWinding(Context* ctx, int dir)
 {
-	float vals[] = { static_cast<float>(to_underlying(PathCommand::Winding)), (float)dir };
-	detail::appendCommands(ctx, vals, NVG_COUNTOF(vals));
+	const std::array<float, 2> vals = { static_cast<float>(to_underlying(PathCommand::Winding)), (float)dir };
+	detail::appendCommands(ctx, vals.data(), (int)vals.size());
 }
 
 void arc(Context* ctx, float cx, float cy, float r, float a0, float a1, int dir)
@@ -2268,7 +2276,7 @@ void arc(Context* ctx, float cx, float cy, float r, float a0, float a1, int dir)
 	float a = 0, da = 0, hda = 0, kappa = 0;
 	float dx = 0, dy = 0, x = 0, y = 0, tanx = 0, tany = 0;
 	float px = 0, py = 0, ptanx = 0, ptany = 0;
-	float vals[3 + 5*7 + 100];
+	std::array<float, 3 + 5*7 + 100> vals{};
 	int i, ndivs, nvals;
 	int move = ctx->ncommands > 0 ? static_cast<int>(PathCommand::LineTo) : static_cast<int>(PathCommand::MoveTo);
 
@@ -2307,7 +2315,7 @@ void arc(Context* ctx, float cx, float cy, float r, float a0, float a1, int dir)
 		tany = dx*r*kappa;
 
 		if (i == 0) {
-			vals[nvals++] = (float)move;
+			vals[(size_t)nvals++] = (float)move;
 			vals[nvals++] = x;
 			vals[nvals++] = y;
 		} else {
@@ -2325,19 +2333,19 @@ void arc(Context* ctx, float cx, float cy, float r, float a0, float a1, int dir)
 		ptany = tany;
 	}
 
-	detail::appendCommands(ctx, vals, nvals);
+	detail::appendCommands(ctx, vals.data(), nvals);
 }
 
 void rect(Context* ctx, float x, float y, float w, float h)
 {
-	float vals[] = {
+	const std::array<float, 13> vals = {
 		static_cast<float>(to_underlying(PathCommand::MoveTo)), x,y,
 		static_cast<float>(to_underlying(PathCommand::LineTo)), x,y+h,
 		static_cast<float>(to_underlying(PathCommand::LineTo)), x+w,y+h,
 		static_cast<float>(to_underlying(PathCommand::LineTo)), x+w,y,
 		static_cast<float>(to_underlying(PathCommand::Close))
 	};
-	detail::appendCommands(ctx, vals, NVG_COUNTOF(vals));
+	detail::appendCommands(ctx, vals.data(), (int)vals.size());
 }
 
 void roundedRect(Context* ctx, float x, float y, float w, float h, float r)
@@ -2357,7 +2365,7 @@ void roundedRectVarying(Context* ctx, float x, float y, float w, float h, float 
 		float rxBR = detail::minf(radBottomRight, halfw) * detail::signf(w), ryBR = detail::minf(radBottomRight, halfh) * detail::signf(h);
 		float rxTR = detail::minf(radTopRight, halfw) * detail::signf(w), ryTR = detail::minf(radTopRight, halfh) * detail::signf(h);
 		float rxTL = detail::minf(radTopLeft, halfw) * detail::signf(w), ryTL = detail::minf(radTopLeft, halfh) * detail::signf(h);
-		float vals[] = {
+		const std::array<float, 44> vals = {
 			static_cast<float>(to_underlying(PathCommand::MoveTo)), x, y + ryTL,
 			static_cast<float>(to_underlying(PathCommand::LineTo)), x, y + h - ryBL,
 			static_cast<float>(to_underlying(PathCommand::BezierTo)), x, y + h - ryBL*(1 - NVG_KAPPA90), x + rxBL*(1 - NVG_KAPPA90), y + h, x + rxBL, y + h,
@@ -2369,13 +2377,13 @@ void roundedRectVarying(Context* ctx, float x, float y, float w, float h, float 
 			static_cast<float>(to_underlying(PathCommand::BezierTo)), x + rxTL*(1 - NVG_KAPPA90), y, x, y + ryTL*(1 - NVG_KAPPA90), x, y + ryTL,
 			static_cast<float>(to_underlying(PathCommand::Close))
 		};
-		detail::appendCommands(ctx, vals, NVG_COUNTOF(vals));
+		detail::appendCommands(ctx, vals.data(), (int)vals.size());
 	}
 }
 
 void ellipse(Context* ctx, float cx, float cy, float rx, float ry)
 {
-	float vals[] = {
+	const std::array<float, 32> vals = {
 		static_cast<float>(to_underlying(PathCommand::MoveTo)), cx-rx, cy,
 		static_cast<float>(to_underlying(PathCommand::BezierTo)), cx-rx, cy+ry*NVG_KAPPA90, cx-rx*NVG_KAPPA90, cy+ry, cx, cy+ry,
 		static_cast<float>(to_underlying(PathCommand::BezierTo)), cx+rx*NVG_KAPPA90, cy+ry, cx+rx, cy+ry*NVG_KAPPA90, cx+rx, cy,
@@ -2383,7 +2391,7 @@ void ellipse(Context* ctx, float cx, float cy, float rx, float ry)
 		static_cast<float>(to_underlying(PathCommand::BezierTo)), cx-rx*NVG_KAPPA90, cy-ry, cx-rx, cy-ry*NVG_KAPPA90, cx-rx, cy,
 		static_cast<float>(to_underlying(PathCommand::Close))
 	};
-	detail::appendCommands(ctx, vals, NVG_COUNTOF(vals));
+	detail::appendCommands(ctx, vals.data(), (int)vals.size());
 }
 
 void circle(Context* ctx, float cx, float cy, float r)
@@ -2431,7 +2439,7 @@ void fill(Context* ctx)
 	fillPaint.outerColor.a *= state->alpha;
 
 	ctx->params.renderFill(ctx->params.userPtr, &fillPaint, state->compositeOperation, &state->scissor, ctx->fringeWidth,
-						   ctx->cache->bounds, ctx->cache->paths, ctx->cache->npaths);
+						   ctx->cache->bounds.data(), ctx->cache->paths, ctx->cache->npaths);
 
 	// Count triangles
 	for (i = 0; i < ctx->cache->npaths; i++) {
@@ -2445,7 +2453,7 @@ void fill(Context* ctx)
 void stroke(Context* ctx)
 {
 	State* state = detail::getState(ctx);
-	const float scale = detail::getAverageScale(state->xform);
+	const float scale = detail::getAverageScale(state->xform.data());
 	float strokeWidth = detail::clampf(state->strokeWidth * scale, 0.0f, 1000.0f);
 	Paint strokePaint = state->stroke;
 	const Path* path;
@@ -2597,7 +2605,7 @@ float text(Context* ctx, float x, float y, const char* string, const char* end)
 	float invscale = 1.0f / scale;
 	int cverts = 0;
 	int nverts = 0;
-	int isFlipped = detail::isTransformFlipped(state->xform);
+	int isFlipped = detail::isTransformFlipped(state->xform.data());
 
 	if (end == NULL)
 		end = string + strlen(string);
@@ -2618,7 +2626,7 @@ float text(Context* ctx, float x, float y, const char* string, const char* end)
 	fonsTextIterInit(ctx->fs, &iter, 0, 0, string, end, FONS_GLYPH_BITMAP_REQUIRED);
 	prevIter = iter;
 	while (fonsTextIterNext(ctx->fs, &iter, &q)) {
-		float c[4*2];
+		std::array<float, 8> c{};
 		if (iter.prevGlyphIndex == -1) { // can not retrieve glyph?
 			if (nverts != 0) {
 				detail::renderText(ctx, verts, nverts);
@@ -2639,10 +2647,10 @@ float text(Context* ctx, float x, float y, const char* string, const char* end)
 			tmp = q.t0; q.t0 = q.t1; q.t1 = tmp;
 		}
 		// Transform corners.
-		transformPoint(&c[0],&c[1], state->xform, q.x0*invscale + x, q.y0*invscale + y);
-		transformPoint(&c[2],&c[3], state->xform, q.x1*invscale + x, q.y0*invscale + y);
-		transformPoint(&c[4],&c[5], state->xform, q.x1*invscale + x, q.y1*invscale + y);
-		transformPoint(&c[6],&c[7], state->xform, q.x0*invscale + x, q.y1*invscale + y);
+		transformPoint(&c[0],&c[1], state->xform.data(), q.x0*invscale + x, q.y0*invscale + y);
+		transformPoint(&c[2],&c[3], state->xform.data(), q.x1*invscale + x, q.y0*invscale + y);
+		transformPoint(&c[4],&c[5], state->xform.data(), q.x1*invscale + x, q.y1*invscale + y);
+		transformPoint(&c[6],&c[7], state->xform.data(), q.x0*invscale + x, q.y1*invscale + y);
 		// Create triangles
 		if (nverts+6 <= cverts) {
 			detail::vset(&verts[nverts], c[0], c[1], q.s0, q.t0, 0, 0); nverts++;
@@ -2664,7 +2672,7 @@ float text(Context* ctx, float x, float y, const char* string, const char* end)
 void textBox(Context* ctx, float x, float y, float breakRowWidth, const char* string, const char* end)
 {
 	State* state = detail::getState(ctx);
-	TextRow rows[2];
+	std::array<TextRow, 2> rows{};
 	int nrows = 0, i;
 	int oldAlign = state->textAlign;
 	int halign = state->textAlign & static_cast<int>(Align::Left | Align::Center | Align::Right);
@@ -2677,9 +2685,9 @@ void textBox(Context* ctx, float x, float y, float breakRowWidth, const char* st
 
 	state->textAlign = static_cast<int>(Align::Left) | valign;
 
-	while ((nrows = textBreakLines(ctx, string, end, breakRowWidth, rows, 2, 0))) {
+	while ((nrows = textBreakLines(ctx, string, end, breakRowWidth, rows.data(), (int)rows.size(), 0))) {
 		for (i = 0; i < nrows; i++) {
-			TextRow* row = &rows[i];
+			TextRow* row = &rows[(size_t)i];
 			if (halign & Align::Left)
 				text(ctx, x, y, row->start, row->end);
 			else if (halign & Align::Center)
@@ -2688,7 +2696,7 @@ void textBox(Context* ctx, float x, float y, float breakRowWidth, const char* st
 				text(ctx, x + breakRowWidth - row->width, y, row->start, row->end);
 			y += lineh * state->lineHeight;
 		}
-		string = rows[nrows-1].next;
+		string = rows[(size_t)nrows-1].next;
 	}
 
 	state->textAlign = oldAlign;
@@ -2990,7 +2998,7 @@ float textBounds(Context* ctx, float x, float y, const char* string, const char*
 void textBoxBounds(Context* ctx, float x, float y, float breakRowWidth, const char* string, const char* end, float* bounds)
 {
 	State* state = detail::getState(ctx);
-	TextRow rows[2];
+	std::array<TextRow, 2> rows{};
 	float scale = detail::getFontScale(state) * ctx->devicePxRatio;
 	float invscale = 1.0f / scale;
 	float yoff = 0;
@@ -3024,9 +3032,9 @@ void textBoxBounds(Context* ctx, float x, float y, float breakRowWidth, const ch
 	rminy *= invscale;
 	rmaxy *= invscale;
 
-	while ((nrows = textBreakLines(ctx, string, end, breakRowWidth, rows, 2, 0))) {
+	while ((nrows = textBreakLines(ctx, string, end, breakRowWidth, rows.data(), (int)rows.size(), 0))) {
 		for (i = 0; i < nrows; i++) {
-			TextRow* row = &rows[i];
+			TextRow* row = &rows[(size_t)i];
 			float rminx, rmaxx, dx = 0;
 			// Horizontal bounds
 			if (halign & Align::Left)
@@ -3045,7 +3053,7 @@ void textBoxBounds(Context* ctx, float x, float y, float breakRowWidth, const ch
 
 			yoff += lineh * state->lineHeight;
 		}
-		string = rows[nrows-1].next;
+		string = rows[(size_t)nrows-1].next;
 	}
 
 	state->textAlign = oldAlign;
