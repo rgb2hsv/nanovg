@@ -739,12 +739,12 @@ static Vertex* roundJoin(Vertex* dst, Point* p0, Point* p1,
 		chooseBevel(p1->flags & PointFlags::InnerBevel, p0, p1, lw, &lx0,&ly0, &lx1,&ly1);
 		a0 = atan2f(-dly0, -dlx0);
 		a1 = atan2f(-dly1, -dlx1);
-		if (a1 > a0) a1 -= M_PI*2;
+		if (a1 > a0) a1 -= (float)(M_PI * 2.0);
 
 		vset(dst, lx0, ly0, lu, 1, -1, t); dst++;
 		vset(dst, p1->x - dlx0*rw, p1->y - dly0*rw, ru, 1, 1, t); dst++;
 
-		n = clampi((int)ceilf(((a0 - a1) / M_PI) * ncap), 2, ncap);
+		n = clampi((int)ceilf(((a0 - a1) / (float)M_PI) * ncap), 2, ncap);
 		for (i = 0; i < n; i++) {
 			float u = i/(float)(n-1);
 			float a = a0 + u*(a1-a0);
@@ -762,12 +762,12 @@ static Vertex* roundJoin(Vertex* dst, Point* p0, Point* p1,
 		chooseBevel(p1->flags & PointFlags::InnerBevel, p0, p1, -rw, &rx0,&ry0, &rx1,&ry1);
 		a0 = atan2f(dly0, dlx0);
 		a1 = atan2f(dly1, dlx1);
-		if (a1 < a0) a1 += M_PI*2;
+		if (a1 < a0) a1 += (float)(M_PI * 2.0);
 
 		vset(dst, p1->x + dlx0*rw, p1->y + dly0*rw, lu,1, -1, t);dst++;
 		vset(dst, rx0, ry0, ru, 1, 1, t); dst++;
 
-		n = clampi((int)ceilf(((a1 - a0) / M_PI) * ncap), 2, ncap);
+		n = clampi((int)ceilf(((a1 - a0) / (float)M_PI) * ncap), 2, ncap);
 		for (i = 0; i < n; i++) {
 			float u = i/(float)(n-1);
 			float a = a0 + u*(a1-a0);
@@ -903,7 +903,7 @@ static Vertex* roundCapStart(Vertex* dst, Point* p,
 	float dly = -dx;
 	UNUSED(aa);
 	for (i = 0; i < ncap; i++) {
-		const float a = i/(float)(ncap-1)*M_PI;
+		const float a = i/(float)(ncap-1) * (float)M_PI;
 		float ax = cosf(a) * w, ay = sinf(a) * w;
 		vset(dst, px - dlx*ax - dx*ay, py - dly*ax - dy*ay, u0, 1, ax / w, t - dir * ay / w); dst++;
 		vset(dst, px, py, 0.5f, 1 , 0, t);  dst++;
@@ -925,7 +925,7 @@ static Vertex* roundCapEnd(Vertex* dst, Point* p,
 	vset(dst, px + dlx*w, py + dly*w, u0,1, w, t); dst++;
 	vset(dst, px - dlx*w, py - dly*w, u1,1, -w, t); dst++;
 	for (i = 0; i < ncap; i++) {
-		float a = i/(float)(ncap-1)*M_PI;
+		float a = i/(float)(ncap-1) * (float)M_PI;
 		float ax = cosf(a) * w, ay = sinf(a) * w;
 		vset(dst, px, py, 0.5f, 1, 0, t); dst++;
 		vset(dst, px - dlx*ax + dx*ay, py - dly*ax + dy*ay, u0, 1, ax / w, t + dir * ay / w); dst++;
@@ -1009,10 +1009,10 @@ static int expandStroke(Context* ctx, float w, float fringe, int lineCap, int li
 	float t;
 	float aa = fringe;//ctx->fringeWidth;
 	float u0 = 0.0f, u1 = 1.0f;
-	int ncap = curveDivs(w, M_PI, ctx->tessTol);	// Calculate divisions per half circle.
+	int ncap = curveDivs(w, (float)M_PI, ctx->tessTol);	// Calculate divisions per half circle.
 
 	w += aa * 0.5f;
-	const float invStrokeWidth = 1.0 / w;
+	const float invStrokeWidth = 1.0f / w;
 	// Disable the gradient used for antialiasing when antialiasing is not used.
 	if (aa == 0.0f) {
 		u0 = 0.5f;
@@ -1669,12 +1669,12 @@ void transformPoint(float* dx, float* dy, const float* t, float sx, float sy)
 
 float degToRad(float deg)
 {
-	return deg / 180.0f * M_PI;
+	return deg / 180.0f * (float)M_PI;
 }
 
 float radToDeg(float rad)
 {
-	return rad / M_PI * 180.0f;
+	return rad / (float)M_PI * 180.0f;
 }
 
 
@@ -2263,6 +2263,8 @@ void pathWinding(Context* ctx, int dir)
 
 void arc(Context* ctx, float cx, float cy, float r, float a0, float a1, int dir)
 {
+	const float pi = (float)M_PI;
+	const float twoPi = pi * 2.0f;
 	float a = 0, da = 0, hda = 0, kappa = 0;
 	float dx = 0, dy = 0, x = 0, y = 0, tanx = 0, tany = 0;
 	float px = 0, py = 0, ptanx = 0, ptany = 0;
@@ -2273,21 +2275,21 @@ void arc(Context* ctx, float cx, float cy, float r, float a0, float a1, int dir)
 	// Clamp angles
 	da = a1 - a0;
 	if (dir == static_cast<int>(Winding::CW)) {
-		if (detail::absf(da) >= M_PI*2) {
-			da = M_PI*2;
+		if (detail::absf(da) >= twoPi) {
+			da = twoPi;
 		} else {
-			while (da < 0.0f) da += M_PI*2;
+			while (da < 0.0f) da += twoPi;
 		}
 	} else {
-		if (detail::absf(da) >= M_PI*2) {
-			da = -M_PI*2;
+		if (detail::absf(da) >= twoPi) {
+			da = -twoPi;
 		} else {
-			while (da > 0.0f) da -= M_PI*2;
+			while (da > 0.0f) da -= twoPi;
 		}
 	}
 
 	// Split arc into max 90 degree segments.
-	ndivs = detail::maxi(1, detail::mini((int)(detail::absf(da) / (M_PI*0.5f) + 0.5f), 5));
+	ndivs = detail::maxi(1, detail::mini((int)(detail::absf(da) / (pi*0.5f) + 0.5f), 5));
 	hda = (da / (float)ndivs) / 2.0f;
 	kappa = detail::absf(4.0f / 3.0f * (1.0f - cosf(hda)) / sinf(hda));
 

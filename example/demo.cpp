@@ -335,8 +335,8 @@ void drawButton(nvg::Context* vg, int preicon, const char* text, float x, float 
 void drawSlider(nvg::Context* vg, float pos, float x, float y, float w, float h)
 {
 	nvg::Paint bg, knob;
-	float cy = y+(int)(h*0.5f);
-	float kr = (int)(h*0.25f);
+	float cy = y + h*0.5f;
+	float kr = h*0.25f;
 
 	nvg::save(vg);
 //	clearState(vg);
@@ -414,7 +414,7 @@ void drawEyes(nvg::Context* vg, float x, float y, float w, float h, float mx, fl
 	float ry = y + ey;
 	float dx,dy,d;
 	float br = (ex < ey ? ex : ey) * 0.5f;
-	float blink = 1 - pow(sinf(t*0.5f),200)*0.8f;
+	float blink = 1.0f - powf(sinf(t*0.5f), 200.0f)*0.8f;
 
 	bg = nvg::linearGradient(vg, x,y+h*0.5f,x+w*0.1f,y+h, nvg::rgba(0,0,0,32), nvg::rgba(0,0,0,16));
 	nvg::beginPath(vg);
@@ -479,7 +479,7 @@ void drawGraph(nvg::Context* vg, float x, float y, float w, float h, float t)
 
 	samples[0] = (1+sinf(t*1.2345f+cosf(t*0.33457f)*0.44f))*0.5f;
 	samples[1] = (1+sinf(t*0.68363f+cosf(t*1.3f)*1.55f))*0.5f;
-	samples[2] = (1+sinf(t*1.1642f+cosf(t*0.33457)*1.24f))*0.5f;
+	samples[2] = (1+sinf(t*1.1642f+cosf(t*0.33457f)*1.24f))*0.5f;
 	samples[3] = (1+sinf(t*0.56345f+cosf(t*1.63f)*0.14f))*0.5f;
 	samples[4] = (1+sinf(t*1.6245f+cosf(t*0.254f)*0.3f))*0.5f;
 	samples[5] = (1+sinf(t*0.345f+cosf(t*0.03f)*0.6f))*0.5f;
@@ -543,7 +543,7 @@ void drawGraph(nvg::Context* vg, float x, float y, float w, float h, float t)
 void drawSpinner(nvg::Context* vg, float cx, float cy, float r, float t)
 {
 	float a0 = 0.0f + t*6;
-	float a1 = M_PI + t*6;
+	float a1 = (float)M_PI + t*6;
 	float r0 = r;
 	float r1 = r * 0.75f;
 	float ax,ay, bx,by;
@@ -705,10 +705,12 @@ void drawColorwheel(nvg::Context* vg, float x, float y, float w, float h, float 
 	r1 = (w < h ? w : h) * 0.5f - 5.0f;
 	r0 = r1 - 20.0f;
 	aeps = 0.5f / r1;	// half a pixel arc length in radians (2pi cancels out).
+	const float pi = (float)M_PI;
+	const float twoPi = pi * 2.0f;
 
 	for (i = 0; i < 6; i++) {
-		float a0 = (float)i / 6.0f * M_PI * 2.0f - aeps;
-		float a1 = (float)(i+1.0f) / 6.0f * M_PI * 2.0f + aeps;
+		float a0 = (float)i / 6.0f * twoPi - aeps;
+		float a1 = (float)(i+1.0f) / 6.0f * twoPi + aeps;
 		nvg::beginPath(vg);
 		nvg::arc(vg, cx,cy, r0, a0, a1, static_cast<int>(nvg::Winding::CW));
 		nvg::arc(vg, cx,cy, r1, a1, a0, static_cast<int>(nvg::Winding::CCW));
@@ -717,7 +719,7 @@ void drawColorwheel(nvg::Context* vg, float x, float y, float w, float h, float 
 		ay = cy + sinf(a0) * (r0+r1)*0.5f;
 		bx = cx + cosf(a1) * (r0+r1)*0.5f;
 		by = cy + sinf(a1) * (r0+r1)*0.5f;
-		paint = nvg::linearGradient(vg, ax,ay, bx,by, nvg::hsla(a0/(M_PI*2),1.0f,0.55f,255), nvg::hsla(a1/(M_PI*2),1.0f,0.55f,255));
+		paint = nvg::linearGradient(vg, ax,ay, bx,by, nvg::hsla(a0/twoPi,1.0f,0.55f,255), nvg::hsla(a1/twoPi,1.0f,0.55f,255));
 		nvg::fillPaint(vg, paint);
 		nvg::fill(vg);
 	}
@@ -732,7 +734,7 @@ void drawColorwheel(nvg::Context* vg, float x, float y, float w, float h, float 
 	// Selector
 	nvg::save(vg);
 	nvg::translate(vg, cx,cy);
-	nvg::rotate(vg, hue*M_PI*2);
+	nvg::rotate(vg, hue*twoPi);
 
 	// Marker on
 	nvg::strokeWidth(vg, 2.0f);
@@ -751,10 +753,10 @@ void drawColorwheel(nvg::Context* vg, float x, float y, float w, float h, float 
 
 	// Center triangle
 	r = r0 - 6;
-	ax = cosf(120.0f/180.0f*M_PI) * r;
-	ay = sinf(120.0f/180.0f*M_PI) * r;
-	bx = cosf(-120.0f/180.0f*M_PI) * r;
-	by = sinf(-120.0f/180.0f*M_PI) * r;
+	ax = cosf(120.0f/180.0f*pi) * r;
+	ay = sinf(120.0f/180.0f*pi) * r;
+	bx = cosf(-120.0f/180.0f*pi) * r;
+	by = sinf(-120.0f/180.0f*pi) * r;
 	nvg::beginPath(vg);
 	nvg::moveTo(vg, r,0);
 	nvg::lineTo(vg, ax,ay);
@@ -770,8 +772,8 @@ void drawColorwheel(nvg::Context* vg, float x, float y, float w, float h, float 
 	nvg::stroke(vg);
 
 	// Select circle on triangle
-	ax = cosf(120.0f/180.0f*M_PI) * r*0.3f;
-	ay = sinf(120.0f/180.0f*M_PI) * r*0.4f;
+	ax = cosf(120.0f/180.0f*pi) * r*0.3f;
+	ay = sinf(120.0f/180.0f*pi) * r*0.4f;
 	nvg::strokeWidth(vg, 2.0f);
 	nvg::beginPath(vg);
 	nvg::circle(vg, ax,ay,5);
@@ -794,8 +796,8 @@ void drawColorwheel(nvg::Context* vg, float x, float y, float w, float h, float 
 	r1 += 0.5f*sqrt(tw*tw+th*th);
 	nvg::beginPath(vg);
 	nvg::fillColor(vg, nvg::rgb(32,32,32));
-	ax = cx + r1*cosf(hue*M_PI*2);
-	ay = cy + r1*sinf(hue*M_PI*2);
+	ax = cx + r1*cosf(hue*twoPi);
+	ay = cy + r1*sinf(hue*twoPi);
 	nvg::roundedRect(vg, ax - tw*0.5f, ay -th*0.5f, tw, th,5.0f);
 	nvg::fill(vg);
 
@@ -839,7 +841,7 @@ void drawLines(nvg::Context* vg, float x, float y, float w, float h, float lineW
 	nvg::save(vg);
 	pts[0] = -s*0.25f + cosf(t*0.3f) * s*0.5f;
 	pts[1] = sinf(t*0.3f) * s*0.5f;
-	pts[2] = -s*0.25;
+	pts[2] = -s*0.25f;
 	pts[3] = 0;
 	pts[4] = s*0.25f;
 	pts[5] = 0;
@@ -1014,7 +1016,12 @@ void drawParagraph(nvg::Context* vg, float x, float y, float width, float height
 
 		nvg::beginPath(vg);
 		nvg::fillColor(vg, nvg::rgba(255,192,0,255));
-		nvg::roundedRect(vg, (int)bounds[0]-4,(int)bounds[1]-2, (int)(bounds[2]-bounds[0])+8, (int)(bounds[3]-bounds[1])+4, ((int)(bounds[3]-bounds[1])+4)/2-1);
+		nvg::roundedRect(
+			vg,
+			(float)((int)bounds[0] - 4), (float)((int)bounds[1] - 2),
+			(float)((int)(bounds[2]-bounds[0]) + 8), (float)((int)(bounds[3]-bounds[1]) + 4),
+			(float)(((int)(bounds[3]-bounds[1]) + 4)/2 - 1)
+		);
 		nvg::fill(vg);
 
 		nvg::fillColor(vg, nvg::rgba(32,32,32,255));
@@ -1038,11 +1045,11 @@ void drawParagraph(nvg::Context* vg, float x, float y, float width, float height
 
 	nvg::beginPath(vg);
 	nvg::fillColor(vg, nvg::rgba(220,220,220,255));
-	nvg::roundedRect(vg, bounds[0]-2,bounds[1]-2, (int)(bounds[2]-bounds[0])+4, (int)(bounds[3]-bounds[1])+4, 3);
-	px = (int)((bounds[2]+bounds[0])/2);
-	nvg::moveTo(vg, px,bounds[1] - 10);
-	nvg::lineTo(vg, px+7,bounds[1]+1);
-	nvg::lineTo(vg, px-7,bounds[1]+1);
+	nvg::roundedRect(vg, bounds[0]-2.0f, bounds[1]-2.0f, (float)((int)(bounds[2]-bounds[0]) + 4), (float)((int)(bounds[3]-bounds[1]) + 4), 3.0f);
+	px = (bounds[2] + bounds[0]) * 0.5f;
+	nvg::moveTo(vg, px, bounds[1] - 10.0f);
+	nvg::lineTo(vg, px + 7.0f, bounds[1] + 1.0f);
+	nvg::lineTo(vg, px - 7.0f, bounds[1] + 1.0f);
 	nvg::fill(vg);
 
 	nvg::fillColor(vg, nvg::rgba(0,0,0,220));
@@ -1141,8 +1148,9 @@ void drawScissor(nvg::Context* vg, float x, float y, float t)
 
 void drawBezierCurve(nvg::Context* vg, float x0, float y0, float radius, float t){
 
-	float x1 = x0 + radius*cos(2*M_PI*t/5);
-	float y1 = y0 + radius*sin(2*M_PI*t/5);
+	const float pi = (float)M_PI;
+	float x1 = x0 + radius*cosf(2.0f*pi*t/5.0f);
+	float y1 = y0 + radius*sinf(2.0f*pi*t/5.0f);
 
 	float cx0 = x0;
 	float cy0 = y0 + ((y1 - y0) * 0.75f);
@@ -1185,7 +1193,7 @@ void drawBezierCurve(nvg::Context* vg, float x0, float y0, float radius, float t
 
 void drawScaledText(nvg::Context* vg, float x0, float y0, float t){
 	nvg::save(vg);
-	const float textScale = (cos(2 * M_PI * t * 0.25)+1.0) + 0.1;
+	const float textScale = (cosf(2.0f * (float)M_PI * t * 0.25f) + 1.0f) + 0.1f;
 	nvg::translate(vg, x0, y0);
 	nvg::scale(vg, textScale, textScale);
 	nvg::fontSize(vg, 24.0f);
@@ -1212,7 +1220,7 @@ void renderDemo(nvg::Context* vg, float mx, float my, float width, float height,
 
 	// Line joints
 
-	switch((int)(t/5.0)%3){
+	switch((int)(t/5.0f)%3){
 		case 0:
 			nvg::lineStyle(vg, static_cast<int>(nvg::LineStyle::Dashed));break;
 		case 1:
@@ -1237,7 +1245,7 @@ void renderDemo(nvg::Context* vg, float mx, float my, float width, float height,
 
 	nvg::save(vg);
 	if (blowup) {
-		nvg::rotate(vg, sinf(t*0.3f)*5.0f/180.0f*M_PI);
+		nvg::rotate(vg, sinf(t*0.3f)*5.0f/180.0f*(float)M_PI);
 		nvg::scale(vg, 2.0f, 2.0f);
 	}
 
@@ -1369,7 +1377,7 @@ static void flipHorizontal(unsigned char* image, int w, int h, int stride)
 
 bool comparePreviousScreenShot(int nw, int nh, int premult, unsigned char* nimg, const char* name)
 {
-	int w, h, n, image;
+	int w, h, n;
 	unsigned char* img;
 	stbi_set_unpremultiply_on_load(premult);
 	stbi_convert_iphone_png_to_rgb(1);
@@ -1398,8 +1406,8 @@ bool comparePreviousScreenShot(int nw, int nh, int premult, unsigned char* nimg,
 			diff[idx+2]=std::min(bd*4,255);
 			diff[idx+3]=255;
 			if(rd > Threshold || gd > Threshold || bd > Threshold || ad > Threshold){
-				int i=(idx/4)%w;
-				int j=(idx/4)/w;
+				size_t i=(idx/4)% (size_t)w;
+				size_t j=(idx/4)/ (size_t)w;
 				ret=false;
 				break;
 			}

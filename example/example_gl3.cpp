@@ -188,7 +188,7 @@ int main(int argc, char** argv)
 		glfwGetWindowSize(window, &winWidth, &winHeight);
 		glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
 		if(testSpecified){
-			float angle=2.0*nvg::PI*testRemaining/float(testCount);
+			double angle = 2.0 * nvg::PI * testRemaining / (double)testCount;
 			mx=winWidth/2.0f+cos(angle)*winWidth/4.0f;
 			my=winHeight/2.0f+sin(angle)*winHeight/4.0f;
 		} else {
@@ -205,9 +205,9 @@ int main(int argc, char** argv)
 			glClearColor(0.3f, 0.3f, 0.32f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT|GL_STENCIL_BUFFER_BIT);
 
-		nvg::beginFrame(vg, winWidth, winHeight, pxRatio);
+		nvg::beginFrame(vg, (float)winWidth, (float)winHeight, pxRatio);
 
-		renderDemo(vg, mx,my, winWidth,winHeight, t, blowup, &data);
+		renderDemo(vg, (float)mx, (float)my, (float)winWidth, (float)winHeight, (float)t, blowup, &data);
 
 		if(!testSpecified){
 			renderGraph(vg, 5,5, &fps);
@@ -221,8 +221,8 @@ int main(int argc, char** argv)
 		// Measure the CPU time taken excluding swap buffers (as the swap may wait for GPU)
 		cpuTime = glfwGetTime() - t;
 
-		updateGraph(&fps, dt);
-		updateGraph(&cpuGraph, cpuTime);
+		updateGraph(&fps, (float)dt);
+		updateGraph(&cpuGraph, (float)cpuTime);
 
 		// We may get multiple results.
 		n = stopGPUTimer(&gpuTimer, gpuTimes, 3);
