@@ -109,6 +109,9 @@ struct ContextImpl {
 	ContextImpl(ContextImpl&&) = delete;
 	ContextImpl& operator=(ContextImpl&&) = delete;
 
+	protected:
+	friend class Context;
+	
 	Params params;
 	std::vector<float> commands;
 	float commandx, commandy;
