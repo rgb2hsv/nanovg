@@ -1341,7 +1341,7 @@ static int isTransformFlipped(const float *xform)
 } // namespace detail
 
 Context::Context(const Params& params) : mImpl(
-	std::shared_ptr<ContextImpl>(createInternal(params),deleteInternal)) {}
+	std::make_shared<ContextImpl>(params)) {}
 
 Context::~Context() = default;
 
@@ -3043,19 +3043,5 @@ void textMetrics(Context& ctx, float* ascender, float* descender, float* lineh)
 		*descender *= invscale;
 	if (lineh != NULL)
 		*lineh *= invscale;
-}
-
-Context* createInternal(Params& params)
-{
-	auto impl = std::make_shared<ContextImpl>(params);
-	Context* ctx = new Context(std::move(impl));
-	save(*ctx);
-	reset(*ctx);
-	return ctx;
-}
-
-void deleteInternal(Context* ctx)
-{
-	delete ctx;
 }
 }

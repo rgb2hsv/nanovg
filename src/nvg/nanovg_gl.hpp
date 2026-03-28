@@ -57,47 +57,28 @@ inline constexpr int operator&(int a, CreateFlags b) noexcept { return a & to_un
 // Flags should be combination of the create flags above.
 
 namespace nvg {
+std::unique_ptr<Context> createGL(int flags);
+void deleteGL(std::unique_ptr<Context>& ctx);
 
 #if defined NANOVG_GL2
-
-std::shared_ptr<Context> createGL2(int flags);
-void deleteGL2(std::shared_ptr<Context> ctx);
-
 int nvglCreateImageFromHandleGL2(Context& ctx, GLuint textureId, int w, int h, int flags);
 GLuint nvglImageHandleGL2(Context& ctx, int image);
-
 #endif
 
 #if defined NANOVG_GL3
-
-std::shared_ptr<Context> createGL3(int flags);
-void deleteGL3(std::shared_ptr<Context> ctx);
-
 int nvglCreateImageFromHandleGL3(Context& ctx, GLuint textureId, int w, int h, int flags);
 GLuint nvglImageHandleGL3(Context& ctx, int image);
-
 #endif
 
 #if defined NANOVG_GLES2
-
-std::shared_ptr<Context> createGLES2(int flags);
-void deleteGLES2(std::shared_ptr<Context> ctx);
-
 int nvglCreateImageFromHandleGLES2(Context& ctx, GLuint textureId, int w, int h, int flags);
 GLuint nvglImageHandleGLES2(Context& ctx, int image);
-
 #endif
 
 #if defined NANOVG_GLES3
-
-std::shared_ptr<Context> createGLES3(int flags);
-void deleteGLES3(std::shared_ptr<Context> ctx);
-
 int nvglCreateImageFromHandleGLES3(Context& ctx, GLuint textureId, int w, int h, int flags);
 GLuint nvglImageHandleGLES3(Context& ctx, int image);
-
 #endif
-
 } // namespace nvg
 
 namespace nvg {
@@ -1645,15 +1626,7 @@ static void glnvg__renderDelete(void* uptr)
 }
 
 
-#if defined NANOVG_GL2
-std::shared_ptr<Context> createGL2(int flags)
-#elif defined NANOVG_GL3
-std::shared_ptr<Context> createGL3(int flags)
-#elif defined NANOVG_GLES2
-std::shared_ptr<Context> createGLES2(int flags)
-#elif defined NANOVG_GLES3
-std::shared_ptr<Context> createGLES3(int flags)
-#endif
+std::unique_ptr<Context> createGL(int flags)
 {
 	Params params{};
 	GLContext* gl = static_cast<GLContext*>(std::malloc(sizeof(GLContext)));
@@ -1677,20 +1650,10 @@ std::shared_ptr<Context> createGLES3(int flags)
 	params.edgeAntiAlias = flags & CreateFlags::Antialias ? 1 : 0;
 
 	gl->flags = flags;
-
-	return std::shared_ptr<Context>(createInternal(params),deleteInternal);
+	return std::make_unique<Context>(params);
 }
 
-#if defined NANOVG_GL2
-void deleteGL2(std::shared_ptr<Context> ctx)
-#elif defined NANOVG_GL3
-void deleteGL3(std::shared_ptr<Context> ctx)
-#elif defined NANOVG_GLES2
-void deleteGLES2(std::shared_ptr<Context> ctx)
-#elif defined NANOVG_GLES3
-void deleteGLES3(std::shared_ptr<Context> ctx)
-#endif
-{
+inline void deleteGL(std::unique_ptr<Context>& ctx){
 	ctx.reset();
 }
 

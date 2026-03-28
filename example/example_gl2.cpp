@@ -57,7 +57,6 @@ int main()
 {
 	GLFWwindow* window;
 	DemoData data;
-	std::shared_ptr<nvg::Context> vgOwner;
 	PerfGraph fps;
 	double prevt = 0;
 
@@ -94,9 +93,9 @@ int main()
 #endif
 
 #ifdef DEMO_MSAA
-	vgOwner = nvg::createGL2(static_cast<int>(nvg::CreateFlags::StencilStrokes | nvg::CreateFlags::Debug));
+	auto vgOwner = nvg::createGL(static_cast<int>(nvg::CreateFlags::StencilStrokes | nvg::CreateFlags::Debug));
 #else
-	vgOwner = nvg::createGL2(static_cast<int>(nvg::CreateFlags::Antialias | nvg::CreateFlags::StencilStrokes | nvg::CreateFlags::Debug));
+	auto vgOwner = nvg::createGL(static_cast<int>(nvg::CreateFlags::Antialias | nvg::CreateFlags::StencilStrokes | nvg::CreateFlags::Debug));
 #endif
 	if (!vgOwner) {
 		printf("Could not init nanovg.\n");
@@ -157,7 +156,7 @@ int main()
 
 	freeDemoData(vg, &data);
 
-	nvg::deleteGL2(std::move(vgOwner));
+	nvg::deleteGL(vgOwner);
 
 	glfwTerminate();
 	return 0;

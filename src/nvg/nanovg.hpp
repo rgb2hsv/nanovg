@@ -752,11 +752,6 @@ int textBreakLines(Context& ctx, const char* string, const char* end, float brea
 // Get image texture Id
 int getImageTextureId(Context* ctx, int handle);
 
-//
-// Constructor and destructor, called by the render back-end.
-Context* createInternal(Params& params);
-void deleteInternal(Context* ctx);
-
 const Params& internalParams(Context& ctx);
 
 // Debug function to dump cached path data.

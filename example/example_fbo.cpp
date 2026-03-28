@@ -155,9 +155,9 @@ int main()
 #endif
 
 #ifdef DEMO_MSAA
-	vgOwner = nvg::createGL3(static_cast<int>(nvg::CreateFlags::StencilStrokes | nvg::CreateFlags::Debug));
+	vgOwner = nvg::createGL(static_cast<int>(nvg::CreateFlags::StencilStrokes | nvg::CreateFlags::Debug));
 #else
-	vgOwner = nvg::createGL3(static_cast<int>(nvg::CreateFlags::Antialias | nvg::CreateFlags::StencilStrokes | nvg::CreateFlags::Debug));
+	vgOwner = nvg::createGL(static_cast<int>(nvg::CreateFlags::Antialias | nvg::CreateFlags::StencilStrokes | nvg::CreateFlags::Debug));
 #endif
 	if (!vgOwner) {
 		printf("Could not init nanovg.\n");
@@ -265,7 +265,7 @@ int main()
 
 	nvgluDeleteFramebuffer(fb);
 
-	nvg::deleteGL3(std::move(vgOwner));
+	nvg::deleteGL(vgOwner);
 
 	printf("Average Frame Time: %.2f ms\n", getGraphAverage(&fps) * 1000.0f);
 	printf("          CPU Time: %.2f ms\n", getGraphAverage(&cpuGraph) * 1000.0f);

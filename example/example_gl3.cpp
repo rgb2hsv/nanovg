@@ -63,7 +63,6 @@ int main(int argc, char** argv)
 {
 	GLFWwindow* window;
 	DemoData data;
-	std::shared_ptr<nvg::Context> vgOwner;
 	GPUtimer gpuTimer;
 	PerfGraph fps, cpuGraph, gpuGraph;
 	double prevt = 0, cpuTime = 0;
@@ -139,9 +138,9 @@ int main(int argc, char** argv)
 #endif
 
 #ifdef DEMO_MSAA
-	vgOwner = nvg::createGL3(static_cast<int>(nvg::CreateFlags::StencilStrokes | nvg::CreateFlags::Debug));
+	auto vgOwner = nvg::createGL(static_cast<int>(nvg::CreateFlags::StencilStrokes | nvg::CreateFlags::Debug));
 #else
-	vgOwner = nvg::createGL3(static_cast<int>(nvg::CreateFlags::Antialias | nvg::CreateFlags::StencilStrokes | nvg::CreateFlags::Debug));
+	auto vgOwner = nvg::createGL(static_cast<int>(nvg::CreateFlags::Antialias | nvg::CreateFlags::StencilStrokes | nvg::CreateFlags::Debug));
 #endif
 	if (!vgOwner) {
 		printf("Could not init nanovg.\n");
@@ -253,7 +252,7 @@ int main(int argc, char** argv)
 
 	freeDemoData(vg, &data);
 
-	nvg::deleteGL3(std::move(vgOwner));
+	nvg::deleteGL(vgOwner);
 
 	if (!testSpecified) {
 		printf("Average Frame Time: %.2f ms\n", getGraphAverage(&fps) * 1000.0f);
