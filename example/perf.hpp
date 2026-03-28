@@ -2,6 +2,7 @@
 
 #include "nanovg.hpp"
 #include <array>
+#include <string>
 
 enum GraphrenderStyle {
     GRAPH_RENDER_FPS,
@@ -18,7 +19,7 @@ struct PerfGraph {
 };
 typedef struct PerfGraph PerfGraph;
 
-void initGraph(PerfGraph* fps, int style, const char* name);
+void initGraph(PerfGraph* fps, int style, const std::string& name);
 void updateGraph(PerfGraph* fps, float frameTime);
 void renderGraph(nvg::Context& vg, float x, float y, PerfGraph* fps);
 float getGraphAverage(PerfGraph* fps);

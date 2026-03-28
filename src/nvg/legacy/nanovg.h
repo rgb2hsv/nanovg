@@ -732,7 +732,11 @@ void nvgDebugDumpPathCache(NVGcontext* ctx);
 #pragma warning(pop)
 #endif
 
+#ifdef _MSC_VER
+#define NVG_NOTUSED(v) ((void)(v))
+#else
 #define NVG_NOTUSED(v) for (;;) { (void)(1 ? (void)0 : ( (void)(v) ) ); break; }
+#endif
 
 #ifdef __cplusplus
 }

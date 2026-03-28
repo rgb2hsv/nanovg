@@ -107,7 +107,7 @@ int main()
 		t = glfwGetTime();
 		dt = t - prevt;
 		prevt = t;
-		updateGraph(&fps, dt);
+		updateGraph(&fps, (float)dt);
 
 		glfwGetCursorPos(window, &mx, &my);
 		glfwGetWindowSize(window, &winWidth, &winHeight);
@@ -128,9 +128,9 @@ int main()
 		glEnable(GL_CULL_FACE);
 		glDisable(GL_DEPTH_TEST);
 
-		nvgBeginFrame(vg, winWidth, winHeight, pxRatio);
+		nvgBeginFrame(vg, (float)winWidth, (float)winHeight, pxRatio);
 
-		renderDemo(vg, mx,my, winWidth,winHeight, t, blowup, &data);
+		renderDemo(vg, (float)mx, (float)my, (float)winWidth, (float)winHeight, (float)t, blowup, &data);
 		renderGraph(vg, 5,5, &fps);
 
 		nvgEndFrame(vg);

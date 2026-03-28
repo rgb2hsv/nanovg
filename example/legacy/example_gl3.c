@@ -154,9 +154,9 @@ int main()
 			glClearColor(0.3f, 0.3f, 0.32f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT|GL_STENCIL_BUFFER_BIT);
 
-		nvgBeginFrame(vg, winWidth, winHeight, pxRatio);
+		nvgBeginFrame(vg, (float)winWidth, (float)winHeight, pxRatio);
 
-		renderDemo(vg, mx,my, winWidth,winHeight, t, blowup, &data);
+		renderDemo(vg, (float)mx, (float)my, (float)winWidth, (float)winHeight, (float)t, blowup, &data);
 
 		renderGraph(vg, 5,5, &fps);
 		renderGraph(vg, 5+200+5,5, &cpuGraph);
@@ -168,8 +168,8 @@ int main()
 		// Measure the CPU time taken excluding swap buffers (as the swap may wait for GPU)
 		cpuTime = glfwGetTime() - t;
 
-		updateGraph(&fps, dt);
-		updateGraph(&cpuGraph, cpuTime);
+		updateGraph(&fps, (float)dt);
+		updateGraph(&cpuGraph, (float)cpuTime);
 
 		// We may get multiple results.
 		n = stopGPUTimer(&gpuTimer, gpuTimes, 3);

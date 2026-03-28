@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+#include <string>
 #include <array>
 #ifdef NANOVG_GLEW
 #  include <GL/glew.h>
@@ -77,13 +78,13 @@ int stopGPUTimer(GPUtimer* timer, float* times, int maxTimes)
 }
 
 
-void initGraph(PerfGraph* fps, int style, const char* name)
+void initGraph(PerfGraph* fps, int style, const std::string& name)
 {
 	fps->style = style;
 	fps->head = 0;
 	fps->values.fill(0.0f);
 	fps->name.fill('\0');
-	strncpy(fps->name.data(), name, fps->name.size());
+	strncpy(fps->name.data(), name.c_str(), fps->name.size());
 	fps->name[fps->name.size()-1] = '\0';
 }
 

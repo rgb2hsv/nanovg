@@ -20,6 +20,8 @@ test
 .Trashes
 ehthumbs.db
 Thumbs.db
+dump.png
+screenshot*.png
 
 ## Build dir
 build/*

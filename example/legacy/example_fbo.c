@@ -50,7 +50,7 @@ void renderPattern(NVGcontext* vg, NVGLUframebuffer* fb, float t, float pxRatio)
 	glViewport(0, 0, fboWidth, fboHeight);
 	glClearColor(0, 0, 0, 0);
 	glClear(GL_COLOR_BUFFER_BIT|GL_STENCIL_BUFFER_BIT);
-	nvgBeginFrame(vg, winWidth, winHeight, pxRatio);
+	nvgBeginFrame(vg, (float)winWidth, (float)winHeight, pxRatio);
 
 	pw = (int)ceilf(winWidth / s);
 	ph = (int)ceilf(winHeight / s);
@@ -205,14 +205,14 @@ int main()
 		// Calculate pixel ration for hi-dpi devices.
 		pxRatio = (float)fbWidth / (float)winWidth;
 
-		renderPattern(vg, fb, t, pxRatio);
+		renderPattern(vg, fb, (float)t, pxRatio);
 
 		// Update and render
 		glViewport(0, 0, fbWidth, fbHeight);
 		glClearColor(0.3f, 0.3f, 0.32f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT|GL_STENCIL_BUFFER_BIT);
 
-		nvgBeginFrame(vg, winWidth, winHeight, pxRatio);
+		nvgBeginFrame(vg, (float)winWidth, (float)winHeight, pxRatio);
 
 		// Use the FBO as image pattern.
 		if (fb != NULL) {
@@ -221,13 +221,13 @@ int main()
 
 			for (i = 0; i < 20; i++) {
 				nvgBeginPath(vg);
-				nvgRect(vg, 10 + i*30,10, 10, winHeight-20);
+				nvgRect(vg, (float)(10 + i*30), 10.0f, 10.0f, (float)(winHeight-20));
 				nvgFillColor(vg, nvgHSLA(i/19.0f, 0.5f, 0.5f, 255));
 				nvgFill(vg);
 			}
 
 			nvgBeginPath(vg);
-			nvgRoundedRect(vg, 140 + sinf(t*1.3f)*100, 140 + cosf(t*1.71244f)*100, 250, 250, 20);
+			nvgRoundedRect(vg, 140.0f + sinf((float)t*1.3f)*100.0f, 140.0f + cosf((float)t*1.71244f)*100.0f, 250.0f, 250.0f, 20.0f);
 			nvgFillPaint(vg, img);
 			nvgFill(vg);
 			nvgStrokeColor(vg, nvgRGBA(220,160,0,255));
@@ -247,8 +247,8 @@ int main()
 		// Measure the CPU time taken excluding swap buffers (as the swap may wait for GPU)
 		cpuTime = glfwGetTime() - t;
 
-		updateGraph(&fps, dt);
-		updateGraph(&cpuGraph, cpuTime);
+		updateGraph(&fps, (float)dt);
+		updateGraph(&cpuGraph, (float)cpuTime);
 
 		// We may get multiple results.
 		n = stopGPUTimer(&gpuTimer, gpuTimes, 3);

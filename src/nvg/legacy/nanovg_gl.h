@@ -967,7 +967,11 @@ static int glnvg__convertPaint(GLNVGcontext* gl, GLNVGfragUniforms* frag, NVGpai
 
 	frag->innerCol = glnvg__premulColor(paint->innerColor);
 	frag->outerCol = glnvg__premulColor(paint->outerColor);
+#if NANOVG_GL_USE_UNIFORMBUFFER
 	frag->lineStyle = lineStyle;
+#else
+	frag->lineStyle = (float)lineStyle;
+#endif
 	if (scissor->extent[0] < -0.5f || scissor->extent[1] < -0.5f) {
 		memset(frag->scissorMat, 0, sizeof(frag->scissorMat));
 		frag->scissorExt[0] = 1.0f;

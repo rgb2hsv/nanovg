@@ -21,6 +21,7 @@
 #include <string.h>
 #include <array>
 #include <memory>
+#include <string>
 #ifdef NANOVG_GLEW
 #	include <GL/glew.h>
 #endif
@@ -237,7 +238,7 @@ int main(int argc, char** argv)
 			std::array<char, 256> fileName{};
 			printf("Capturing %d/%d at t = %0.2f sec\n", testCount - testRemaining + 1, testCount,t);
 			snprintf(fileName.data(), (int)fileName.size(), "screenshot%03d.png", testCount - testRemaining + 1);
-			success&=saveScreenShot(fbWidth, fbHeight, false, fileName.data(), true);
+			success &= saveScreenShot(fbWidth, fbHeight, false, std::string(fileName.data()), true);
 			testRemaining--;
 			if (testRemaining == 0)
 				glfwSetWindowShouldClose(window, GL_TRUE);

@@ -10,8 +10,9 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
-
 #ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable: 4244) /* float/double/int conversions in layout math */
 #define snprintf _snprintf
 #elif !defined(__MINGW32__)
 #include <iconv.h>
@@ -55,7 +56,7 @@ static char* cpToUTF8(int cp, char* str)
 	case 4: str[3] = 0x80 | (cp & 0x3f); cp = cp >> 6; cp |= 0x10000;
 	case 3: str[2] = 0x80 | (cp & 0x3f); cp = cp >> 6; cp |= 0x800;
 	case 2: str[1] = 0x80 | (cp & 0x3f); cp = cp >> 6; cp |= 0xc0;
-	case 1: str[0] = cp;
+	case 1: str[0] = (char)cp;
 	}
 	return str;
 }
@@ -321,8 +322,8 @@ void drawButton(NVGcontext* vg, int preicon, const char* text, float x, float y,
 void drawSlider(NVGcontext* vg, float pos, float x, float y, float w, float h)
 {
 	NVGpaint bg, knob;
-	float cy = y+(int)(h*0.5f);
-	float kr = (int)(h*0.25f);
+	float cy = y + (float)((int)(h*0.5f));
+	float kr = (float)((int)(h*0.25f));
 
 	nvgSave(vg);
 //	nvgClearState(vg);
@@ -400,7 +401,7 @@ void drawEyes(NVGcontext* vg, float x, float y, float w, float h, float mx, floa
 	float ry = y + ey;
 	float dx,dy,d;
 	float br = (ex < ey ? ex : ey) * 0.5f;
-	float blink = 1 - pow(sinf(t*0.5f),200)*0.8f;
+	float blink = 1.0f - powf(sinf(t*0.5f), 200.0f)*0.8f;
 
 	bg = nvgLinearGradient(vg, x,y+h*0.5f,x+w*0.1f,y+h, nvgRGBA(0,0,0,32), nvgRGBA(0,0,0,16));
 	nvgBeginPath(vg);
@@ -777,7 +778,7 @@ void drawColorwheel(NVGcontext* vg, float x, float y, float w, float h, float t)
 	// Render hue label
 	const float tw = 50;
 	const float th = 25;
-	r1 += 0.5f*sqrt(tw*tw+th*th);
+	r1 += 0.5f*sqrtf(tw*tw+th*th);
 	nvgBeginPath(vg);
 	nvgFillColor(vg, nvgRGB(32,32,32));
 	ax = cx + r1*cosf(hue*NVG_PI*2);
@@ -825,8 +826,8 @@ void drawLines(NVGcontext* vg, float x, float y, float w, float h, float strokeW
 	nvgSave(vg);
 	pts[0] = -s*0.25f + cosf(t*0.3f) * s*0.5f;
 	pts[1] = sinf(t*0.3f) * s*0.5f;
-	pts[2] = -s*0.25;
-	pts[3] = 0;
+	pts[2] = -s*0.25f;
+	pts[3] = 0.0f;
 	pts[4] = s*0.25f;
 	pts[5] = 0;
 	pts[6] = s*0.25f + cosf(-t*0.3f) * s*0.5f;
@@ -933,7 +934,7 @@ void drawParagraph(NVGcontext* vg, float x, float y, float width, float height, 
 	float bounds[4];
 	float a;
 	const char* hoverText = "Hover your mouse over the text to see calculated caret position.";
-	float gx,gy;
+	float gx = 0.0f, gy = 0.0f;
 	int gutter = 0;
 	NVG_NOTUSED(height);
 
@@ -969,10 +970,10 @@ void drawParagraph(NVGcontext* vg, float x, float y, float width, float height, 
 				for (j = 0; j < nglyphs; j++) {
 					float x0 = glyphs[j].x;
 					float x1 = (j+1 < nglyphs) ? glyphs[j+1].x : x+row->width;
-					float gx = x0 * 0.3f + x1 * 0.7f;
-					if (mx >= px && mx < gx)
+					float glyphMidX = x0 * 0.3f + x1 * 0.7f;
+					if (mx >= px && mx < glyphMidX)
 						caretx = glyphs[j].x;
-					px = gx;
+					px = glyphMidX;
 				}
 				nvgBeginPath(vg);
 				nvgFillColor(vg, nvgRGBA(255,192,0,255));
@@ -1127,8 +1128,8 @@ void drawScissor(NVGcontext* vg, float x, float y, float t)
 
 void drawBezierCurve(NVGcontext* vg, float x0, float y0, float radius, float t){
 
-	float x1 = x0 + radius*cos(2*NVG_PI*t/5);
-	float y1 = y0 + radius*sin(2*NVG_PI*t/5);
+	float x1 = x0 + radius*cosf(2.0f*NVG_PI*t/5.0f);
+	float y1 = y0 + radius*sinf(2.0f*NVG_PI*t/5.0f);
 
 	float cx0 = x0;
 	float cy0 = y0 + ((y1 - y0) * 0.75f);
@@ -1171,9 +1172,9 @@ void drawBezierCurve(NVGcontext* vg, float x0, float y0, float radius, float t){
 
 void drawScaledText(NVGcontext* vg, float x0, float y0, float t){
 	nvgSave(vg);
-	const float scale = (cos(2 * NVG_PI * t * 0.25)+1.0) + 0.1;
+	const float scale = (cosf(2.0f * NVG_PI * t * 0.25f)+1.0f) + 0.1f;
 	nvgTranslate(vg, x0, y0);
-;	nvgScale(vg, scale, scale);
+	nvgScale(vg, scale, scale);
 	nvgFontSize(vg, 24.0f);
 	nvgFontFace(vg, "sans-bold");
 	nvgTextAlign(vg,NVG_ALIGN_CENTER|NVG_ALIGN_MIDDLE);
@@ -1278,9 +1279,9 @@ static void unpremultiplyAlpha(unsigned char* image, int w, int h, int stride)
 		for (x = 0; x < w; x++) {
 			int r = row[0], g = row[1], b = row[2], a = row[3];
 			if (a != 0) {
-				row[0] = (int)mini(r*255/a, 255);
-				row[1] = (int)mini(g*255/a, 255);
-				row[2] = (int)mini(b*255/a, 255);
+				row[0] = (unsigned char)mini(r*255/a, 255);
+				row[1] = (unsigned char)mini(g*255/a, 255);
+				row[2] = (unsigned char)mini(b*255/a, 255);
 			}
 			row += 4;
 		}
@@ -1317,9 +1318,9 @@ static void unpremultiplyAlpha(unsigned char* image, int w, int h, int stride)
 					n++;
 				}
 				if (n > 0) {
-					row[0] = r/n;
-					row[1] = g/n;
-					row[2] = b/n;
+					row[0] = (unsigned char)(r/n);
+					row[1] = (unsigned char)(g/n);
+					row[2] = (unsigned char)(b/n);
 				}
 			}
 			row += 4;
@@ -1367,3 +1368,7 @@ void saveScreenShot(int w, int h, int premult, const char* name)
  	stbi_write_png(name, w, h, 4, image, w*4);
  	free(image);
 }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
