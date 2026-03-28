@@ -52,7 +52,7 @@ void renderPattern(nvg::Context& vg, GlUtilsFramebuffer* fb, float t, float pxRa
 	glViewport(0, 0, fboWidth, fboHeight);
 	glClearColor(0, 0, 0, 0);
 	glClear(GL_COLOR_BUFFER_BIT|GL_STENCIL_BUFFER_BIT);
-	nvg::beginFrame(vg, winWidth, winHeight, pxRatio);
+	nvg::beginFrame(vg, static_cast<float>(winWidth), static_cast<float>(winHeight), pxRatio);
 
 	pw = (int)ceilf(winWidth / s);
 	ph = (int)ceilf(winHeight / s);
@@ -208,14 +208,14 @@ int main()
 		// Calculate pixel ration for hi-dpi devices.
 		pxRatio = (float)fbWidth / (float)winWidth;
 
-		renderPattern(vg, fb, t, pxRatio);
+		renderPattern(vg, fb, static_cast<float>(t), pxRatio);
 
 		// Update and render
 		glViewport(0, 0, fbWidth, fbHeight);
 		glClearColor(0.3f, 0.3f, 0.32f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT|GL_STENCIL_BUFFER_BIT);
 
-		nvg::beginFrame(vg, winWidth, winHeight, pxRatio);
+		nvg::beginFrame(vg, static_cast<float>(winWidth), static_cast<float>(winHeight), pxRatio);
 
 		// Use the FBO as image pattern.
 		if (fb != NULL) {
@@ -224,13 +224,14 @@ int main()
 
 			for (i = 0; i < 20; i++) {
 				nvg::beginPath(vg);
-				nvg::rect(vg, 10 + i*30,10, 10, winHeight-20);
+				nvg::rect(vg, static_cast<float>(10 + i * 30), 10.f, 10.f, static_cast<float>(winHeight - 20));
 				nvg::fillColor(vg, nvg::hsla(i/19.0f, 0.5f, 0.5f, 255));
 				nvg::fill(vg);
 			}
 
 			nvg::beginPath(vg);
-			nvg::roundedRect(vg, 140 + sinf(t*1.3f)*100, 140 + cosf(t*1.71244f)*100, 250, 250, 20);
+			const float animT = static_cast<float>(t);
+			nvg::roundedRect(vg, 140.f + sinf(animT * 1.3f) * 100.f, 140.f + cosf(animT * 1.71244f) * 100.f, 250.f, 250.f, 20.f);
 			nvg::fillPaint(vg, img);
 			nvg::fill(vg);
 			nvg::strokeColor(vg, nvg::rgba(220,160,0,255));
@@ -250,8 +251,8 @@ int main()
 		// Measure the CPU time taken excluding swap buffers (as the swap may wait for GPU)
 		cpuTime = glfwGetTime() - t;
 
-		updateGraph(&fps, dt);
-		updateGraph(&cpuGraph, cpuTime);
+		updateGraph(&fps, static_cast<float>(dt));
+		updateGraph(&cpuGraph, static_cast<float>(cpuTime));
 
 		// We may get multiple results.
 		n = stopGPUTimer(&gpuTimer, gpuTimes.data(), (int)gpuTimes.size());

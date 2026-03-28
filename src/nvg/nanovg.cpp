@@ -31,6 +31,7 @@
 #include <stdexcept>
 #include <ranges>
 #include <span>
+#include <bit>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -44,6 +45,8 @@
 		} \
 	} while (0)
 	
+
+#define NANOVG_FAST_SQRT
 #define FONTSTASH_IMPLEMENTATION
 #include "fontstash.h"
 
@@ -170,15 +173,23 @@ struct Context {
 	std::shared_ptr<PathCache> cache;
 };
 
+Context* createInternal(Params& params){
+	return new Context(params);
+}
+
+void deleteInternal(Context* ctx){
+	delete ctx;
+}
+
 namespace detail {
 
-static float sqrtf(float a) { return ::sqrtf(a); } //TODO: change to use fast sqrt approximation
-static float modf(float a, float b) { return ::fmodf(a, b); }
-static float sinf(float a) { return ::sinf(a); }
-static float cosf(float a) { return ::cosf(a); }
-static float tanf(float a) { return ::tanf(a); }
-static float atan2f(float a,float b) { return ::atan2f(a, b); }
-static float acosf(float a) { return ::acosf(a); }
+static float sqrtf(float a) { return std::sqrtf(a); } //TODO: change to use fast sqrt approximation
+static float modf(float a, float b) { return std::fmodf(a, b); }
+static float sinf(float a) { return std::sinf(a); }
+static float cosf(float a) { return std::cosf(a); }
+static float tanf(float a) { return std::tanf(a); }
+static float atan2f(float a,float b) { return std::atan2f(a, b); }
+static float acosf(float a) { return std::acosf(a); }
 static int mini(int a, int b) { return a < b ? a : b; }
 static int maxi(int a, int b) { return a > b ? a : b; }
 static int clampi(int a, int mn, int mx) { return a < mn ? mn : (a > mx ? mx : a); }
@@ -188,24 +199,40 @@ static float absf(float a) { return a >= 0.0f ? a : -a; }
 static float signf(float a) { return a >= 0.0f ? 1.0f : -1.0f; }
 static float clampf(float a, float mn, float mx) { return a < mn ? mn : (a > mx ? mx : a); }
 static float cross(float dx0, float dy0, float dx1, float dy1) { return dx1*dy0 - dx0*dy1; }
+static float rsqrtf(float x) {
+	float xhalf = 0.5f * x;
+    uint32_t i = std::bit_cast<uint32_t>(x);
+    // The magic constant
+    i = 0x5f3759df - (i >> 1);    
+    float y = std::bit_cast<float>(i);
+    // One iteration of Newton's Method
+    y = y * (1.5f - (xhalf * y * y));
+	return y;
+}
+
+#if defined(NANOVG_FAST_SQRT)
 static float normalize(float& x, float& y)
 {
-	float d = sqrtf((x)*(x) + (y)*(y));
-	if (d > 1e-6f) {
-		float id = 1.0f / d;
-		x *= id;
-		y *= id;
+	float id = rsqrtf(x*x + y*y);
+	x *= id;
+	y *= id;
+	if(id<=std::numeric_limits<float>::epsilon())
+		return std::numeric_limits<float>::max();
+
+	return 1.0f/id;
+}
+#else
+static float normalize(float& x, float& y)
+{
+	float d = sqrtf(x*x + y*y);
+	if(d>std::numeric_limits<float>::epsilon()) {
+		d = 1.0f/d;
+		x *= d;
+		y *= d;
 	}
 	return d;
 }
-
-Context* createInternal(Params& params){
-	return new Context(params);
-}
-
-void deleteInternal(Context* ctx){
-	delete ctx;
-}
+#endif
 
 static std::shared_ptr<PathCache> allocPathCache(void)
 {
