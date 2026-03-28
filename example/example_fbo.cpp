@@ -18,6 +18,7 @@
 
 #include <stdio.h>
 #include <array>
+#include <memory>
 #ifdef NANOVG_GLEW
 #	include <GL/glew.h>
 #endif
@@ -42,7 +43,7 @@ void renderPattern(nvg::Context* vg, GlUtilsFramebuffer* fb, float t, float pxRa
 
 	if (fb == NULL) return;
 
-	nvg::imageSize(vg, fb->image, &fboWidth, &fboHeight);
+	nvg::imageSize(vg, fb->image, fboWidth, fboHeight);
 	winWidth = (int)(fboWidth / pxRatio);
 	winHeight = (int)(fboHeight / pxRatio);
 
@@ -103,7 +104,8 @@ static void key(GLFWwindow* window, int key, int scancode, int action, int mods)
 int main()
 {
 	GLFWwindow* window;
-	nvg::Context* vg = NULL;
+	std::shared_ptr<nvg::Context> vgOwner;
+	nvg::Context* vg = nullptr;
 	GPUtimer gpuTimer;
 	PerfGraph fps, cpuGraph, gpuGraph;
 	double prevt = 0, cpuTime = 0;
@@ -154,11 +156,12 @@ int main()
 #endif
 
 #ifdef DEMO_MSAA
-	vg = nvg::createGL3(static_cast<int>(nvg::CreateFlags::StencilStrokes | nvg::CreateFlags::Debug));
+	vgOwner = nvg::createGL3(static_cast<int>(nvg::CreateFlags::StencilStrokes | nvg::CreateFlags::Debug));
 #else
-	vg = nvg::createGL3(static_cast<int>(nvg::CreateFlags::Antialias | nvg::CreateFlags::StencilStrokes | nvg::CreateFlags::Debug));
+	vgOwner = nvg::createGL3(static_cast<int>(nvg::CreateFlags::Antialias | nvg::CreateFlags::StencilStrokes | nvg::CreateFlags::Debug));
 #endif
-	if (vg == NULL) {
+	vg = vgOwner.get();
+	if (!vg) {
 		printf("Could not init nanovg.\n");
 		return -1;
 	}
@@ -262,7 +265,7 @@ int main()
 
 	nvgluDeleteFramebuffer(fb);
 
-	nvg::deleteGL3(vg);
+	nvg::deleteGL3(std::move(vgOwner));
 
 	printf("Average Frame Time: %.2f ms\n", getGraphAverage(&fps) * 1000.0f);
 	printf("          CPU Time: %.2f ms\n", getGraphAverage(&cpuGraph) * 1000.0f);

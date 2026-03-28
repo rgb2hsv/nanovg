@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <array>
+#include <memory>
 #ifdef NANOVG_GLEW
 #	include <GL/glew.h>
 #endif
@@ -62,7 +63,8 @@ int main(int argc, char** argv)
 {
 	GLFWwindow* window;
 	DemoData data;
-	nvg::Context* vg = NULL;
+	std::shared_ptr<nvg::Context> vgOwner;
+	nvg::Context* vg = nullptr;
 	GPUtimer gpuTimer;
 	PerfGraph fps, cpuGraph, gpuGraph;
 	double prevt = 0, cpuTime = 0;
@@ -138,11 +140,12 @@ int main(int argc, char** argv)
 #endif
 
 #ifdef DEMO_MSAA
-	vg = nvg::createGL3(static_cast<int>(nvg::CreateFlags::StencilStrokes | nvg::CreateFlags::Debug));
+	vgOwner = nvg::createGL3(static_cast<int>(nvg::CreateFlags::StencilStrokes | nvg::CreateFlags::Debug));
 #else
-	vg = nvg::createGL3(static_cast<int>(nvg::CreateFlags::Antialias | nvg::CreateFlags::StencilStrokes | nvg::CreateFlags::Debug));
+	vgOwner = nvg::createGL3(static_cast<int>(nvg::CreateFlags::Antialias | nvg::CreateFlags::StencilStrokes | nvg::CreateFlags::Debug));
 #endif
-	if (vg == NULL) {
+	vg = vgOwner.get();
+	if (!vg) {
 		printf("Could not init nanovg.\n");
 		return -1;
 	}
@@ -251,7 +254,7 @@ int main(int argc, char** argv)
 
 	freeDemoData(vg, &data);
 
-	nvg::deleteGL3(vg);
+	nvg::deleteGL3(std::move(vgOwner));
 
 	if (!testSpecified) {
 		printf("Average Frame Time: %.2f ms\n", getGraphAverage(&fps) * 1000.0f);

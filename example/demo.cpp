@@ -614,7 +614,7 @@ void drawThumbnails(nvg::Context* vg, float x, float y, float w, float h, const 
 		ty = y+10;
 		tx += (i%2) * (thumb+10);
 		ty += (i/2) * (thumb+10);
-		nvg::imageSize(vg, images[i], &imgw, &imgh);
+		nvg::imageSize(vg, images[i], imgw, imgh);
 		if (imgw < imgh) {
 			iw = thumb;
 			ih = iw * (float)imgh/(float)imgw;

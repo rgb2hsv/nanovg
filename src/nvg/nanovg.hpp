@@ -244,13 +244,13 @@ typedef struct Params Params;
 // For example, GLFW returns two dimension for an opened window: window size and
 // frame buffer size. In that case you would set windowWidth/Height to the window size
 // devicePixelRatio to: frameBufferWidth / windowWidth.
-void beginFrame(Context* ctx, float windowWidth, float windowHeight, float devicePixelRatio);
+void beginFrame(Context& ctx, float windowWidth, float windowHeight, float devicePixelRatio);
 
 // Cancels drawing the current frame.
 void cancelFrame(Context* ctx);
 
 // Ends drawing flushing remaining render state.
-void endFrame(Context* ctx);
+void endFrame(Context& ctx);
 
 //
 // Composite operation
@@ -453,7 +453,7 @@ void transformPremultiply(float* dst, const float* src);
 int transformInverse(float* dst, const float* src);
 
 // Transform a point by given transform.
-void transformPoint(float* dstx, float* dsty, const float* xform, float srcx, float srcy);
+void transformPoint(float& dstx, float& dsty, const float* xform, float srcx, float srcy);
 
 // Converts degrees to radians and vice versa.
 float degToRad(float deg);
@@ -482,7 +482,7 @@ int createImageRGBA(Context* ctx, int w, int h, int imageFlags, const unsigned c
 void updateImage(Context* ctx, int image, const unsigned char* data);
 
 // Returns the dimensions of a created image.
-void imageSize(Context* ctx, int image, int* w, int* h);
+void imageSize(Context& ctx, int image, int& w, int& h);
 
 // Deletes created image.
 void deleteImage(Context& ctx, int image);
@@ -750,5 +750,17 @@ Params* internalParams(Context* ctx);
 
 // Debug function to dump cached path data.
 void debugDumpPathCache(Context* ctx);
+
+inline void beginFrame(Context* ctx, float windowWidth, float windowHeight, float devicePixelRatio)
+{
+	beginFrame(*ctx, windowWidth, windowHeight, devicePixelRatio);
+}
+inline void endFrame(Context* ctx) { endFrame(*ctx); }
+
+inline void save(Context* ctx) { save(*ctx); }
+inline void restore(Context* ctx) { restore(*ctx); }
+inline void reset(Context* ctx) { reset(*ctx); }
+inline void imageSize(Context* ctx, int image, int& w, int& h) { imageSize(*ctx, image, w, h); }
+inline void deleteImage(Context* ctx, int image) { deleteImage(*ctx, image); }
 
 } // namespace nvg

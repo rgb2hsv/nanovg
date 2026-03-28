@@ -30,6 +30,7 @@
 #include <exception>
 #include <stdexcept>
 #include <ranges>
+#include <span>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -374,8 +375,8 @@ static void appendCommands(Context& ctx, C& vals)
 	Expects(nvals>0);
 	if (auto front=(int)vals.front(); front != static_cast<int>(PathCommand::Close) && front != static_cast<int>(PathCommand::Winding)) {
 		auto iter=std::rbegin(vals);
-		ctx->commandy = *iter++;
-		ctx->commandx = *iter;
+		ctx.commandy = *iter++;
+		ctx.commandx = *iter;
 	}
 
 	// transform commands
@@ -384,17 +385,17 @@ static void appendCommands(Context& ctx, C& vals)
 		int cmd = (int)(vals[i]);
 		switch (cmd) {
 		case static_cast<int>(PathCommand::MoveTo):
-			transformPoint(&vals[i+1],&vals[i+2], state->xform.data(), vals[i+1],vals[i+2]);
+			transformPoint(vals[i+1], vals[i+2], state.xform.data(), vals[i+1], vals[i+2]);
 			i += 3;
 			break;
 		case static_cast<int>(PathCommand::LineTo):
-			transformPoint(&vals[i+1],&vals[i+2], state->xform.data(), vals[i+1],vals[i+2]);
+			transformPoint(vals[i+1], vals[i+2], state.xform.data(), vals[i+1], vals[i+2]);
 			i += 3;
 			break;
 		case static_cast<int>(PathCommand::BezierTo):
-			transformPoint(&vals[i+1],&vals[i+2], state->xform.data(), vals[i+1],vals[i+2]);
-			transformPoint(&vals[i+3],&vals[i+4], state->xform.data(), vals[i+3],vals[i+4]);
-			transformPoint(&vals[i+5],&vals[i+6], state->xform.data(), vals[i+5],vals[i+6]);
+			transformPoint(vals[i+1], vals[i+2], state.xform.data(), vals[i+1], vals[i+2]);
+			transformPoint(vals[i+3], vals[i+4], state.xform.data(), vals[i+3], vals[i+4]);
+			transformPoint(vals[i+5], vals[i+6], state.xform.data(), vals[i+5], vals[i+6]);
 			i += 7;
 			break;
 		case static_cast<int>(PathCommand::Close):
@@ -407,7 +408,7 @@ static void appendCommands(Context& ctx, C& vals)
 			i++;
 		}
 	}
-	ctx->commands.insert(ctx->commands.end(), vals.begin(), vals.end());
+	ctx.commands.insert(ctx.commands.end(), vals.begin(), vals.end());
 }
 
 static void clearPathCache(Context& ctx)
@@ -1305,9 +1306,9 @@ static int allocTextAtlas(Context* ctx)
 		return 0;
 	// if next fontImage already have a texture
 	if (ctx->fontImages[ctx->fontImageIdx+1] != 0)
-		imageSize(ctx, ctx->fontImages[ctx->fontImageIdx+1], &iw, &ih);
+		imageSize(*ctx, ctx->fontImages[ctx->fontImageIdx+1], iw, ih);
 	else { // calculate the new font image size and create it.
-		imageSize(ctx, ctx->fontImages[ctx->fontImageIdx], &iw, &ih);
+		imageSize(*ctx, ctx->fontImages[ctx->fontImageIdx], iw, ih);
 		if (iw > ih)
 			ih *= 2;
 		else
@@ -1403,8 +1404,8 @@ ScissorBounds currentScissor(Context* ctx) {
 void deleteInternal(const std::shared_ptr<Context>& ctx)
 {
 	int i;
-	if(!ctx)
-		return
+	if (!ctx)
+		return;
 
 	ctx->commands.clear();
 	if (ctx->cache != nullptr) detail::deletePathCache(ctx->cache);
@@ -1424,7 +1425,7 @@ void deleteInternal(const std::shared_ptr<Context>& ctx)
 
 }
 
-void beginFrame(Context& ctx, float windowWidth, float windowHeight, float deviceM_PIxelRatio)
+void beginFrame(Context& ctx, float windowWidth, float windowHeight, float devicePixelRatio)
 {
 /*	printf("Tris: draws:%d  fill:%d  stroke:%d  text:%d  TOT:%d\n",
 		ctx->drawCallCount, ctx->fillTriCount, ctx->strokeTriCount, ctx->textTriCount,
@@ -1434,9 +1435,9 @@ void beginFrame(Context& ctx, float windowWidth, float windowHeight, float devic
 	save(ctx);
 	reset(ctx);
 
-	detail::setDevicePixelRatio(ctx, deviceM_PIxelRatio);
+	detail::setDevicePixelRatio(ctx, devicePixelRatio);
 
-	ctx.params.renderViewport(ctx.params.userPtr, windowWidth, windowHeight, deviceM_PIxelRatio);
+	ctx.params.renderViewport(ctx.params.userPtr, windowWidth, windowHeight, devicePixelRatio);
 
 	ctx.drawCallCount = 0;
 	ctx.fillTriCount = 0;
@@ -1459,13 +1460,13 @@ void endFrame(Context& ctx)
 		// delete images that smaller than current one
 		if (fontImage == 0)
 			return;
-		imageSize(ctx, fontImage, &iw, &ih);
+		imageSize(ctx, fontImage, iw, ih);
 		for (i = j = 0; i < ctx.fontImageIdx; i++) {
 			if (ctx.fontImages[i] != 0) {
 				int nw, nh;
 				int image = ctx.fontImages[i];
 				ctx.fontImages[i] = 0;
-				imageSize(ctx, image, &nw, &nh);
+				imageSize(ctx, image, nw, nh);
 				if (nw < iw || nh < ih)
 					deleteImage(ctx, image);
 				else
@@ -1643,10 +1644,10 @@ int transformInverse(float* inv, const float* t)
 	return 1;
 }
 
-void transformPoint(float* dx, float* dy, const float* t, float sx, float sy)
+void transformPoint(float& dx, float& dy, const float* t, float sx, float sy)
 {
-	*dx = sx*t[0] + sy*t[2] + t[4];
-	*dy = sx*t[1] + sy*t[3] + t[5];
+	dx = sx*t[0] + sy*t[2] + t[4];
+	dy = sx*t[1] + sy*t[3] + t[5];
 }
 
 float degToRad(float deg)
@@ -1896,9 +1897,9 @@ void updateImage(Context* ctx, int image, const unsigned char* data)
 	ctx->params.renderUpdateTexture(ctx->params.userPtr, image, 0,0, w,h, data);
 }
 
-void imageSize(Context* ctx, int image, int* w, int* h)
+void imageSize(Context& ctx, int image, int& w, int& h)
 {
-	ctx->params.renderGetTextureSize(ctx->params.userPtr, image, w, h);
+	ctx.params.renderGetTextureSize(ctx.params.userPtr, image, &w, &h);
 }
 
 void deleteImage(Context& ctx, int image)
@@ -2140,37 +2141,37 @@ void globalCompositeBlendFuncSeparate(Context* ctx, int srcRGB, int dstRGB, int 
 // Draw
 void beginPath(Context* ctx)
 {
-	ctx->ncommands = 0;
+	ctx->commands.clear();
 	detail::clearPathCache(*ctx);
 }
 
 void moveTo(Context* ctx, float x, float y)
 {
-	const std::array<float, 3> vals = { static_cast<float>(to_underlying(PathCommand::MoveTo)), x, y };
-	detail::appendCommands(*ctx, vals.data(), (int)vals.size());
+	std::array<float, 3> vals = { static_cast<float>(to_underlying(PathCommand::MoveTo)), x, y };
+	detail::appendCommands(*ctx, vals);
 }
 
 void lineTo(Context* ctx, float x, float y)
 {
-	const std::array<float, 3> vals = { static_cast<float>(to_underlying(PathCommand::LineTo)), x, y };
-	detail::appendCommands(*ctx, vals.data(), (int)vals.size());
+	std::array<float, 3> vals = { static_cast<float>(to_underlying(PathCommand::LineTo)), x, y };
+	detail::appendCommands(*ctx, vals);
 }
 
 void bezierTo(Context* ctx, float c1x, float c1y, float c2x, float c2y, float x, float y)
 {
-	const std::array<float, 7> vals = { static_cast<float>(to_underlying(PathCommand::BezierTo)), c1x, c1y, c2x, c2y, x, y };
-	detail::appendCommands(*ctx, vals.data(), (int)vals.size());
+	std::array<float, 7> vals = { static_cast<float>(to_underlying(PathCommand::BezierTo)), c1x, c1y, c2x, c2y, x, y };
+	detail::appendCommands(*ctx, vals);
 }
 
 void quadTo(Context* ctx, float cx, float cy, float x, float y)
 {
     float x0 = ctx->commandx;
     float y0 = ctx->commandy;
-    const std::array<float, 7> vals = { static_cast<float>(to_underlying(PathCommand::BezierTo)),
+    std::array<float, 7> vals = { static_cast<float>(to_underlying(PathCommand::BezierTo)),
         x0 + 2.0f/3.0f*(cx - x0), y0 + 2.0f/3.0f*(cy - y0),
         x + 2.0f/3.0f*(cx - x), y + 2.0f/3.0f*(cy - y),
         x, y };
-   detail::appendCommands(*ctx, vals.data(), (int)vals.size());
+   detail::appendCommands(*ctx, vals);
 }
 
 void arcTo(Context* ctx, float x1, float y1, float x2, float y2, float radius)
@@ -2180,7 +2181,7 @@ void arcTo(Context* ctx, float x1, float y1, float x2, float y2, float radius)
 	float dx0,dy0, dx1,dy1, a, d, cx,cy, a0,a1;
 	int dir;
 
-	if (ctx->ncommands == 0) {
+	if (ctx->commands.empty()) {
 		return;
 	}
 
@@ -2198,8 +2199,8 @@ void arcTo(Context* ctx, float x1, float y1, float x2, float y2, float radius)
 	dy0 = y0-y1;
 	dx1 = x2-x1;
 	dy1 = y2-y1;
-	detail::normalize(&dx0,&dy0);
-	detail::normalize(&dx1,&dy1);
+	detail::normalize(dx0, dy0);
+	detail::normalize(dx1, dy1);
 	a = acosf(dx0*dx1 + dy0*dy1);
 	d = radius / tanf(a/2.0f);
 
@@ -2231,14 +2232,14 @@ void arcTo(Context* ctx, float x1, float y1, float x2, float y2, float radius)
 
 void closePath(Context* ctx)
 {
-	const std::array<float, 1> vals = { static_cast<float>(to_underlying(PathCommand::Close)) };
-	detail::appendCommands(*ctx, vals.data(), (int)vals.size());
+	std::array<float, 1> vals = { static_cast<float>(to_underlying(PathCommand::Close)) };
+	detail::appendCommands(*ctx, vals);
 }
 
 void pathWinding(Context* ctx, int dir)
 {
-	const std::array<float, 2> vals = { static_cast<float>(to_underlying(PathCommand::Winding)), (float)dir };
-	detail::appendCommands(*ctx, vals.data(), (int)vals.size());
+	std::array<float, 2> vals = { static_cast<float>(to_underlying(PathCommand::Winding)), (float)dir };
+	detail::appendCommands(*ctx, vals);
 }
 
 void arc(Context* ctx, float cx, float cy, float r, float a0, float a1, int dir)
@@ -2250,7 +2251,7 @@ void arc(Context* ctx, float cx, float cy, float r, float a0, float a1, int dir)
 	float px = 0, py = 0, ptanx = 0, ptany = 0;
 	std::array<float, 3 + 5*7 + 100> vals{};
 	int i, ndivs, nvals;
-	int move = ctx->ncommands > 0 ? static_cast<int>(PathCommand::LineTo) : static_cast<int>(PathCommand::MoveTo);
+	int move = !ctx->commands.empty() ? static_cast<int>(PathCommand::LineTo) : static_cast<int>(PathCommand::MoveTo);
 
 	// Clamp angles
 	da = a1 - a0;
@@ -2305,19 +2306,20 @@ void arc(Context* ctx, float cx, float cy, float r, float a0, float a1, int dir)
 		ptany = tany;
 	}
 
-	detail::appendCommands(*ctx, vals.data(), nvals);
+	std::span<float> span(vals.data(), static_cast<size_t>(nvals));
+	detail::appendCommands(*ctx, span);
 }
 
 void rect(Context* ctx, float x, float y, float w, float h)
 {
-	const std::array<float, 13> vals = {
+	std::array<float, 13> vals = {
 		static_cast<float>(to_underlying(PathCommand::MoveTo)), x,y,
 		static_cast<float>(to_underlying(PathCommand::LineTo)), x,y+h,
 		static_cast<float>(to_underlying(PathCommand::LineTo)), x+w,y+h,
 		static_cast<float>(to_underlying(PathCommand::LineTo)), x+w,y,
 		static_cast<float>(to_underlying(PathCommand::Close))
 	};
-	detail::appendCommands(*ctx, vals.data(), (int)vals.size());
+	detail::appendCommands(*ctx, vals);
 }
 
 void roundedRect(Context* ctx, float x, float y, float w, float h, float r)
@@ -2337,7 +2339,7 @@ void roundedRectVarying(Context* ctx, float x, float y, float w, float h, float 
 		float rxBR = detail::minf(radBottomRight, halfw) * detail::signf(w), ryBR = detail::minf(radBottomRight, halfh) * detail::signf(h);
 		float rxTR = detail::minf(radTopRight, halfw) * detail::signf(w), ryTR = detail::minf(radTopRight, halfh) * detail::signf(h);
 		float rxTL = detail::minf(radTopLeft, halfw) * detail::signf(w), ryTL = detail::minf(radTopLeft, halfh) * detail::signf(h);
-		const std::array<float, 44> vals = {
+		std::array<float, 44> vals = {
 			static_cast<float>(to_underlying(PathCommand::MoveTo)), x, y + ryTL,
 			static_cast<float>(to_underlying(PathCommand::LineTo)), x, y + h - ryBL,
 			static_cast<float>(to_underlying(PathCommand::BezierTo)), x, y + h - ryBL*(1 - NVG_KAPPA90), x + rxBL*(1 - NVG_KAPPA90), y + h, x + rxBL, y + h,
@@ -2349,13 +2351,13 @@ void roundedRectVarying(Context* ctx, float x, float y, float w, float h, float 
 			static_cast<float>(to_underlying(PathCommand::BezierTo)), x + rxTL*(1 - NVG_KAPPA90), y, x, y + ryTL*(1 - NVG_KAPPA90), x, y + ryTL,
 			static_cast<float>(to_underlying(PathCommand::Close))
 		};
-		detail::appendCommands(*ctx, vals.data(), (int)vals.size());
+		detail::appendCommands(*ctx, vals);
 	}
 }
 
 void ellipse(Context* ctx, float cx, float cy, float rx, float ry)
 {
-	const std::array<float, 32> vals = {
+	std::array<float, 32> vals = {
 		static_cast<float>(to_underlying(PathCommand::MoveTo)), cx-rx, cy,
 		static_cast<float>(to_underlying(PathCommand::BezierTo)), cx-rx, cy+ry*NVG_KAPPA90, cx-rx*NVG_KAPPA90, cy+ry, cx, cy+ry,
 		static_cast<float>(to_underlying(PathCommand::BezierTo)), cx+rx*NVG_KAPPA90, cy+ry, cx+rx, cy+ry*NVG_KAPPA90, cx+rx, cy,
@@ -2363,7 +2365,7 @@ void ellipse(Context* ctx, float cx, float cy, float rx, float ry)
 		static_cast<float>(to_underlying(PathCommand::BezierTo)), cx-rx*NVG_KAPPA90, cy-ry, cx-rx, cy-ry*NVG_KAPPA90, cx-rx, cy,
 		static_cast<float>(to_underlying(PathCommand::Close))
 	};
-	detail::appendCommands(*ctx, vals.data(), (int)vals.size());
+	detail::appendCommands(*ctx, vals);
 }
 
 void circle(Context* ctx, float cx, float cy, float r)
@@ -2400,11 +2402,11 @@ void fill(Context* ctx)
 	Paint fillPaint = state.fill;
 	int i;
 
-	detail::flattenPaths(ctx);
+	detail::flattenPaths(*ctx);
 	if (ctx->params.edgeAntiAlias && state.shapeAntiAlias)
-		detail::expandFill(ctx, ctx->fringeWidth, static_cast<int>(LineCap::Miter), 2.4f);
+		detail::expandFill(*ctx, ctx->fringeWidth, static_cast<int>(LineCap::Miter), 2.4f);
 	else
-		detail::expandFill(ctx, 0.0f, static_cast<int>(LineCap::Miter), 2.4f);
+		detail::expandFill(*ctx, 0.0f, static_cast<int>(LineCap::Miter), 2.4f);
 
 	// Apply global alpha
 	fillPaint.innerColor.a *= state.alpha;
@@ -2445,12 +2447,12 @@ void stroke(Context* ctx)
 	strokePaint.innerColor.a *= state.alpha;
 	strokePaint.outerColor.a *= state.alpha;
 
-	detail::flattenPaths(ctx);
+	detail::flattenPaths(*ctx);
 
 	if (ctx->params.edgeAntiAlias && state.shapeAntiAlias)
-		detail::expandStroke(ctx, strokeWidth*0.5f, ctx->fringeWidth, state.lineCap, state.lineJoin, state.lineStyle, state.miterLimit);
+		detail::expandStroke(*ctx, strokeWidth*0.5f, ctx->fringeWidth, state.lineCap, state.lineJoin, state.lineStyle, state.miterLimit);
 	else
-		detail::expandStroke(ctx, strokeWidth*0.5f, 0.0f, state.lineCap, state.lineJoin, state.lineStyle, state.miterLimit);
+		detail::expandStroke(*ctx, strokeWidth*0.5f, 0.0f, state.lineCap, state.lineJoin, state.lineStyle, state.miterLimit);
 
 	ctx->params.renderStroke(ctx->params.userPtr, &strokePaint, state.compositeOperation, &state.scissor, ctx->fringeWidth,
 							 strokeWidth, state.lineStyle, ctx->cache->paths, ctx->cache->npaths);
@@ -2619,10 +2621,10 @@ float text(Context* ctx, float x, float y, const char* string, const char* end)
 			tmp = q.t0; q.t0 = q.t1; q.t1 = tmp;
 		}
 		// Transform corners.
-		transformPoint(&c[0],&c[1], state.xform.data(), q.x0*invscale + x, q.y0*invscale + y);
-		transformPoint(&c[2],&c[3], state.xform.data(), q.x1*invscale + x, q.y0*invscale + y);
-		transformPoint(&c[4],&c[5], state.xform.data(), q.x1*invscale + x, q.y1*invscale + y);
-		transformPoint(&c[6],&c[7], state.xform.data(), q.x0*invscale + x, q.y1*invscale + y);
+		transformPoint(c[0], c[1], state.xform.data(), q.x0*invscale + x, q.y0*invscale + y);
+		transformPoint(c[2], c[3], state.xform.data(), q.x1*invscale + x, q.y0*invscale + y);
+		transformPoint(c[4], c[5], state.xform.data(), q.x1*invscale + x, q.y1*invscale + y);
+		transformPoint(c[6], c[7], state.xform.data(), q.x0*invscale + x, q.y1*invscale + y);
 		// Create triangles
 		if (nverts+6 <= cverts) {
 			detail::vset(&verts[nverts], c[0], c[1], q.s0, q.t0, 0, 0); nverts++;

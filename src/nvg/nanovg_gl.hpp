@@ -18,6 +18,7 @@
 #pragma once
 #include "nanovg.hpp"
 #include <array>
+#include <memory>
 
 namespace nvg {
 
@@ -59,8 +60,8 @@ namespace nvg {
 
 #if defined NANOVG_GL2
 
-Context* createGL2(int flags);
-void deleteGL2(Context* ctx);
+std::shared_ptr<Context> createGL2(int flags);
+void deleteGL2(std::shared_ptr<Context> ctx);
 
 int nvglCreateImageFromHandleGL2(Context* ctx, GLuint textureId, int w, int h, int flags);
 GLuint nvglImageHandleGL2(Context* ctx, int image);
@@ -69,8 +70,8 @@ GLuint nvglImageHandleGL2(Context* ctx, int image);
 
 #if defined NANOVG_GL3
 
-Context* createGL3(int flags);
-void deleteGL3(Context* ctx);
+std::shared_ptr<Context> createGL3(int flags);
+void deleteGL3(std::shared_ptr<Context> ctx);
 
 int nvglCreateImageFromHandleGL3(Context* ctx, GLuint textureId, int w, int h, int flags);
 GLuint nvglImageHandleGL3(Context* ctx, int image);
@@ -79,8 +80,8 @@ GLuint nvglImageHandleGL3(Context* ctx, int image);
 
 #if defined NANOVG_GLES2
 
-Context* createGLES2(int flags);
-void deleteGLES2(Context* ctx);
+std::shared_ptr<Context> createGLES2(int flags);
+void deleteGLES2(std::shared_ptr<Context> ctx);
 
 int nvglCreateImageFromHandleGLES2(Context* ctx, GLuint textureId, int w, int h, int flags);
 GLuint nvglImageHandleGLES2(Context* ctx, int image);
@@ -89,8 +90,8 @@ GLuint nvglImageHandleGLES2(Context* ctx, int image);
 
 #if defined NANOVG_GLES3
 
-Context* createGLES3(int flags);
-void deleteGLES3(Context* ctx);
+std::shared_ptr<Context> createGLES3(int flags);
+void deleteGLES3(std::shared_ptr<Context> ctx);
 
 int nvglCreateImageFromHandleGLES3(Context* ctx, GLuint textureId, int w, int h, int flags);
 GLuint nvglImageHandleGLES3(Context* ctx, int image);
@@ -1641,19 +1642,18 @@ static void glnvg__renderDelete(void* uptr)
 
 
 #if defined NANOVG_GL2
-Context* createGL2(int flags)
+std::shared_ptr<Context> createGL2(int flags)
 #elif defined NANOVG_GL3
-Context* createGL3(int flags)
+std::shared_ptr<Context> createGL3(int flags)
 #elif defined NANOVG_GLES2
-Context* createGLES2(int flags)
+std::shared_ptr<Context> createGLES2(int flags)
 #elif defined NANOVG_GLES3
-Context* createGLES3(int flags)
+std::shared_ptr<Context> createGLES3(int flags)
 #endif
 {
 	Params params{};
-	Context* ctx = nullptr;
 	GLContext* gl = static_cast<GLContext*>(std::malloc(sizeof(GLContext)));
-	if (gl == nullptr) goto error;
+	if (gl == nullptr) return nullptr;
 	*gl = GLContext{};
 
 	params.renderCreate = glnvg__renderCreate;
@@ -1674,25 +1674,17 @@ Context* createGLES3(int flags)
 
 	gl->flags = flags;
 
-	ctx = createInternal(&params);
-	if (ctx == NULL) goto error;
-
-	return ctx;
-
-error:
-	// 'gl' is freed by deleteInternal.
-	if (ctx != NULL) deleteInternal(ctx);
-	return NULL;
+	return createInternal(&params);
 }
 
 #if defined NANOVG_GL2
-void deleteGL2(Context* ctx)
+void deleteGL2(std::shared_ptr<Context> ctx)
 #elif defined NANOVG_GL3
-void deleteGL3(Context* ctx)
+void deleteGL3(std::shared_ptr<Context> ctx)
 #elif defined NANOVG_GLES2
-void deleteGLES2(Context* ctx)
+void deleteGLES2(std::shared_ptr<Context> ctx)
 #elif defined NANOVG_GLES3
-void deleteGLES3(Context* ctx)
+void deleteGLES3(std::shared_ptr<Context> ctx)
 #endif
 {
 	deleteInternal(ctx);

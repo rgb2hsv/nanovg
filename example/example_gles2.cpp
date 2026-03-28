@@ -17,6 +17,7 @@
 //
 
 #include <stdio.h>
+#include <memory>
 #define GLFW_INCLUDE_ES2
 #define GLFW_INCLUDE_GLEXT
 #include <GLFW/glfw3.h>
@@ -55,7 +56,8 @@ int main()
 {
 	GLFWwindow* window;
 	DemoData data;
-	Context* vg = NULL;
+	std::shared_ptr<nvg::Context> vgOwner;
+	nvg::Context* vg = nullptr;
 	PerfGraph fps;
 	double prevt = 0;
 
@@ -83,8 +85,9 @@ int main()
 
 	glfwMakeContextCurrent(window);
 
-	vg = nvg::createGLES2(static_cast<int>(nvg::CreateFlags::Antialias | nvg::CreateFlags::StencilStrokes | nvg::CreateFlags::Debug));
-	if (vg == NULL) {
+	vgOwner = nvg::createGLES2(static_cast<int>(nvg::CreateFlags::Antialias | nvg::CreateFlags::StencilStrokes | nvg::CreateFlags::Debug));
+	vg = vgOwner.get();
+	if (!vg) {
 		printf("Could not init nanovg.\n");
 		return -1;
 	}
@@ -148,7 +151,7 @@ int main()
 
 	freeDemoData(vg, &data);
 
-	nvg::deleteGLES2(vg);
+	nvg::deleteGLES2(std::move(vgOwner));
 
 	glfwTerminate();
 	return 0;
