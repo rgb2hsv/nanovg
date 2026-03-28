@@ -331,7 +331,7 @@ public:
 	void debugDumpPathCache() const;
 
 protected:
-	std::shared_ptr<ContextImpl> mImpl;
+	std::unique_ptr<ContextImpl> mImpl;
 
 };
 

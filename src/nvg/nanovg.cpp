@@ -71,7 +71,7 @@
 namespace nvg {
 
 Context::Context(const Params& params) : mImpl(
-	std::make_shared<ContextImpl>(params)) {}
+	std::make_unique<ContextImpl>(params)) {}
 
 Context::~Context() = default;
 
