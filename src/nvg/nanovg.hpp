@@ -27,26 +27,6 @@
 namespace nvg {
 
 struct ContextImpl;
-struct Params;
-
-class Context {
-public:
-	explicit Context(const Params& params);
-	~Context();
-	Context(const Context&) = delete;
-	Context& operator=(const Context&) = delete;
-	Context(Context&&) = delete;
-	Context& operator=(Context&&) = delete;
-
-	ContextImpl& operator*() noexcept;
-	const ContextImpl& operator*() const noexcept;
-	ContextImpl* operator->() noexcept;
-	const ContextImpl* operator->() const noexcept;
-
-protected:
-	std::shared_ptr<ContextImpl> mImpl;
-
-};
 
 template<typename E>
 	requires std::is_enum_v<E>
@@ -246,6 +226,114 @@ struct Params {
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
+
+class Context {
+public:
+	explicit Context(const Params& params);
+	~Context();
+	Context(const Context&) = delete;
+	Context& operator=(const Context&) = delete;
+	Context(Context&&) = delete;
+	Context& operator=(Context&&) = delete;
+
+	ContextImpl& operator*() noexcept;
+	const ContextImpl& operator*() const noexcept;
+	ContextImpl* operator->() noexcept;
+	const ContextImpl* operator->() const noexcept;
+
+	void beginFrame(float windowWidth, float windowHeight, float devicePixelRatio);
+	void cancelFrame();
+	void endFrame();
+	void globalCompositeOperation(int op);
+	void globalCompositeBlendFunc(int sfactor, int dfactor);
+	void globalCompositeBlendFuncSeparate(int srcRGB, int dstRGB, int srcAlpha, int dstAlpha);
+	void save();
+	void restore();
+	void reset();
+	ScissorBounds currentScissor();
+	void shapeAntiAlias(int enabled);
+	void strokeColor(Color color);
+	void strokePaint(Paint paint);
+	void fillColor(Color color);
+	void fillPaint(Paint paint);
+	void miterLimit(float limit);
+	void strokeWidth(float size);
+	void lineStyle(int lineStyle);
+	void lineCap(int cap);
+	void lineJoin(int join);
+	void globalAlpha(float alpha);
+	void resetTransform();
+	void transform(float a, float b, float c, float d, float e, float f);
+	void translate(float x, float y);
+	void rotate(float angle);
+	void skewX(float angle);
+	void skewY(float angle);
+	void scale(float x, float y);
+	void currentTransform(float* xform);
+	int createImage(const char* filename, int imageFlags);
+	int createImageMem(int imageFlags, unsigned char* data, int ndata);
+	int createImageRGBA(int w, int h, int imageFlags, const unsigned char* data);
+	void updateImage(int image, const unsigned char* data);
+	void imageSize(int image, int& w, int& h);
+	void deleteImage(int image);
+	Paint linearGradient(float sx, float sy, float ex, float ey, Color icol, Color ocol);
+	Paint boxGradient(float x, float y, float w, float h, float r, float f, Color icol, Color ocol);
+	Paint radialGradient(float cx, float cy, float inr, float outr, Color icol, Color ocol);
+	Paint imagePattern(float ox, float oy, float ex, float ey, float angle, int image, float alpha);
+	void scissor(float x, float y, float w, float h);
+	void intersectScissor(float x, float y, float w, float h);
+	void resetScissor();
+	void beginPath();
+	void moveTo(float x, float y);
+	void lineTo(float x, float y);
+	void bezierTo(float c1x, float c1y, float c2x, float c2y, float x, float y);
+	void quadTo(float cx, float cy, float x, float y);
+	void arcTo(float x1, float y1, float x2, float y2, float radius);
+	void closePath();
+	void pathWinding(int dir);
+	void arc(float cx, float cy, float r, float a0, float a1, int dir);
+	void rect(float x, float y, float w, float h);
+	void roundedRect(float x, float y, float w, float h, float r);
+	void roundedRectVarying(float x, float y, float w, float h, float radTopLeft, float radTopRight, float radBottomRight, float radBottomLeft);
+	void ellipse(float cx, float cy, float rx, float ry);
+	void circle(float cx, float cy, float r);
+	void fill();
+	void stroke();
+	int createFont(const char* name, const char* filename);
+	int createFontAtIndex(const char* name, const char* filename, const int fontIndex);
+	int createFontMem(const char* name, unsigned char* data, int ndata, int freeData);
+	int createFontMemAtIndex(const char* name, unsigned char* data, int ndata, int freeData, const int fontIndex);
+	int findFont(const char* name);
+	int addFallbackFontId(int baseFont, int fallbackFont);
+	int addFallbackFont(const char* baseFont, const char* fallbackFont);
+	void resetFallbackFontsId(int baseFont);
+	void resetFallbackFonts(const char* baseFont);
+	void fontSize(float size);
+	void fontBlur(float blur);
+	void fontDilate(float dilate);
+	void textLetterSpacing(float spacing);
+	void textLineHeight(float lineHeight);
+	void textAlign(int align);
+	void fontFaceId(int font);
+	void fontFace(const char* font);
+	int getFontFaceId();
+	float getFontSize();
+	float getStrokeWidth();
+	int getTextAlign();
+	float text(float x, float y, const char* string, const char* end);
+	void textBox(float x, float y, float breakRowWidth, const char* string, const char* end);
+	float textBounds(float x, float y, const char* string, const char* end, float* bounds);
+	void textBoxBounds(float x, float y, float breakRowWidth, const char* string, const char* end, float* bounds);
+	int textGlyphPositions(float x, float y, const char* string, const char* end, GlyphPosition* positions, int maxPositions);
+	void textMetrics(float* ascender, float* descender, float* lineh);
+	int textBreakLines(const char* string, const char* end, float breakRowWidth, TextRow* rows, int maxRows, int skipSpaces);
+	const Params& internalParams();
+	void debugDumpPathCache();
+
+protected:
+	std::shared_ptr<ContextImpl> mImpl;
+
+};
 
 // Begin drawing a new frame
 // Calls to nanovg drawing API should be wrapped in beginFrame() & endFrame()
