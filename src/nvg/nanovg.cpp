@@ -1665,7 +1665,10 @@ float radToDeg(float rad)
 // State handling
 void save(Context& ctx)
 {
-	ctx.states.push_back({});
+	if (!ctx.states.empty())
+		ctx.states.push_back(ctx.states.back());
+	else
+		ctx.states.push_back({});
 }
 
 void restore(Context& ctx)
