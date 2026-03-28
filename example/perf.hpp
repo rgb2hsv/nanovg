@@ -19,10 +19,10 @@ struct PerfGraph {
 };
 typedef struct PerfGraph PerfGraph;
 
-void initGraph(PerfGraph* fps, int style, const std::string& name);
-void updateGraph(PerfGraph* fps, float frameTime);
-void renderGraph(nvg::Context& vg, float x, float y, PerfGraph* fps);
-float getGraphAverage(PerfGraph* fps);
+void initGraph(PerfGraph& graph, int style, const std::string& name);
+void updateGraph(PerfGraph& graph, float frameTime);
+void renderGraph(nvg::Context& vg, float x, float y, PerfGraph& graph);
+float getGraphAverage(PerfGraph& graph);
 
 #define GPU_QUERY_COUNT 5
 struct GPUtimer {

@@ -65,7 +65,7 @@ int main()
 		return -1;
 	}
 
-	initGraph(&fps, GRAPH_RENDER_FPS, "Frame Time");
+	initGraph(fps, GRAPH_RENDER_FPS, "Frame Time");
 
 	glfwSetErrorCallback(errorcb);
 
@@ -121,7 +121,7 @@ int main()
 		t = glfwGetTime();
 		dt = t - prevt;
 		prevt = t;
-		updateGraph(&fps, static_cast<float>(dt));
+		updateGraph(fps, static_cast<float>(dt));
 
 		glfwGetCursorPos(window, &mx, &my);
 		glfwGetWindowSize(window, &winWidth, &winHeight);
@@ -141,7 +141,7 @@ int main()
 		vg.beginFrame( static_cast<float>(winWidth), static_cast<float>(winHeight), pxRatio);
 
 		renderDemo(vg, static_cast<float>(mx), static_cast<float>(my), static_cast<float>(winWidth), static_cast<float>(winHeight), static_cast<float>(t), blowup, &data);
-		renderGraph(vg, 5,5, &fps);
+		renderGraph(vg, 5,5, fps);
 
 		vg.endFrame();
 

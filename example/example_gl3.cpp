@@ -68,7 +68,7 @@ int main(int argc, char** argv)
 	PerfGraph fps, cpuGraph, gpuGraph;
 	double prevt = 0, cpuTime = 0;
 	int testCount = 0;
-	bool testSpecified = false;
+	bool testRequested = false;
 	for (int i = 1; i < argc; i++) {
 		if (!strcmp(argv[i], "--test")) {
 			if (i + 1 >= argc) {
@@ -82,7 +82,7 @@ int main(int argc, char** argv)
 				return -1;
 			}
 			testCount = static_cast<int>(v);
-			testSpecified = true;
+			testRequested = true;
 			i++;
 		} else if (!strncmp(argv[i], "--test=", 7)) {
 			char* endptr = NULL;
@@ -92,7 +92,7 @@ int main(int argc, char** argv)
 				return -1;
 			}
 			testCount = static_cast<int>(v);
-			testSpecified = true;
+			testRequested = true;
 		}
 	}
 	int testRemaining = testCount;
@@ -102,9 +102,9 @@ int main(int argc, char** argv)
 		return -1;
 	}
 
-	initGraph(&fps, GRAPH_RENDER_FPS, "Frame Time");
-	initGraph(&cpuGraph, GRAPH_RENDER_MS, "CPU Time");
-	initGraph(&gpuGraph, GRAPH_RENDER_MS, "GPU Time");
+	initGraph(fps, GRAPH_RENDER_FPS, "Frame Time");
+	initGraph(cpuGraph, GRAPH_RENDER_MS, "CPU Time");
+	initGraph(gpuGraph, GRAPH_RENDER_MS, "GPU Time");
 
 	glfwSetErrorCallback(errorcb);
 #ifndef _WIN32 // don't require this on win32, and works with more cards
@@ -154,7 +154,7 @@ int main(int argc, char** argv)
 		return -1;
 	}
 
-	if (testSpecified && testCount == 0)
+	if (testRequested && testCount == 0)
 		glfwSetWindowShouldClose(window, GL_TRUE);
 
 	glfwSwapInterval(0);
@@ -165,7 +165,7 @@ int main(int argc, char** argv)
 	long long frameCounter = 0;
 	int sampleRate = 5;
 	bool success= true;
-	if(testSpecified)
+	if(testRequested)
 		prevt = 0.0f;
 	else
 		prevt = glfwGetTime();
@@ -179,7 +179,7 @@ int main(int argc, char** argv)
 		std::array<float, 3> gpuTimes{};
 		int i, n;
 
-		if(testSpecified)
+		if(testRequested)
 			t=frameCounter/30.0f;
 		else
 			t = glfwGetTime();
@@ -192,7 +192,7 @@ int main(int argc, char** argv)
 
 		glfwGetWindowSize(window, &winWidth, &winHeight);
 		glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
-		if(testSpecified){
+		if(testRequested){
 			double angle = 2.0 * nvg::PI * testRemaining / (double)testCount;
 			mx=winWidth/2.0f+cos(angle)*winWidth/4.0f;
 			my=winHeight/2.0f+sin(angle)*winHeight/4.0f;
@@ -214,11 +214,11 @@ int main(int argc, char** argv)
 
 		renderDemo(vg, (float)mx, (float)my, (float)winWidth, (float)winHeight, (float)t, blowup, &data);
 
-		if(!testSpecified){
-			renderGraph(vg, 5,5, &fps);
-			renderGraph(vg, 5+200+5,5, &cpuGraph);
+		if(!testRequested){
+			renderGraph(vg, 5,5, fps);
+			renderGraph(vg, 5+200+5,5, cpuGraph);
 			if (gpuTimer.supported) {
-				renderGraph(vg, 5+200+5+200+5,5, &gpuGraph);
+				renderGraph(vg, 5+200+5+200+5,5, gpuGraph);
 			}
 		}
 		vg.endFrame();
@@ -226,13 +226,13 @@ int main(int argc, char** argv)
 		// Measure the CPU time taken excluding swap buffers (as the swap may wait for GPU)
 		cpuTime = glfwGetTime() - t;
 
-		updateGraph(&fps, (float)dt);
-		updateGraph(&cpuGraph, (float)cpuTime);
+		updateGraph(fps, (float)dt);
+		updateGraph(cpuGraph, (float)cpuTime);
 
 		// We may get multiple results.
 		n = stopGPUTimer(&gpuTimer, gpuTimes.data(), (int)gpuTimes.size());
 		for (i = 0; i < n; i++)
-			updateGraph(&gpuGraph, gpuTimes[i]);
+			updateGraph(gpuGraph, gpuTimes[i]);
 
 		if (testRemaining > 0 && frameCounter % sampleRate ==0) {
 			std::array<char, 256> fileName{};
@@ -242,7 +242,7 @@ int main(int argc, char** argv)
 			testRemaining--;
 			if (testRemaining == 0)
 				glfwSetWindowShouldClose(window, GL_TRUE);
-		} else if (screenshot) {
+		} else if (screenshot&&!testRequested) {
 			screenshot = 0;
 			success&=saveScreenShot(fbWidth, fbHeight, premult, "dump.png");
 		}
@@ -255,10 +255,10 @@ int main(int argc, char** argv)
 
 	nvg::deleteGL(vgOwner);
 
-	if (!testSpecified) {
-		printf("Average Frame Time: %.2f ms\n", getGraphAverage(&fps) * 1000.0f);
-		printf("          CPU Time: %.2f ms\n", getGraphAverage(&cpuGraph) * 1000.0f);
-		printf("          GPU Time: %.2f ms\n", getGraphAverage(&gpuGraph) * 1000.0f);
+	if (!testRequested) {
+		printf("Average Frame Time: %.2f ms\n", getGraphAverage(fps) * 1000.0f);
+		printf("          CPU Time: %.2f ms\n", getGraphAverage(cpuGraph) * 1000.0f);
+		printf("          GPU Time: %.2f ms\n", getGraphAverage(gpuGraph) * 1000.0f);
 	} else {
 		if(success)
 			printf("Test passed!\n");

@@ -78,39 +78,39 @@ int stopGPUTimer(GPUtimer* timer, float* times, int maxTimes)
 }
 
 
-void initGraph(PerfGraph* fps, int style, const std::string& name)
+void initGraph(PerfGraph& graph, int style, const std::string& name)
 {
-	fps->style = style;
-	fps->head = 0;
-	fps->values.fill(0.0f);
-	fps->name.fill('\0');
-	strncpy(fps->name.data(), name.c_str(), fps->name.size());
-	fps->name[fps->name.size()-1] = '\0';
+	graph.style = style;
+	graph.head = 0;
+	graph.values.fill(0.0f);
+	graph.name.fill('\0');
+	strncpy(graph.name.data(), name.c_str(), graph.name.size());
+	graph.name[graph.name.size()-1] = '\0';
 }
 
-void updateGraph(PerfGraph* fps, float frameTime)
+void updateGraph(PerfGraph& graph, float frameTime)
 {
-	fps->head = (fps->head+1) % GRAPH_HISTORY_COUNT;
-	fps->values[fps->head] = frameTime;
+	graph.head = (graph.head+1) % GRAPH_HISTORY_COUNT;
+	graph.values[graph.head] = frameTime;
 }
 
-float getGraphAverage(PerfGraph* fps)
+float getGraphAverage(PerfGraph& graph)
 {
 	int i;
 	float avg = 0;
 	for (i = 0; i < GRAPH_HISTORY_COUNT; i++) {
-		avg += fps->values[i];
+		avg += graph.values[i];
 	}
 	return avg / (float)GRAPH_HISTORY_COUNT;
 }
 
-void renderGraph(nvg::Context& vg, float x, float y, PerfGraph* fps)
+void renderGraph(nvg::Context& vg, float x, float y, PerfGraph& graph)
 {
 	int i;
 	float avg, w, h;
 	std::array<char, 64> str{};
 
-	avg = getGraphAverage(fps);
+	avg = getGraphAverage(graph);
 
 	w = 200;
 	h = 35;
@@ -122,18 +122,18 @@ void renderGraph(nvg::Context& vg, float x, float y, PerfGraph* fps)
 
 	vg.beginPath();
 	vg.moveTo( x, y+h);
-	if (fps->style == GRAPH_RENDER_FPS) {
+	if (graph.style == GRAPH_RENDER_FPS) {
 		for (i = 0; i < GRAPH_HISTORY_COUNT; i++) {
-			float v = 1.0f / (0.00001f + fps->values[(fps->head+i) % GRAPH_HISTORY_COUNT]);
+			float v = 1.0f / (0.00001f + graph.values[(graph.head+i) % GRAPH_HISTORY_COUNT]);
 			float vx, vy;
 			if (v > 80.0f) v = 80.0f;
 			vx = x + ((float)i/(GRAPH_HISTORY_COUNT-1)) * w;
 			vy = y + h - ((v / 80.0f) * h);
 			vg.lineTo( vx, vy);
 		}
-	} else if (fps->style == GRAPH_RENDER_PERCENT) {
+	} else if (graph.style == GRAPH_RENDER_PERCENT) {
 		for (i = 0; i < GRAPH_HISTORY_COUNT; i++) {
-			float v = fps->values[(fps->head+i) % GRAPH_HISTORY_COUNT] * 1.0f;
+			float v = graph.values[(graph.head+i) % GRAPH_HISTORY_COUNT] * 1.0f;
 			float vx, vy;
 			if (v > 100.0f) v = 100.0f;
 			vx = x + ((float)i/(GRAPH_HISTORY_COUNT-1)) * w;
@@ -142,7 +142,7 @@ void renderGraph(nvg::Context& vg, float x, float y, PerfGraph* fps)
 		}
 	} else {
 		for (i = 0; i < GRAPH_HISTORY_COUNT; i++) {
-			float v = fps->values[(fps->head+i) % GRAPH_HISTORY_COUNT] * 1000.0f;
+			float v = graph.values[(graph.head+i) % GRAPH_HISTORY_COUNT] * 1000.0f;
 			float vx, vy;
 			if (v > 20.0f) v = 20.0f;
 			vx = x + ((float)i/(GRAPH_HISTORY_COUNT-1)) * w;
@@ -156,14 +156,14 @@ void renderGraph(nvg::Context& vg, float x, float y, PerfGraph* fps)
 
 	vg.fontFace( "sans");
 
-	if (fps->name[0] != '\0') {
+	if (graph.name[0] != '\0') {
 		vg.fontSize( 12.0f);
 		vg.textAlign( static_cast<int>(nvg::Align::Left | nvg::Align::Top));
 		vg.fillColor( nvg::rgba(240,240,240,192));
-		vg.text( x+3,y+3, fps->name.data(), NULL);
+		vg.text( x+3,y+3, graph.name.data(), NULL);
 	}
 
-	if (fps->style == GRAPH_RENDER_FPS) {
+	if (graph.style == GRAPH_RENDER_FPS) {
 		vg.fontSize( 15.0f);
 		vg.textAlign( static_cast<int>(nvg::Align::Right | nvg::Align::Top));
 		vg.fillColor( nvg::rgba(240,240,240,255));
@@ -176,7 +176,7 @@ void renderGraph(nvg::Context& vg, float x, float y, PerfGraph* fps)
 		sprintf(str.data(), "%.2f ms", avg * 1000.0f);
 		vg.text( x+w-3,y+h-3, str.data(), NULL);
 	}
-	else if (fps->style == GRAPH_RENDER_PERCENT) {
+	else if (graph.style == GRAPH_RENDER_PERCENT) {
 		vg.fontSize( 15.0f);
 		vg.textAlign( static_cast<int>(nvg::Align::Right | nvg::Align::Top));
 		vg.fillColor( nvg::rgba(240,240,240,255));

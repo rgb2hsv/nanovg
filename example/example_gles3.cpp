@@ -65,7 +65,7 @@ int main()
 		return -1;
 	}
 
-	initGraph(&fps, GRAPH_RENDER_FPS, "Frame Time");
+	initGraph(fps, GRAPH_RENDER_FPS, "Frame Time");
 
 	glfwSetErrorCallback(errorcb);
 
@@ -109,7 +109,7 @@ int main()
 		t = glfwGetTime();
 		dt = t - prevt;
 		prevt = t;
-		updateGraph(&fps, dt);
+		updateGraph(fps, dt);
 
 		glfwGetCursorPos(window, &mx, &my);
 		glfwGetWindowSize(window, &winWidth, &winHeight);
@@ -133,7 +133,7 @@ int main()
 		beginFrame(vg, winWidth, winHeight, pxRatio);
 
 		renderDemo(vg, mx,my, winWidth,winHeight, t, blowup, &data);
-		renderGraph(vg, 5,5, &fps);
+		renderGraph(vg, 5,5, fps);
 
 		endFrame(vg);
 
