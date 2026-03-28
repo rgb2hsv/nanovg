@@ -17,7 +17,6 @@ struct PerfGraph {
 	std::array<float, GRAPH_HISTORY_COUNT> values{};
 	int head;
 };
-typedef struct PerfGraph PerfGraph;
 
 void initGraph(PerfGraph& graph, int style, const std::string& name);
 void updateGraph(PerfGraph& graph, float frameTime);
@@ -30,7 +29,6 @@ struct GPUtimer {
 	int cur, ret;
 	std::array<unsigned int, GPU_QUERY_COUNT> queries{};
 };
-typedef struct GPUtimer GPUtimer;
 
 void initGPUTimer(GPUtimer* timer);
 void startGPUTimer(GPUtimer* timer);

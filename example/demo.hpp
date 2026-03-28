@@ -7,7 +7,6 @@ struct DemoData {
 	int fontNormal, fontBold, fontIcons, fontEmoji;
 	std::array<int, 12> images{};
 };
-typedef struct DemoData DemoData;
 
 int loadDemoData(nvg::Context& vg, DemoData& data);
 void freeDemoData(nvg::Context& vg, DemoData& data);
