@@ -1674,7 +1674,7 @@ std::shared_ptr<Context> createGLES3(int flags)
 
 	gl->flags = flags;
 
-	return createInternal(&params);
+	return std::shared_ptr<Context>(createInternal(params),deleteInternal);
 }
 
 #if defined NANOVG_GL2
@@ -1687,7 +1687,7 @@ void deleteGLES2(std::shared_ptr<Context> ctx)
 void deleteGLES3(std::shared_ptr<Context> ctx)
 #endif
 {
-	deleteInternal(ctx);
+	ctx.reset();
 }
 
 #if defined NANOVG_GL2
@@ -1700,7 +1700,7 @@ int nvglCreateImageFromHandleGLES2(Context& ctx, GLuint textureId, int w, int h,
 int nvglCreateImageFromHandleGLES3(Context& ctx, GLuint textureId, int w, int h, int imageFlags)
 #endif
 {
-	GLContext* gl = (GLContext*)internalParams(ctx)->userPtr;
+	GLContext* gl = (GLContext*)internalParams(ctx).userPtr;
 	GlTexture* tex = glnvg__allocTexture(gl);
 
 	if (tex == NULL) return 0;
@@ -1724,7 +1724,7 @@ GLuint nvglImageHandleGLES2(Context& ctx, int image)
 GLuint nvglImageHandleGLES3(Context& ctx, int image)
 #endif
 {
-	GLContext* gl = (GLContext*)internalParams(ctx)->userPtr;
+	GLContext* gl = (GLContext*)internalParams(ctx).userPtr;
 	GlTexture* tex = glnvg__findTexture(gl, image);
 	return tex->tex;
 }

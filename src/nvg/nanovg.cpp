@@ -148,6 +148,9 @@ struct PathCache {
 };
 
 struct Context {
+	explicit Context(const Params& params);
+	~Context();
+
 	Params params;
 	std::vector<float> commands;
 	float commandx, commandy;
@@ -195,11 +198,15 @@ static float normalize(float& x, float& y)
 	}
 	return d;
 }
-static void deletePathCache(std::shared_ptr<PathCache>& c)
-{
-	if (c == nullptr) return;
-	c.reset();
+
+Context* createInternal(Params& params){
+	return new Context(params);
 }
+
+void deleteInternal(Context* ctx){
+	delete ctx;
+}
+
 static std::shared_ptr<PathCache> allocPathCache(void)
 {
 	auto c = std::make_shared<PathCache>();
@@ -1310,24 +1317,34 @@ static int isTransformFlipped(const float *xform)
 
 } // namespace detail
 
-std::shared_ptr<Context> createInternal(Params* params)
-{
-	FONSparams fontParams;
-	auto sp = std::make_shared<Context>();
+Context::~Context() {
 	int i;
-	sp->params = *params;
+	if (fs)
+		fonsDeleteInternal(fs);
+
+	for (i = 0; i < NVG_MAX_FONTIMAGES; i++) {
+		if (fontImages[i] != 0) {
+			deleteImage(*this, fontImages[i]);
+			fontImages[i] = 0;
+		}
+	}
+
+	if (params.renderDelete != nullptr)
+		params.renderDelete(params.userPtr);
+}
+Context::Context(const Params& params):params(params){
+	int i;
+	FONSparams fontParams;
 	for (i = 0; i < NVG_MAX_FONTIMAGES; i++)
-		sp->fontImages[i] = 0;
+		fontImages[i] = 0;
 
-	sp->commands.clear();
-	sp->cache = detail::allocPathCache();
+	cache = detail::allocPathCache();
 
-	save(*sp);
-	reset(*sp);
+	save(*this);
+	reset(*this);
+	detail::setDevicePixelRatio(*this, 1.0f);
 
-	detail::setDevicePixelRatio(*sp, 1.0f);
-
-	if (sp->params.renderCreate(sp->params.userPtr) == 0)
+	if (params.renderCreate(params.userPtr) == 0)
 		throw std::runtime_error("Could not init render context.");
 
 	// Init font rendering
@@ -1340,15 +1357,14 @@ std::shared_ptr<Context> createInternal(Params* params)
 	fontParams.renderDraw = nullptr;
 	fontParams.renderDelete = nullptr;
 	fontParams.userPtr = nullptr;
-	sp->fs = fonsCreateInternal(&fontParams);
-	if (sp->fs == nullptr) throw std::runtime_error("Could not create font context");
+	fs = fonsCreateInternal(&fontParams);
+	if (fs == nullptr) throw std::runtime_error("Could not create font context");
 
 	// Create font texture
-	sp->fontImages[0] = sp->params.renderCreateTexture(sp->params.userPtr, static_cast<int>(Texture::Alpha), fontParams.width, fontParams.height, 0, nullptr);
-	if (sp->fontImages[0] == 0) throw std::runtime_error("Could not create font texture");
-	sp->fontImageIdx = 0;
-	sp->scissor = ScissorBounds{0.0f, 0.0f, -1.0f, -1.0f};
-	return sp;
+	fontImages[0] = params.renderCreateTexture(params.userPtr, static_cast<int>(Texture::Alpha), fontParams.width, fontParams.height, 0, nullptr);
+	if (fontImages[0] == 0) throw std::runtime_error("Could not create font texture");
+	fontImageIdx = 0;
+	scissor = ScissorBounds{0.0f, 0.0f, -1.0f, -1.0f};
 }
 
 int getImageTextureId(Context& ctx, int handle)
@@ -1356,37 +1372,13 @@ int getImageTextureId(Context& ctx, int handle)
 	return ctx.params.renderGetImageTextureId(ctx.params.userPtr, handle);
 }
 
-Params* internalParams(Context& ctx)
+const Params& internalParams(Context& ctx)
 {
-    return &ctx.params;
+    return ctx.params;
 }
 
 ScissorBounds currentScissor(Context& ctx) {
 	return ctx.scissor;
-}
-
-void deleteInternal(const std::shared_ptr<Context>& sp)
-{
-	int i;
-	if (!sp)
-		return;
-
-	sp->commands.clear();
-	if (sp->cache != nullptr) detail::deletePathCache(sp->cache);
-
-	if (sp->fs)
-		fonsDeleteInternal(sp->fs);
-
-	for (i = 0; i < NVG_MAX_FONTIMAGES; i++) {
-		if (sp->fontImages[i] != 0) {
-			deleteImage(*sp, sp->fontImages[i]);
-			sp->fontImages[i] = 0;
-		}
-	}
-
-	if (sp->params.renderDelete != nullptr)
-		sp->params.renderDelete(sp->params.userPtr);
-
 }
 
 void beginFrame(Context& ctx, float windowWidth, float windowHeight, float devicePixelRatio)

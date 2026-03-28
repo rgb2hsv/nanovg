@@ -26,6 +26,8 @@
 
 namespace nvg {
 
+struct Context;
+
 template<typename E>
 	requires std::is_enum_v<E>
 [[nodiscard]] constexpr std::underlying_type_t<E> to_underlying(E e) noexcept {
@@ -36,8 +38,6 @@ template<typename E>
 #pragma warning(push)
 #pragma warning(disable: 4201)  // nonstandard extension used : nameless struct/union
 #endif
-
-typedef struct Context Context;
 
 struct Color {
 	union {
@@ -183,7 +183,6 @@ struct Scissor {
 	float xform[6];
 	float extent[2];
 };
-typedef struct Scissor Scissor;
 
 struct ScissorBounds {
 	float x;
@@ -191,12 +190,10 @@ struct ScissorBounds {
 	float w;
 	float h;
 };
-typedef struct ScissorBounds ScissorBounds;
 
 struct Vertex {
 	float x,y,u,v,s,t;
 };
-typedef struct Vertex Vertex;
 
 struct Path {
 	int first;
@@ -211,7 +208,6 @@ struct Path {
 	int winding;
 	int convex;
 };
-typedef struct Path Path;
 
 struct Params {
 	void* userPtr;
@@ -230,7 +226,6 @@ struct Params {
 	void (*renderTriangles)(void* uptr, Paint* paint, CompositeOperationState compositeOperation, Scissor* scissor, const Vertex* verts, int nverts, float fringe);
 	void (*renderDelete)(void* uptr);
 };
-typedef struct Params Params;
 
 #ifdef _MSC_VER
 #pragma warning(pop)
@@ -739,14 +734,14 @@ void textMetrics(Context& ctx, float* ascender, float* descender, float* lineh);
 int textBreakLines(Context& ctx, const char* string, const char* end, float breakRowWidth, TextRow* rows, int maxRows, int skipSpaces);
 
 // Get image texture Id
-int getImageTextureId(Context& ctx, int handle);
+int getImageTextureId(Context* ctx, int handle);
 
 //
 // Constructor and destructor, called by the render back-end.
-std::shared_ptr<Context> createInternal(Params* params);
-void deleteInternal(const std::shared_ptr<Context>& ctx);
+Context* createInternal(Params& params);
+void deleteInternal(Context* ctx);
 
-Params* internalParams(Context& ctx);
+const Params& internalParams(Context& ctx);
 
 // Debug function to dump cached path data.
 void debugDumpPathCache(Context& ctx);
