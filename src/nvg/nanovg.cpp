@@ -155,7 +155,7 @@ struct Context {
 	float distTol;
 	float fringeWidth;
 	float devicePxRatio;
-	struct FONScontext* fs;
+	struct FONScontext* fs=nullptr;
 	std::array<int, NVG_MAX_FONTIMAGES> fontImages;
 	size_t fontImageIdx;
 	size_t drawCallCount;
@@ -478,15 +478,14 @@ static float getAverageScale(const float *t)
 	float sy = sqrtf(t[1]*t[1] + t[3]*t[3]);
 	return (sx + sy) * 0.5f;
 }
-static Vertex* allocTempVerts(Context& ctx, int nverts)
+static void prepareTempVerts(Context& ctx, int nverts)
 {
 	std::vector<Vertex>& verts = ctx.cache->verts;
+	verts.clear();
 	if (static_cast<size_t>(nverts) > verts.capacity()) {
 		const int cverts = (nverts + 0xff) & ~0xff; // Round up to prevent allocations when things change just slightly.
 		verts.reserve(static_cast<size_t>(cverts));
 	}
-
-	return verts.data();
 }
 static float triarea2(float ax, float ay, float bx, float by, float cx, float cy)
 {
@@ -520,15 +519,11 @@ static void polyReverse(Point* pts, int npts)
 		j--;
 	}
 }
-static void vset(Vertex* vtx, float x, float y, float u, float v, float s, float t)
+static void vset(std::vector<Vertex>& out, float x, float y, float u, float v, float s, float t)
 {
-	vtx->x = x;
-	vtx->y = y;
-	vtx->u = u;
-	vtx->v = v;
-	vtx->s = s; // Normalized line width [-1, 1]
-	vtx->t = t; // Path length normalized by stroke width
+	out.emplace_back({x, y, u, v, s, t});
 }
+
 static void tesselateBezier(Context& ctx,
 								 float x1, float y1, float x2, float y2,
 								 float x3, float y3, float x4, float y4,
@@ -694,7 +689,7 @@ static void chooseBevel(int bevel, Point* p0, Point* p1, float w,
 		*y1 = p1->y + p1->dmy * w;
 	}
 }
-static Vertex* roundJoin(Vertex* dst, Point* p0, Point* p1,
+static void roundJoin(std::vector<Vertex>& out, Point* p0, Point* p1,
 								 float lw, float rw, float lu, float ru, int ncap,
 								 float fringe, float t)
 {
@@ -712,8 +707,8 @@ static Vertex* roundJoin(Vertex* dst, Point* p0, Point* p1,
 		a1 = atan2f(-dly1, -dlx1);
 		if (a1 > a0) a1 -= (float)(M_PI * 2.0);
 
-		vset(dst, lx0, ly0, lu, 1, -1, t); dst++;
-		vset(dst, p1->x - dlx0*rw, p1->y - dly0*rw, ru, 1, 1, t); dst++;
+		vset(out, lx0, ly0, lu, 1, -1, t);
+		vset(out, p1->x - dlx0*rw, p1->y - dly0*rw, ru, 1, 1, t);
 
 		n = clampi((int)ceilf(((a0 - a1) / (float)M_PI) * ncap), 2, ncap);
 		for (i = 0; i < n; i++) {
@@ -721,12 +716,12 @@ static Vertex* roundJoin(Vertex* dst, Point* p0, Point* p1,
 			float a = a0 + u*(a1-a0);
 			float rx = p1->x + cosf(a) * rw;
 			float ry = p1->y + sinf(a) * rw;
-			vset(dst, p1->x, p1->y, 0.5f, 1, 0, t); dst++;
-			vset(dst, rx, ry, ru,1, 1, t); dst++;
+			vset(out, p1->x, p1->y, 0.5f, 1, 0, t);
+			vset(out, rx, ry, ru,1, 1, t);
 		}
 
-		vset(dst, lx1, ly1, lu, 1, -1, t); dst++;
-		vset(dst, p1->x - dlx1*rw, p1->y - dly1*rw, ru, 1, 1, t); dst++;
+		vset(out, lx1, ly1, lu, 1, -1, t);
+		vset(out, p1->x - dlx1*rw, p1->y - dly1*rw, ru, 1, 1, t);
 
 	} else {
 		float rx0,ry0,rx1,ry1,a0,a1;
@@ -735,8 +730,8 @@ static Vertex* roundJoin(Vertex* dst, Point* p0, Point* p1,
 		a1 = atan2f(dly1, dlx1);
 		if (a1 < a0) a1 += (float)(M_PI * 2.0);
 
-		vset(dst, p1->x + dlx0*rw, p1->y + dly0*rw, lu,1, -1, t);dst++;
-		vset(dst, rx0, ry0, ru, 1, 1, t); dst++;
+		vset(out, p1->x + dlx0*rw, p1->y + dly0*rw, lu,1, -1, t);
+		vset(out, rx0, ry0, ru, 1, 1, t);
 
 		n = clampi((int)ceilf(((a1 - a0) / (float)M_PI) * ncap), 2, ncap);
 		for (i = 0; i < n; i++) {
@@ -744,17 +739,16 @@ static Vertex* roundJoin(Vertex* dst, Point* p0, Point* p1,
 			float a = a0 + u*(a1-a0);
 			float lx = p1->x + cosf(a) * lw;
 			float ly = p1->y + sinf(a) * lw;
-			vset(dst, lx, ly, lu, 1, 1, t); dst++;
-			vset(dst, p1->x, p1->y, 0.5f, 1,  0.0, t);  dst++;
+			vset(out, lx, ly, lu, 1, 1, t);
+			vset(out, p1->x, p1->y, 0.5f, 1,  0.0, t);
 		}
 
-		vset(dst, p1->x + dlx1*rw, p1->y + dly1*rw, lu, 1, -1, t);  dst++;
-		vset(dst, rx1, ry1, ru, 1, 1, t);  dst++;
+		vset(out, p1->x + dlx1*rw, p1->y + dly1*rw, lu, 1, -1, t);
+		vset(out, rx1, ry1, ru, 1, 1, t);
 
 	}
-	return dst;
-}
-static Vertex* bevelJoin(Vertex* dst, Point* p0, Point* p1,
+	}
+static void bevelJoin(std::vector<Vertex>& out, Point* p0, Point* p1,
 										float lw, float rw, float lu, float ru, float fringe, float t)
 {
 	float rx0,ry0,rx1,ry1;
@@ -768,74 +762,72 @@ static Vertex* bevelJoin(Vertex* dst, Point* p0, Point* p1,
 	if (p1->flags & PointFlags::Left) {
 		chooseBevel(p1->flags & PointFlags::InnerBevel, p0, p1, lw, &lx0,&ly0, &lx1,&ly1);
 
-		vset(dst, lx0, ly0, lu, 1, -1, t);  dst++;
-		vset(dst, p1->x - dlx0*rw, p1->y - dly0*rw, ru, 1, 1, t);  dst++;
+		vset(out, lx0, ly0, lu, 1, -1, t);
+		vset(out, p1->x - dlx0*rw, p1->y - dly0*rw, ru, 1, 1, t);
 
 		if (p1->flags & PointFlags::Bevel) {
-			vset(dst, lx0, ly0, lu, 1, -1, t);  dst++;
-			vset(dst, p1->x - dlx0*rw, p1->y - dly0*rw, ru, 1, 1, t);  dst++;
+			vset(out, lx0, ly0, lu, 1, -1, t);
+			vset(out, p1->x - dlx0*rw, p1->y - dly0*rw, ru, 1, 1, t);
 
-			vset(dst, lx1, ly1, lu, 1, -1, t);  dst++;
-			vset(dst, p1->x - dlx1*rw, p1->y - dly1*rw, ru, 1, 1, t);  dst++;
+			vset(out, lx1, ly1, lu, 1, -1, t);
+			vset(out, p1->x - dlx1*rw, p1->y - dly1*rw, ru, 1, 1, t);
 		} else {
 			rx0 = p1->x - p1->dmx * rw;
 			ry0 = p1->y - p1->dmy * rw;
 
-			vset(dst, p1->x, p1->y, 0.5f, 1, -1, t);  dst++;
-			vset(dst, p1->x - dlx0*rw, p1->y - dly0*rw, ru, 1, 1, t);  dst++;
+			vset(out, p1->x, p1->y, 0.5f, 1, -1, t);
+			vset(out, p1->x - dlx0*rw, p1->y - dly0*rw, ru, 1, 1, t);
 
-			vset(dst, rx0, ry0, ru,1, -1, t);  dst++;
-			vset(dst, rx0, ry0, ru,1, 1, t);  dst++;
+			vset(out, rx0, ry0, ru,1, -1, t);
+			vset(out, rx0, ry0, ru,1, 1, t);
 
-			vset(dst, p1->x, p1->y, 0.5f, 1, -1, t);  dst++;
-			vset(dst, p1->x - dlx1*rw, p1->y - dly1*rw, ru, 1, 1, t);  dst++;
+			vset(out, p1->x, p1->y, 0.5f, 1, -1, t);
+			vset(out, p1->x - dlx1*rw, p1->y - dly1*rw, ru, 1, 1, t);
 		}
 
-		vset(dst, lx1, ly1, lu, 1, -1, t);  dst++;
-		vset(dst, p1->x - dlx1*rw, p1->y - dly1*rw, ru,1, 1, t);  dst++;
+		vset(out, lx1, ly1, lu, 1, -1, t);
+		vset(out, p1->x - dlx1*rw, p1->y - dly1*rw, ru,1, 1, t);
 
 	} else {
 		chooseBevel(p1->flags & PointFlags::InnerBevel, p0, p1, -rw, &rx0,&ry0, &rx1,&ry1);
 
-		vset(dst, p1->x + dlx0*lw, p1->y + dly0*lw, lu, 1, 1, t);  dst++;
-		vset(dst, rx0, ry0, ru, 1, -1, t);  dst++;
+		vset(out, p1->x + dlx0*lw, p1->y + dly0*lw, lu, 1, 1, t);
+		vset(out, rx0, ry0, ru, 1, -1, t);
 
 		if (p1->flags & PointFlags::Bevel) {
-			vset(dst, p1->x + dlx0*lw, p1->y + dly0*lw, lu, 1, 1, t);  dst++;
-			vset(dst, rx0, ry0, ru, 1, -1, t);  dst++;
+			vset(out, p1->x + dlx0*lw, p1->y + dly0*lw, lu, 1, 1, t);
+			vset(out, rx0, ry0, ru, 1, -1, t);
 
-			vset(dst, p1->x + dlx1*lw, p1->y + dly1*lw, lu, 1, 1, t);  dst++;
-			vset(dst, rx1, ry1, ru, 1, -1, t);  dst++;
+			vset(out, p1->x + dlx1*lw, p1->y + dly1*lw, lu, 1, 1, t);
+			vset(out, rx1, ry1, ru, 1, -1, t);
 		} else {
 			lx0 = p1->x + p1->dmx * lw;
 			ly0 = p1->y + p1->dmy * lw;
 
-			vset(dst, p1->x + dlx0*lw, p1->y + dly0*lw, lu, 1, 1, t);  dst++;
-			vset(dst, p1->x, p1->y, 0.5f,1, -1, t);   dst++;
+			vset(out, p1->x + dlx0*lw, p1->y + dly0*lw, lu, 1, 1, t);
+			vset(out, p1->x, p1->y, 0.5f,1, -1, t);
 
-			vset(dst, lx0, ly0, lu, 1, 1, t);  dst++;
-			vset(dst, lx0, ly0, lu, 1, -1, t);  dst++;
+			vset(out, lx0, ly0, lu, 1, 1, t);
+			vset(out, lx0, ly0, lu, 1, -1, t);
 
-			vset(dst, p1->x + dlx1*lw, p1->y + dly1*lw, lu, 1, 1, t);  dst++;
-			vset(dst, p1->x, p1->y, 0.5f, 1, -1, t);  dst++;
+			vset(out, p1->x + dlx1*lw, p1->y + dly1*lw, lu, 1, 1, t);
+			vset(out, p1->x, p1->y, 0.5f, 1, -1, t);
 		}
 
-		vset(dst, p1->x + dlx1*lw, p1->y + dly1*lw, lu, 1, 1, t);  dst++;
-		vset(dst, rx1, ry1, ru, 1, -1, t);  dst++;
+		vset(out, p1->x + dlx1*lw, p1->y + dly1*lw, lu, 1, 1, t);
+		vset(out, rx1, ry1, ru, 1, -1, t);
 	}
 
-	return dst;
-}
-static Vertex* insertSpacer(Vertex* dst, Point* p, float dx, float dy, float w, float u0, float u1, float t){
+	}
+static void insertSpacer(std::vector<Vertex>& out, Point* p, float dx, float dy, float w, float u0, float u1, float t){
 	float dlx = dy;
 	float dly = -dx;
 	float px = p->x;
 	float py = p->y;
-	vset(dst, px + dlx*w, py + dly*w, u0,1,-1, t); dst++;
-	vset(dst, px - dlx*w, py - dly*w, u1,1, 1, t); dst++;
-	return dst;
-}
-static Vertex* buttCapStart(Vertex* dst, Point* p,
+	vset(out, px + dlx*w, py + dly*w, u0,1,-1, t);
+	vset(out, px - dlx*w, py - dly*w, u1,1, 1, t);
+	}
+static void buttCapStart(std::vector<Vertex>& out, Point* p,
 									float dx, float dy, float w, float d,
 									float aa, float u0, float u1, float t, int dir)
 {
@@ -843,13 +835,12 @@ static Vertex* buttCapStart(Vertex* dst, Point* p,
 	float py = p->y - dy*d;
 	float dlx = dy;
 	float dly = -dx;
-	vset(dst, px + dlx*w - dx*aa, py + dly*w - dy*aa, u0,0, -1, t - dir * aa / w); dst++;
-	vset(dst, px - dlx*w - dx*aa, py - dly*w - dy*aa, u1,0, 1, t - dir * aa / w); dst++;
-	vset(dst, px + dlx*w, py + dly*w, u0,1, -1, t); dst++;
-	vset(dst, px - dlx*w, py - dly*w, u1,1, 1, t); dst++;
-	return dst;
-}
-static Vertex* buttCapEnd(Vertex* dst, Point* p,
+	vset(out, px + dlx*w - dx*aa, py + dly*w - dy*aa, u0,0, -1, t - dir * aa / w);
+	vset(out, px - dlx*w - dx*aa, py - dly*w - dy*aa, u1,0, 1, t - dir * aa / w);
+	vset(out, px + dlx*w, py + dly*w, u0,1, -1, t);
+	vset(out, px - dlx*w, py - dly*w, u1,1, 1, t);
+	}
+static void buttCapEnd(std::vector<Vertex>& out, Point* p,
 								  float dx, float dy, float w, float d,
 								  float aa, float u0, float u1, float t, int dir)
 {
@@ -857,13 +848,12 @@ static Vertex* buttCapEnd(Vertex* dst, Point* p,
 	float py = p->y + dy*d;
 	float dlx = dy;
 	float dly = -dx;
-	vset(dst, px + dlx*w, py + dly*w, u0, 1 , -1, t); dst++;
-	vset(dst, px - dlx*w, py - dly*w, u1, 1 , 1, t); dst++;
-	vset(dst, px + dlx*w + dx*aa, py + dly*w + dy*aa, u0, 0, -1, t + dir * aa / w); dst++;
-	vset(dst, px - dlx*w + dx*aa, py - dly*w + dy*aa, u1, 0, 1, t + dir * aa / w); dst++;
-	return dst;
-}
-static Vertex* roundCapStart(Vertex* dst, Point* p,
+	vset(out, px + dlx*w, py + dly*w, u0, 1 , -1, t);
+	vset(out, px - dlx*w, py - dly*w, u1, 1 , 1, t);
+	vset(out, px + dlx*w + dx*aa, py + dly*w + dy*aa, u0, 0, -1, t + dir * aa / w);
+	vset(out, px - dlx*w + dx*aa, py - dly*w + dy*aa, u1, 0, 1, t + dir * aa / w);
+	}
+static void roundCapStart(std::vector<Vertex>& out, Point* p,
 									 float dx, float dy, float w, int ncap,
 									 float aa, float u0, float u1, float t, int dir)
 {
@@ -876,14 +866,13 @@ static Vertex* roundCapStart(Vertex* dst, Point* p,
 	for (i = 0; i < ncap; i++) {
 		const float a = i/(float)(ncap-1) * (float)M_PI;
 		float ax = cosf(a) * w, ay = sinf(a) * w;
-		vset(dst, px - dlx*ax - dx*ay, py - dly*ax - dy*ay, u0, 1, ax / w, t - dir * ay / w); dst++;
-		vset(dst, px, py, 0.5f, 1 , 0, t);  dst++;
+		vset(out, px - dlx*ax - dx*ay, py - dly*ax - dy*ay, u0, 1, ax / w, t - dir * ay / w);
+		vset(out, px, py, 0.5f, 1 , 0, t);
 	}
-	vset(dst, px + dlx*w, py + dly*w, u0, 1, 1, t); dst++;
-	vset(dst, px - dlx*w, py - dly*w, u1, 1, -1, t); dst++;
-	return dst;
-}
-static Vertex* roundCapEnd(Vertex* dst, Point* p,
+	vset(out, px + dlx*w, py + dly*w, u0, 1, 1, t);
+	vset(out, px - dlx*w, py - dly*w, u1, 1, -1, t);
+	}
+static void roundCapEnd(std::vector<Vertex>& out, Point* p,
 								   float dx, float dy, float w, int ncap,
 								   float aa, float u0, float u1, float t, int dir)
 {
@@ -893,16 +882,15 @@ static Vertex* roundCapEnd(Vertex* dst, Point* p,
 	float dlx = dy;
 	float dly = -dx;
 	UNUSED(aa);
-	vset(dst, px + dlx*w, py + dly*w, u0,1, w, t); dst++;
-	vset(dst, px - dlx*w, py - dly*w, u1,1, -w, t); dst++;
+	vset(out, px + dlx*w, py + dly*w, u0,1, w, t);
+	vset(out, px - dlx*w, py - dly*w, u1,1, -w, t);
 	for (i = 0; i < ncap; i++) {
 		float a = i/(float)(ncap-1) * (float)M_PI;
 		float ax = cosf(a) * w, ay = sinf(a) * w;
-		vset(dst, px, py, 0.5f, 1, 0, t); dst++;
-		vset(dst, px - dlx*ax + dx*ay, py - dly*ax + dy*ay, u0, 1, ax / w, t + dir * ay / w); dst++;
+		vset(out, px, py, 0.5f, 1, 0, t);
+		vset(out, px - dlx*ax + dx*ay, py - dly*ax + dy*ay, u0, 1, ax / w, t + dir * ay / w);
 	}
-	return dst;
-}
+	}
 static void calculateJoins(Context& ctx, float w, int lineJoin, float miterLimit)
 {
 	auto& cache = ctx.cache;
@@ -974,8 +962,7 @@ static void calculateJoins(Context& ctx, float w, int lineJoin, float miterLimit
 static int expandStroke(Context& ctx, float w, float fringe, int lineCap, int lineJoin, int lineStyle, float miterLimit)
 {
 	auto& cache = ctx.cache;
-	Vertex* verts;
-	Vertex* dst;
+	std::vector<Vertex>& buf = ctx.cache->verts;
 	int cverts, i, j;
 	float t;
 	float aa = fringe;//ctx->fringeWidth;
@@ -1015,8 +1002,7 @@ static int expandStroke(Context& ctx, float w, float fringe, int lineCap, int li
 		}
 	}
 
-	verts = allocTempVerts(ctx, cverts);
-	if (verts == NULL) return 0;
+	prepareTempVerts(ctx, cverts);
 
 	for (i = 0; i < static_cast<int>(cache->paths.size()); i++) {
 		Path* path = &cache->paths[i];
@@ -1031,8 +1017,7 @@ static int expandStroke(Context& ctx, float w, float fringe, int lineCap, int li
 
 		// Calculate fringe or stroke
 		loop = (path->closed == 0) ? 0 : 1;
-		dst = verts;
-		path->stroke = dst;
+		const size_t strokeStart = buf.size();
 
 		if (loop) {
 			// Looping
@@ -1076,57 +1061,57 @@ static int expandStroke(Context& ctx, float w, float fringe, int lineCap, int li
 			dy = p1->y - p0->y;
 			normalize(dx, dy);
 			if (lineCap == static_cast<int>(LineCap::Butt))
-				dst = buttCapStart(dst, p0, dx, dy, w, -aa*0.5f, aa, u0, u1, t, dir);
+				buttCapStart(buf, p0, dx, dy, w, -aa*0.5f, aa, u0, u1, t, dir);
 			else if (lineCap == static_cast<int>(LineCap::Butt) || lineCap == static_cast<int>(LineCap::Square))
-				dst = buttCapStart(dst, p0, dx, dy, w, w-aa, aa, u0, u1, t, dir);
+				buttCapStart(buf, p0, dx, dy, w, w-aa, aa, u0, u1, t, dir);
 			else if (lineCap == static_cast<int>(LineCap::Round))
-				dst = roundCapStart(dst, p0, dx, dy, w, ncap, aa, u0, u1, t, dir);
+				roundCapStart(buf, p0, dx, dy, w, ncap, aa, u0, u1, t, dir);
 		}
 		for (j = s; j < e; ++j) {
 			if(lineStyle > 1){
 				dx = p1->x - p0->x;
 				dy = p1->y - p0->y;
 				float dt=normalize(dx, dy);
-				dst = insertSpacer(dst, p0, dx, dy, w, u0, u1, t);
+				insertSpacer(buf, p0, dx, dy, w, u0, u1, t);
 				t+=dir*dt*invStrokeWidth;
-				dst = insertSpacer(dst, p1, dx, dy, w, u0, u1, t);
+				insertSpacer(buf, p1, dx, dy, w, u0, u1, t);
 			}
 			if ((p1->flags & (PointFlags::Bevel | PointFlags::InnerBevel)) != 0) {
 				if (lineJoin == static_cast<int>(LineCap::Round)) {
-					dst = roundJoin(dst, p0, p1, w, w, u0, u1, ncap, aa, t);
+					roundJoin(buf, p0, p1, w, w, u0, u1, ncap, aa, t);
 				} else {
-					dst = bevelJoin(dst, p0, p1, w, w, u0, u1, aa, t);
+					bevelJoin(buf, p0, p1, w, w, u0, u1, aa, t);
 				}
 			} else {
-				vset(dst, p1->x + (p1->dmx * w), p1->y + (p1->dmy * w), u0, 1, -1, t); dst++;
-				vset(dst, p1->x - (p1->dmx * w), p1->y - (p1->dmy * w), u1, 1, 1, t); dst++;
+				vset(buf, p1->x + (p1->dmx * w), p1->y + (p1->dmy * w), u0, 1, -1, t);
+				vset(buf, p1->x - (p1->dmx * w), p1->y - (p1->dmy * w), u1, 1, 1, t);
 			}
 			p0 = p1++;
 		}
 		
 		if (loop) {
 			// Loop it
-			vset(dst, verts[0].x, verts[0].y, u0, 1, -1, t); dst++;
-			vset(dst, verts[1].x, verts[1].y, u1, 1, 1, t); dst++;
+			vset(buf, buf[strokeStart].x, buf[strokeStart].y, u0, 1, -1, t);
+			vset(buf, buf[strokeStart + 1].x, buf[strokeStart + 1].y, u1, 1, 1, t);
 		} else {
 			dx = p1->x - p0->x;
 			dy = p1->y - p0->y;
 			float dt = normalize(dx, dy);
 			if(lineStyle > 1){
-				dst = insertSpacer(dst, p0, dx, dy, w, u0, u1, t);
+				insertSpacer(buf, p0, dx, dy, w, u0, u1, t);
 				t+=dir*dt*invStrokeWidth;
-				dst = insertSpacer(dst, p1, dx, dy, w, u0, u1, t);
+				insertSpacer(buf, p1, dx, dy, w, u0, u1, t);
 			}
 			// Add cap
 			if (lineCap == static_cast<int>(LineCap::Butt))
-				dst = buttCapEnd(dst, p1, dx, dy, w, -aa*0.5f, aa, u0, u1, t, dir);
+				buttCapEnd(buf, p1, dx, dy, w, -aa*0.5f, aa, u0, u1, t, dir);
 			else if (lineCap == static_cast<int>(LineCap::Butt) || lineCap == static_cast<int>(LineCap::Square))
-				dst = buttCapEnd(dst, p1, dx, dy, w, w-aa, aa, u0, u1, t, dir);
+				buttCapEnd(buf, p1, dx, dy, w, w-aa, aa, u0, u1, t, dir);
 			else if (lineCap == static_cast<int>(LineCap::Round))
-				dst = roundCapEnd(dst, p1, dx, dy, w, ncap, aa, u0, u1, t, dir);
+				roundCapEnd(buf, p1, dx, dy, w, ncap, aa, u0, u1, t, dir);
 		}
-		path->nstroke = (int)(dst - verts);
-		verts = dst;
+		path->stroke = buf.data() + strokeStart;
+		path->nstroke = static_cast<int>(buf.size() - strokeStart);
 	}
 
 	return 1;
@@ -1134,8 +1119,7 @@ static int expandStroke(Context& ctx, float w, float fringe, int lineCap, int li
 static int expandFill(Context& ctx, float w, int lineJoin, float miterLimit)
 {
 	auto& cache = ctx.cache;
-	Vertex* verts;
-	Vertex* dst;
+	std::vector<Vertex>& buf = ctx.cache->verts;
 	int cverts, convex, i, j;
 	float aa = ctx.fringeWidth;
 	int fringe = w > 0.0f;
@@ -1151,8 +1135,7 @@ static int expandFill(Context& ctx, float w, int lineJoin, float miterLimit)
 			cverts += (path->count + path->nbevel*5 + 1) * 2; // plus one for loop
 	}
 
-	verts = allocTempVerts(ctx, cverts);
-	if (verts == NULL) return 0;
+	prepareTempVerts(ctx, cverts);
 
 	convex = cache->paths.size() == 1 && cache->paths[0].convex;
 
@@ -1166,8 +1149,7 @@ static int expandFill(Context& ctx, float w, int lineJoin, float miterLimit)
 
 		// Calculate shape vertices.
 		woff = 0.5f*aa;
-		dst = verts;
-		path->fill = dst;
+		const size_t fillStart = buf.size();
 
 		if (fringe) {
 			// Looping
@@ -1182,29 +1164,28 @@ static int expandFill(Context& ctx, float w, int lineJoin, float miterLimit)
 					if (p1->flags & PointFlags::Left) {
 						float lx = p1->x + p1->dmx * woff;
 						float ly = p1->y + p1->dmy * woff;
-						vset(dst, lx, ly, 0.5f, 1, 0, 0); dst++;
+						vset(buf, lx, ly, 0.5f, 1, 0, 0);
 					} else {
 						float lx0 = p1->x + dlx0 * woff;
 						float ly0 = p1->y + dly0 * woff;
 						float lx1 = p1->x + dlx1 * woff;
 						float ly1 = p1->y + dly1 * woff;
-						vset(dst, lx0, ly0, 0.5f, 1, 0, 0); dst++;
-						vset(dst, lx1, ly1, 0.5f, 1, 0, 0); dst++;
+						vset(buf, lx0, ly0, 0.5f, 1, 0, 0);
+						vset(buf, lx1, ly1, 0.5f, 1, 0, 0);
 					}
 				} else {
-					vset(dst, p1->x + (p1->dmx * woff), p1->y + (p1->dmy * woff), 0.5f,1, 0, 0); dst++;
+					vset(buf, p1->x + (p1->dmx * woff), p1->y + (p1->dmy * woff), 0.5f,1, 0, 0);
 				}
 				p0 = p1++;
 			}
 		} else {
 			for (j = 0; j < path->count; ++j) {
-				vset(dst, pts[j].x, pts[j].y, 0.5f, 1, 0, 0);
-				dst++;
+				vset(buf, pts[j].x, pts[j].y, 0.5f, 1, 0, 0);
 			}
 		}
 
-		path->nfill = (int)(dst - verts);
-		verts = dst;
+		path->fill = buf.data() + fillStart;
+		path->nfill = static_cast<int>(buf.size() - fillStart);
 
 		// Calculate fringe
 		if (fringe) {
@@ -1212,8 +1193,7 @@ static int expandFill(Context& ctx, float w, int lineJoin, float miterLimit)
 			rw = w - woff;
 			lu = 0;
 			ru = 1;
-			dst = verts;
-			path->stroke = dst;
+			const size_t strokeStart = buf.size();
 
 			// Create only half a fringe for convex shapes so that
 			// the shape can be rendered without stenciling.
@@ -1228,20 +1208,20 @@ static int expandFill(Context& ctx, float w, int lineJoin, float miterLimit)
 
 			for (j = 0; j < path->count; ++j) {
 				if ((p1->flags & (PointFlags::Bevel | PointFlags::InnerBevel)) != 0) {
-					dst = bevelJoin(dst, p0, p1, lw, rw, lu, ru, ctx.fringeWidth, 0);
+					bevelJoin(buf, p0, p1, lw, rw, lu, ru, ctx.fringeWidth, 0);
 				} else {
-					vset(dst, p1->x + (p1->dmx * lw), p1->y + (p1->dmy * lw), lu,1,0, 0); dst++;
-					vset(dst, p1->x - (p1->dmx * rw), p1->y - (p1->dmy * rw), ru,1,0, 0); dst++;
+					vset(buf, p1->x + (p1->dmx * lw), p1->y + (p1->dmy * lw), lu,1,0, 0);
+					vset(buf, p1->x - (p1->dmx * rw), p1->y - (p1->dmy * rw), ru,1,0, 0);
 				}
 				p0 = p1++;
 			}
 
 			// Loop it
-			vset(dst, verts[0].x, verts[0].y, lu,1,0, 0); dst++;
-			vset(dst, verts[1].x, verts[1].y, ru,1,0, 0); dst++;
+			vset(buf, buf[strokeStart].x, buf[strokeStart].y, lu,1,0, 0);
+			vset(buf, buf[strokeStart + 1].x, buf[strokeStart + 1].y, ru,1,0, 0);
 
-			path->nstroke = (int)(dst - verts);
-			verts = dst;
+			path->stroke = buf.data() + strokeStart;
+			path->nstroke = static_cast<int>(buf.size() - strokeStart);
 		} else {
 			path->stroke = NULL;
 			path->nstroke = 0;
@@ -2555,11 +2535,10 @@ float text(Context* ctx, float x, float y, const char* string, const char* end)
 	State& state = detail::getState(*ctx);
 	FONStextIter iter, prevIter;
 	FONSquad q;
-	Vertex* verts;
+	std::vector<Vertex>& buf = ctx->cache->verts;
 	float scale = detail::getFontScale(&state) * ctx->devicePxRatio;
 	float invscale = 1.0f / scale;
 	int cverts = 0;
-	int nverts = 0;
 	int isFlipped = detail::isTransformFlipped(state.xform.data());
 
 	if (end == NULL)
@@ -2575,17 +2554,16 @@ float text(Context* ctx, float x, float y, const char* string, const char* end)
 	fonsSetFont(ctx->fs, state.fontId);
 
 	cverts = detail::maxi(2, (int)(end - string)) * 6; // conservative estimate.
-	verts = detail::allocTempVerts(*ctx, cverts);
-	if (verts == NULL) return x;
+	detail::prepareTempVerts(*ctx, cverts);
 
 	fonsTextIterInit(ctx->fs, &iter, 0, 0, string, end, FONS_GLYPH_BITMAP_REQUIRED);
 	prevIter = iter;
 	while (fonsTextIterNext(ctx->fs, &iter, &q)) {
 		std::array<float, 8> c{};
 		if (iter.prevGlyphIndex == -1) { // can not retrieve glyph?
-			if (nverts != 0) {
-				detail::renderText(ctx, verts, nverts);
-				nverts = 0;
+			if (!buf.empty()) {
+				detail::renderText(ctx, buf.data(), static_cast<int>(buf.size()));
+				buf.clear();
 			}
 			if (!detail::allocTextAtlas(ctx))
 				break; // no memory :(
@@ -2607,20 +2585,20 @@ float text(Context* ctx, float x, float y, const char* string, const char* end)
 		transformPoint(c[4], c[5], state.xform.data(), q.x1*invscale + x, q.y1*invscale + y);
 		transformPoint(c[6], c[7], state.xform.data(), q.x0*invscale + x, q.y1*invscale + y);
 		// Create triangles
-		if (nverts+6 <= cverts) {
-			detail::vset(&verts[nverts], c[0], c[1], q.s0, q.t0, 0, 0); nverts++;
-			detail::vset(&verts[nverts], c[4], c[5], q.s1, q.t1, 0, 0); nverts++;
-			detail::vset(&verts[nverts], c[2], c[3], q.s1, q.t0, 0, 0); nverts++;
-			detail::vset(&verts[nverts], c[0], c[1], q.s0, q.t0, 0, 0); nverts++;
-			detail::vset(&verts[nverts], c[6], c[7], q.s0, q.t1, 0, 0); nverts++;
-			detail::vset(&verts[nverts], c[4], c[5], q.s1, q.t1, 0, 0); nverts++;
+		if (buf.size() + 6 <= buf.capacity()) {
+			detail::vset(buf, c[0], c[1], q.s0, q.t0, 0, 0);
+			detail::vset(buf, c[4], c[5], q.s1, q.t1, 0, 0);
+			detail::vset(buf, c[2], c[3], q.s1, q.t0, 0, 0);
+			detail::vset(buf, c[0], c[1], q.s0, q.t0, 0, 0);
+			detail::vset(buf, c[6], c[7], q.s0, q.t1, 0, 0);
+			detail::vset(buf, c[4], c[5], q.s1, q.t1, 0, 0);
 		}
 	}
 
 	// TODO: add back-end bit to do this just once per frame.
 	detail::flushTextTexture(ctx);
 
-	detail::renderText(ctx, verts, nverts);
+	detail::renderText(ctx, buf.data(), static_cast<int>(buf.size()));
 	return iter.nextx * invscale + x;
 }
 
