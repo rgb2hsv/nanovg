@@ -26,7 +26,27 @@
 
 namespace nvg {
 
-struct Context;
+struct ContextImpl;
+struct Params;
+
+class Context {
+public:
+	explicit Context(const Params& params);
+	~Context();
+	Context(const Context&) = delete;
+	Context& operator=(const Context&) = delete;
+	Context(Context&&) = delete;
+	Context& operator=(Context&&) = delete;
+
+	ContextImpl& operator*() noexcept;
+	const ContextImpl& operator*() const noexcept;
+	ContextImpl* operator->() noexcept;
+	const ContextImpl* operator->() const noexcept;
+
+protected:
+	std::shared_ptr<ContextImpl> mImpl;
+
+};
 
 template<typename E>
 	requires std::is_enum_v<E>
@@ -47,7 +67,7 @@ struct Color {
 		};
 	};
 };
-typedef struct Color Color;
+
 constexpr float PI=3.14159265358979323846264338327f;
 
 struct Paint {
@@ -59,7 +79,6 @@ struct Paint {
 	Color outerColor;
 	int image;
 };
-typedef struct Paint Paint;
 
 enum class Winding : int {
 	CCW = 1, // Winding for solid shapes
@@ -139,14 +158,12 @@ struct CompositeOperationState {
 	int srcAlpha;
 	int dstAlpha;
 };
-typedef struct CompositeOperationState CompositeOperationState;
 
 struct GlyphPosition {
 	const char* str;	// Position of the glyph in the input string.
 	float x;			// The x-coordinate of the logical glyph position.
 	float minx, maxx;	// The bounds of the glyph shape.
 };
-typedef struct GlyphPosition GlyphPosition;
 
 struct TextRow {
 	const char* start;	// Pointer to the input text where the row starts.
@@ -155,7 +172,6 @@ struct TextRow {
 	float width;		// Logical width of the row.
 	float minx, maxx;	// Actual bounds of the row. Logical with and bounds can differ because of kerning and some parts over extending.
 };
-typedef struct TextRow TextRow;
 
 enum class ImageFlags : int {
 	GenerateMipmaps = 1 << 0,
