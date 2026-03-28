@@ -1353,157 +1353,6 @@ ContextImpl* Context::operator->() noexcept { return mImpl.get(); }
 
 const ContextImpl* Context::operator->() const noexcept { return mImpl.get(); }
 
-void Context::beginFrame(float windowWidth, float windowHeight, float devicePixelRatio) {
-	::nvg::beginFrame(*this, windowWidth, windowHeight, devicePixelRatio);
-}
-void Context::cancelFrame() { ::nvg::cancelFrame(*this); }
-void Context::endFrame() { ::nvg::endFrame(*this); }
-void Context::globalCompositeOperation(int op) { ::nvg::globalCompositeOperation(*this, op); }
-void Context::globalCompositeBlendFunc(int sfactor, int dfactor) {
-	::nvg::globalCompositeBlendFunc(*this, sfactor, dfactor);
-}
-void Context::globalCompositeBlendFuncSeparate(int srcRGB, int dstRGB, int srcAlpha, int dstAlpha) {
-	::nvg::globalCompositeBlendFuncSeparate(*this, srcRGB, dstRGB, srcAlpha, dstAlpha);
-}
-void Context::save() { ::nvg::save(*this); }
-void Context::restore() { ::nvg::restore(*this); }
-void Context::reset() { ::nvg::reset(*this); }
-ScissorBounds Context::currentScissor() { return ::nvg::currentScissor(*this); }
-void Context::shapeAntiAlias(int enabled) { ::nvg::shapeAntiAlias(*this, enabled); }
-void Context::strokeColor(Color color) { ::nvg::strokeColor(*this, color); }
-void Context::strokePaint(Paint paint) { ::nvg::strokePaint(*this, paint); }
-void Context::fillColor(Color color) { ::nvg::fillColor(*this, color); }
-void Context::fillPaint(Paint paint) { ::nvg::fillPaint(*this, paint); }
-void Context::miterLimit(float limit) { ::nvg::miterLimit(*this, limit); }
-void Context::strokeWidth(float size) { ::nvg::strokeWidth(*this, size); }
-void Context::lineStyle(int lineStyle) { ::nvg::lineStyle(*this, lineStyle); }
-void Context::lineCap(int cap) { ::nvg::lineCap(*this, cap); }
-void Context::lineJoin(int join) { ::nvg::lineJoin(*this, join); }
-void Context::globalAlpha(float alpha) { ::nvg::globalAlpha(*this, alpha); }
-void Context::resetTransform() { ::nvg::resetTransform(*this); }
-void Context::transform(float a, float b, float c, float d, float e, float f) {
-	::nvg::transform(*this, a, b, c, d, e, f);
-}
-void Context::translate(float x, float y) { ::nvg::translate(*this, x, y); }
-void Context::rotate(float angle) { ::nvg::rotate(*this, angle); }
-void Context::skewX(float angle) { ::nvg::skewX(*this, angle); }
-void Context::skewY(float angle) { ::nvg::skewY(*this, angle); }
-void Context::scale(float x, float y) { ::nvg::scale(*this, x, y); }
-void Context::currentTransform(float* xform) { ::nvg::currentTransform(*this, xform); }
-int Context::createImage(const char* filename, int imageFlags) {
-	return ::nvg::createImage(*this, filename, imageFlags);
-}
-int Context::createImageMem(int imageFlags, unsigned char* data, int ndata) {
-	return ::nvg::createImageMem(*this, imageFlags, data, ndata);
-}
-int Context::createImageRGBA(int w, int h, int imageFlags, const unsigned char* data) {
-	return ::nvg::createImageRGBA(*this, w, h, imageFlags, data);
-}
-void Context::updateImage(int image, const unsigned char* data) {
-	::nvg::updateImage(*this, image, data);
-}
-void Context::imageSize(int image, int& w, int& h) { ::nvg::imageSize(*this, image, w, h); }
-void Context::deleteImage(int image) { ::nvg::deleteImage(*this, image); }
-Paint Context::linearGradient(float sx, float sy, float ex, float ey, Color icol, Color ocol) {
-	return ::nvg::linearGradient(*this, sx, sy, ex, ey, icol, ocol);
-}
-Paint Context::boxGradient(float x, float y, float w, float h, float r, float f, Color icol, Color ocol) {
-	return ::nvg::boxGradient(*this, x, y, w, h, r, f, icol, ocol);
-}
-Paint Context::radialGradient(float cx, float cy, float inr, float outr, Color icol, Color ocol) {
-	return ::nvg::radialGradient(*this, cx, cy, inr, outr, icol, ocol);
-}
-Paint Context::imagePattern(float ox, float oy, float ex, float ey, float angle, int image, float alpha) {
-	return ::nvg::imagePattern(*this, ox, oy, ex, ey, angle, image, alpha);
-}
-void Context::scissor(float x, float y, float w, float h) { ::nvg::scissor(*this, x, y, w, h); }
-void Context::intersectScissor(float x, float y, float w, float h) {
-	::nvg::intersectScissor(*this, x, y, w, h);
-}
-void Context::resetScissor() { ::nvg::resetScissor(*this); }
-void Context::beginPath() { ::nvg::beginPath(*this); }
-void Context::moveTo(float x, float y) { ::nvg::moveTo(*this, x, y); }
-void Context::lineTo(float x, float y) { ::nvg::lineTo(*this, x, y); }
-void Context::bezierTo(float c1x, float c1y, float c2x, float c2y, float x, float y) {
-	::nvg::bezierTo(*this, c1x, c1y, c2x, c2y, x, y);
-}
-void Context::quadTo(float cx, float cy, float x, float y) { ::nvg::quadTo(*this, cx, cy, x, y); }
-void Context::arcTo(float x1, float y1, float x2, float y2, float radius) {
-	::nvg::arcTo(*this, x1, y1, x2, y2, radius);
-}
-void Context::closePath() { ::nvg::closePath(*this); }
-void Context::pathWinding(int dir) { ::nvg::pathWinding(*this, dir); }
-void Context::arc(float cx, float cy, float r, float a0, float a1, int dir) {
-	::nvg::arc(*this, cx, cy, r, a0, a1, dir);
-}
-void Context::rect(float x, float y, float w, float h) { ::nvg::rect(*this, x, y, w, h); }
-void Context::roundedRect(float x, float y, float w, float h, float r) {
-	::nvg::roundedRect(*this, x, y, w, h, r);
-}
-void Context::roundedRectVarying(float x, float y, float w, float h, float radTopLeft, float radTopRight, float radBottomRight, float radBottomLeft) {
-	::nvg::roundedRectVarying(*this, x, y, w, h, radTopLeft, radTopRight, radBottomRight, radBottomLeft);
-}
-void Context::ellipse(float cx, float cy, float rx, float ry) { ::nvg::ellipse(*this, cx, cy, rx, ry); }
-void Context::circle(float cx, float cy, float r) { ::nvg::circle(*this, cx, cy, r); }
-void Context::fill() { ::nvg::fill(*this); }
-void Context::stroke() { ::nvg::stroke(*this); }
-int Context::createFont(const char* name, const char* filename) {
-	return ::nvg::createFont(*this, name, filename);
-}
-int Context::createFontAtIndex(const char* name, const char* filename, const int fontIndex) {
-	return ::nvg::createFontAtIndex(*this, name, filename, fontIndex);
-}
-int Context::createFontMem(const char* name, unsigned char* data, int ndata, int freeData) {
-	return ::nvg::createFontMem(*this, name, data, ndata, freeData);
-}
-int Context::createFontMemAtIndex(const char* name, unsigned char* data, int ndata, int freeData, const int fontIndex) {
-	return ::nvg::createFontMemAtIndex(*this, name, data, ndata, freeData, fontIndex);
-}
-int Context::findFont(const char* name) { return ::nvg::findFont(*this, name); }
-int Context::addFallbackFontId(int baseFont, int fallbackFont) {
-	return ::nvg::addFallbackFontId(*this, baseFont, fallbackFont);
-}
-int Context::addFallbackFont(const char* baseFont, const char* fallbackFont) {
-	return ::nvg::addFallbackFont(*this, baseFont, fallbackFont);
-}
-void Context::resetFallbackFontsId(int baseFont) { ::nvg::resetFallbackFontsId(*this, baseFont); }
-void Context::resetFallbackFonts(const char* baseFont) { ::nvg::resetFallbackFonts(*this, baseFont); }
-void Context::fontSize(float size) { ::nvg::fontSize(*this, size); }
-void Context::fontBlur(float blur) { ::nvg::fontBlur(*this, blur); }
-void Context::fontDilate(float dilate) { ::nvg::fontDilate(*this, dilate); }
-void Context::textLetterSpacing(float spacing) { ::nvg::textLetterSpacing(*this, spacing); }
-void Context::textLineHeight(float lineHeight) { ::nvg::textLineHeight(*this, lineHeight); }
-void Context::textAlign(int align) { ::nvg::textAlign(*this, align); }
-void Context::fontFaceId(int font) { ::nvg::fontFaceId(*this, font); }
-void Context::fontFace(const char* font) { ::nvg::fontFace(*this, font); }
-int Context::getFontFaceId() { return ::nvg::getFontFaceId(*this); }
-float Context::getFontSize() { return ::nvg::getFontSize(*this); }
-float Context::getStrokeWidth() { return ::nvg::getStrokeWidth(*this); }
-int Context::getTextAlign() { return ::nvg::getTextAlign(*this); }
-float Context::text(float x, float y, const char* string, const char* end) {
-	return ::nvg::text(*this, x, y, string, end);
-}
-void Context::textBox(float x, float y, float breakRowWidth, const char* string, const char* end) {
-	::nvg::textBox(*this, x, y, breakRowWidth, string, end);
-}
-float Context::textBounds(float x, float y, const char* string, const char* end, float* bounds) {
-	return ::nvg::textBounds(*this, x, y, string, end, bounds);
-}
-void Context::textBoxBounds(float x, float y, float breakRowWidth, const char* string, const char* end, float* bounds) {
-	::nvg::textBoxBounds(*this, x, y, breakRowWidth, string, end, bounds);
-}
-int Context::textGlyphPositions(float x, float y, const char* string, const char* end, GlyphPosition* positions, int maxPositions) {
-	return ::nvg::textGlyphPositions(*this, x, y, string, end, positions, maxPositions);
-}
-void Context::textMetrics(float* ascender, float* descender, float* lineh) {
-	::nvg::textMetrics(*this, ascender, descender, lineh);
-}
-int Context::textBreakLines(const char* string, const char* end, float breakRowWidth, TextRow* rows, int maxRows, int skipSpaces) {
-	return ::nvg::textBreakLines(*this, string, end, breakRowWidth, rows, maxRows, skipSpaces);
-}
-const Params& Context::internalParams() { return ::nvg::internalParams(*this); }
-void Context::debugDumpPathCache() { ::nvg::debugDumpPathCache(*this); }
-
 ContextImpl::~ContextImpl() {
 	for (size_t i = 0; i < fontImages.size(); ++i) {
 		if (fontImages[i] != 0) {
@@ -1546,14 +1395,100 @@ ContextImpl::ContextImpl(const Params& params):params(params){
 	scissor = ScissorBounds{0.0f, 0.0f, -1.0f, -1.0f};
 }
 
+namespace draw {
+
+// Forward declarations for mutual references within this namespace.
+void beginFrame(Context& ctx, float windowWidth, float windowHeight, float devicePixelRatio);
+void cancelFrame(Context& ctx);
+void endFrame(Context& ctx);
+void globalCompositeOperation(Context& ctx, int op);
+void globalCompositeBlendFunc(Context& ctx, int sfactor, int dfactor);
+void globalCompositeBlendFuncSeparate(Context& ctx, int srcRGB, int dstRGB, int srcAlpha, int dstAlpha);
+void save(Context& ctx);
+void restore(Context& ctx);
+void reset(Context& ctx);
+ScissorBounds currentScissor(Context& ctx);
+void shapeAntiAlias(Context& ctx, int enabled);
+void strokeColor(Context& ctx, Color color);
+void strokePaint(Context& ctx, Paint paint);
+void fillColor(Context& ctx, Color color);
+void fillPaint(Context& ctx, Paint paint);
+void miterLimit(Context& ctx, float limit);
+void strokeWidth(Context& ctx, float size);
+void lineStyle(Context& ctx, int lineStyle);
+void lineCap(Context& ctx, int cap);
+void lineJoin(Context& ctx, int join);
+void globalAlpha(Context& ctx, float alpha);
+void resetTransform(Context& ctx);
+void transform(Context& ctx, float a, float b, float c, float d, float e, float f);
+void translate(Context& ctx, float x, float y);
+void rotate(Context& ctx, float angle);
+void skewX(Context& ctx, float angle);
+void skewY(Context& ctx, float angle);
+void scale(Context& ctx, float x, float y);
+void currentTransform(Context& ctx, float* xform);
+int createImage(Context& ctx, const char* filename, int imageFlags);
+int createImageMem(Context& ctx, int imageFlags, unsigned char* data, int ndata);
+int createImageRGBA(Context& ctx, int w, int h, int imageFlags, const unsigned char* data);
+void updateImage(Context& ctx, int image, const unsigned char* data);
+void imageSize(Context& ctx, int image, int& w, int& h);
+void deleteImage(Context& ctx, int image);
+Paint linearGradient(Context& ctx, float sx, float sy, float ex, float ey, Color icol, Color ocol);
+Paint boxGradient(Context& ctx, float x, float y, float w, float h, float r, float f, Color icol, Color ocol);
+Paint radialGradient(Context& ctx, float cx, float cy, float inr, float outr, Color icol, Color ocol);
+Paint imagePattern(Context& ctx, float ox, float oy, float ex, float ey, float angle, int image, float alpha);
+void scissor(Context& ctx, float x, float y, float w, float h);
+void intersectScissor(Context& ctx, float x, float y, float w, float h);
+void resetScissor(Context& ctx);
+void beginPath(Context& ctx);
+void moveTo(Context& ctx, float x, float y);
+void lineTo(Context& ctx, float x, float y);
+void bezierTo(Context& ctx, float c1x, float c1y, float c2x, float c2y, float x, float y);
+void quadTo(Context& ctx, float cx, float cy, float x, float y);
+void arcTo(Context& ctx, float x1, float y1, float x2, float y2, float radius);
+void closePath(Context& ctx);
+void pathWinding(Context& ctx, int dir);
+void arc(Context& ctx, float cx, float cy, float r, float a0, float a1, int dir);
+void rect(Context& ctx, float x, float y, float w, float h);
+void roundedRect(Context& ctx, float x, float y, float w, float h, float r);
+void roundedRectVarying(Context& ctx, float x, float y, float w, float h, float radTopLeft, float radTopRight, float radBottomRight, float radBottomLeft);
+void ellipse(Context& ctx, float cx, float cy, float rx, float ry);
+void circle(Context& ctx, float cx, float cy, float r);
+void fill(Context& ctx);
+void stroke(Context& ctx);
+int createFont(Context& ctx, const char* name, const char* filename);
+int createFontAtIndex(Context& ctx, const char* name, const char* filename, const int fontIndex);
+int createFontMem(Context& ctx, const char* name, unsigned char* data, int ndata, int freeData);
+int createFontMemAtIndex(Context& ctx, const char* name, unsigned char* data, int ndata, int freeData, const int fontIndex);
+int findFont(Context& ctx, const char* name);
+int addFallbackFontId(Context& ctx, int baseFont, int fallbackFont);
+int addFallbackFont(Context& ctx, const char* baseFont, const char* fallbackFont);
+void resetFallbackFontsId(Context& ctx, int baseFont);
+void resetFallbackFonts(Context& ctx, const char* baseFont);
+void fontSize(Context& ctx, float size);
+void fontBlur(Context& ctx, float blur);
+void fontDilate(Context& ctx, float dilate);
+void textLetterSpacing(Context& ctx, float spacing);
+void textLineHeight(Context& ctx, float lineHeight);
+void textAlign(Context& ctx, int align);
+void fontFaceId(Context& ctx, int font);
+void fontFace(Context& ctx, const char* font);
+int getFontFaceId(Context& ctx);
+float getFontSize(Context& ctx);
+float getStrokeWidth(Context& ctx);
+int getTextAlign(Context& ctx);
+float text(Context& ctx, float x, float y, const char* string, const char* end);
+void textBox(Context& ctx, float x, float y, float breakRowWidth, const char* string, const char* end);
+float textBounds(Context& ctx, float x, float y, const char* string, const char* end, float* bounds);
+void textBoxBounds(Context& ctx, float x, float y, float breakRowWidth, const char* string, const char* end, float* bounds);
+int textGlyphPositions(Context& ctx, float x, float y, const char* string, const char* end, GlyphPosition* positions, int maxPositions);
+void textMetrics(Context& ctx, float* ascender, float* descender, float* lineh);
+int textBreakLines(Context& ctx, const char* string, const char* end, float breakRowWidth, TextRow* rows, int maxRows, int skipSpaces);
+void debugDumpPathCache(Context& ctx);
+
 int getImageTextureId(Context* ctx, int handle)
 {
 	return (*ctx)->params.renderGetImageTextureId((*ctx)->params.userPtr, handle);
-}
-
-const Params& internalParams(Context& ctx)
-{
-    return ctx->params;
 }
 
 ScissorBounds currentScissor(Context& ctx) {
@@ -1614,6 +1549,8 @@ void endFrame(Context& ctx)
 		ctx->fontImageIdx = 0;
 	}
 }
+
+} // namespace draw
 
 Color rgb(unsigned char r, unsigned char g, unsigned char b)
 {
@@ -1795,7 +1732,7 @@ float radToDeg(float rad)
 	return rad / (float)M_PI * 180.0f;
 }
 
-
+namespace draw {
 
 // State handling
 void save(Context& ctx)
@@ -3195,4 +3132,158 @@ void textMetrics(Context& ctx, float* ascender, float* descender, float* lineh)
 	if (lineh != NULL)
 		*lineh *= invscale;
 }
+
+} // namespace draw
+
+void Context::beginFrame(float windowWidth, float windowHeight, float devicePixelRatio) {
+	draw::beginFrame(*this, windowWidth, windowHeight, devicePixelRatio);
+}
+void Context::cancelFrame() { draw::cancelFrame(*this); }
+void Context::endFrame() { draw::endFrame(*this); }
+void Context::globalCompositeOperation(int op) { draw::globalCompositeOperation(*this, op); }
+void Context::globalCompositeBlendFunc(int sfactor, int dfactor) {
+	draw::globalCompositeBlendFunc(*this, sfactor, dfactor);
+}
+void Context::globalCompositeBlendFuncSeparate(int srcRGB, int dstRGB, int srcAlpha, int dstAlpha) {
+	draw::globalCompositeBlendFuncSeparate(*this, srcRGB, dstRGB, srcAlpha, dstAlpha);
+}
+void Context::save() { draw::save(*this); }
+void Context::restore() { draw::restore(*this); }
+void Context::reset() { draw::reset(*this); }
+ScissorBounds Context::currentScissor() { return draw::currentScissor(*this); }
+void Context::shapeAntiAlias(int enabled) { draw::shapeAntiAlias(*this, enabled); }
+void Context::strokeColor(Color color) { draw::strokeColor(*this, color); }
+void Context::strokePaint(Paint paint) { draw::strokePaint(*this, paint); }
+void Context::fillColor(Color color) { draw::fillColor(*this, color); }
+void Context::fillPaint(Paint paint) { draw::fillPaint(*this, paint); }
+void Context::miterLimit(float limit) { draw::miterLimit(*this, limit); }
+void Context::strokeWidth(float size) { draw::strokeWidth(*this, size); }
+void Context::lineStyle(int lineStyle) { draw::lineStyle(*this, lineStyle); }
+void Context::lineCap(int cap) { draw::lineCap(*this, cap); }
+void Context::lineJoin(int join) { draw::lineJoin(*this, join); }
+void Context::globalAlpha(float alpha) { draw::globalAlpha(*this, alpha); }
+void Context::resetTransform() { draw::resetTransform(*this); }
+void Context::transform(float a, float b, float c, float d, float e, float f) {
+	draw::transform(*this, a, b, c, d, e, f);
+}
+void Context::translate(float x, float y) { draw::translate(*this, x, y); }
+void Context::rotate(float angle) { draw::rotate(*this, angle); }
+void Context::skewX(float angle) { draw::skewX(*this, angle); }
+void Context::skewY(float angle) { draw::skewY(*this, angle); }
+void Context::scale(float x, float y) { draw::scale(*this, x, y); }
+void Context::currentTransform(float* xform) { draw::currentTransform(*this, xform); }
+int Context::createImage(const char* filename, int imageFlags) {
+	return draw::createImage(*this, filename, imageFlags);
+}
+int Context::createImageMem(int imageFlags, unsigned char* data, int ndata) {
+	return draw::createImageMem(*this, imageFlags, data, ndata);
+}
+int Context::createImageRGBA(int w, int h, int imageFlags, const unsigned char* data) {
+	return draw::createImageRGBA(*this, w, h, imageFlags, data);
+}
+void Context::updateImage(int image, const unsigned char* data) {
+	draw::updateImage(*this, image, data);
+}
+void Context::imageSize(int image, int& w, int& h) { draw::imageSize(*this, image, w, h); }
+void Context::deleteImage(int image) { draw::deleteImage(*this, image); }
+Paint Context::linearGradient(float sx, float sy, float ex, float ey, Color icol, Color ocol) {
+	return draw::linearGradient(*this, sx, sy, ex, ey, icol, ocol);
+}
+Paint Context::boxGradient(float x, float y, float w, float h, float r, float f, Color icol, Color ocol) {
+	return draw::boxGradient(*this, x, y, w, h, r, f, icol, ocol);
+}
+Paint Context::radialGradient(float cx, float cy, float inr, float outr, Color icol, Color ocol) {
+	return draw::radialGradient(*this, cx, cy, inr, outr, icol, ocol);
+}
+Paint Context::imagePattern(float ox, float oy, float ex, float ey, float angle, int image, float alpha) {
+	return draw::imagePattern(*this, ox, oy, ex, ey, angle, image, alpha);
+}
+void Context::scissor(float x, float y, float w, float h) { draw::scissor(*this, x, y, w, h); }
+void Context::intersectScissor(float x, float y, float w, float h) {
+	draw::intersectScissor(*this, x, y, w, h);
+}
+void Context::resetScissor() { draw::resetScissor(*this); }
+void Context::beginPath() { draw::beginPath(*this); }
+void Context::moveTo(float x, float y) { draw::moveTo(*this, x, y); }
+void Context::lineTo(float x, float y) { draw::lineTo(*this, x, y); }
+void Context::bezierTo(float c1x, float c1y, float c2x, float c2y, float x, float y) {
+	draw::bezierTo(*this, c1x, c1y, c2x, c2y, x, y);
+}
+void Context::quadTo(float cx, float cy, float x, float y) { draw::quadTo(*this, cx, cy, x, y); }
+void Context::arcTo(float x1, float y1, float x2, float y2, float radius) {
+	draw::arcTo(*this, x1, y1, x2, y2, radius);
+}
+void Context::closePath() { draw::closePath(*this); }
+void Context::pathWinding(int dir) { draw::pathWinding(*this, dir); }
+void Context::arc(float cx, float cy, float r, float a0, float a1, int dir) {
+	draw::arc(*this, cx, cy, r, a0, a1, dir);
+}
+void Context::rect(float x, float y, float w, float h) { draw::rect(*this, x, y, w, h); }
+void Context::roundedRect(float x, float y, float w, float h, float r) {
+	draw::roundedRect(*this, x, y, w, h, r);
+}
+void Context::roundedRectVarying(float x, float y, float w, float h, float radTopLeft, float radTopRight, float radBottomRight, float radBottomLeft) {
+	draw::roundedRectVarying(*this, x, y, w, h, radTopLeft, radTopRight, radBottomRight, radBottomLeft);
+}
+void Context::ellipse(float cx, float cy, float rx, float ry) { draw::ellipse(*this, cx, cy, rx, ry); }
+void Context::circle(float cx, float cy, float r) { draw::circle(*this, cx, cy, r); }
+void Context::fill() { draw::fill(*this); }
+void Context::stroke() { draw::stroke(*this); }
+int Context::createFont(const char* name, const char* filename) {
+	return draw::createFont(*this, name, filename);
+}
+int Context::createFontAtIndex(const char* name, const char* filename, const int fontIndex) {
+	return draw::createFontAtIndex(*this, name, filename, fontIndex);
+}
+int Context::createFontMem(const char* name, unsigned char* data, int ndata, int freeData) {
+	return draw::createFontMem(*this, name, data, ndata, freeData);
+}
+int Context::createFontMemAtIndex(const char* name, unsigned char* data, int ndata, int freeData, const int fontIndex) {
+	return draw::createFontMemAtIndex(*this, name, data, ndata, freeData, fontIndex);
+}
+int Context::findFont(const char* name) { return draw::findFont(*this, name); }
+int Context::addFallbackFontId(int baseFont, int fallbackFont) {
+	return draw::addFallbackFontId(*this, baseFont, fallbackFont);
+}
+int Context::addFallbackFont(const char* baseFont, const char* fallbackFont) {
+	return draw::addFallbackFont(*this, baseFont, fallbackFont);
+}
+void Context::resetFallbackFontsId(int baseFont) { draw::resetFallbackFontsId(*this, baseFont); }
+void Context::resetFallbackFonts(const char* baseFont) { draw::resetFallbackFonts(*this, baseFont); }
+void Context::fontSize(float size) { draw::fontSize(*this, size); }
+void Context::fontBlur(float blur) { draw::fontBlur(*this, blur); }
+void Context::fontDilate(float dilate) { draw::fontDilate(*this, dilate); }
+void Context::textLetterSpacing(float spacing) { draw::textLetterSpacing(*this, spacing); }
+void Context::textLineHeight(float lineHeight) { draw::textLineHeight(*this, lineHeight); }
+void Context::textAlign(int align) { draw::textAlign(*this, align); }
+void Context::fontFaceId(int font) { draw::fontFaceId(*this, font); }
+void Context::fontFace(const char* font) { draw::fontFace(*this, font); }
+int Context::getFontFaceId() { return draw::getFontFaceId(*this); }
+float Context::getFontSize() { return draw::getFontSize(*this); }
+float Context::getStrokeWidth() { return draw::getStrokeWidth(*this); }
+int Context::getTextAlign() { return draw::getTextAlign(*this); }
+float Context::text(float x, float y, const char* string, const char* end) {
+	return draw::text(*this, x, y, string, end);
+}
+void Context::textBox(float x, float y, float breakRowWidth, const char* string, const char* end) {
+	draw::textBox(*this, x, y, breakRowWidth, string, end);
+}
+float Context::textBounds(float x, float y, const char* string, const char* end, float* bounds) {
+	return draw::textBounds(*this, x, y, string, end, bounds);
+}
+void Context::textBoxBounds(float x, float y, float breakRowWidth, const char* string, const char* end, float* bounds) {
+	draw::textBoxBounds(*this, x, y, breakRowWidth, string, end, bounds);
+}
+int Context::textGlyphPositions(float x, float y, const char* string, const char* end, GlyphPosition* positions, int maxPositions) {
+	return draw::textGlyphPositions(*this, x, y, string, end, positions, maxPositions);
+}
+void Context::textMetrics(float* ascender, float* descender, float* lineh) {
+	draw::textMetrics(*this, ascender, descender, lineh);
+}
+int Context::textBreakLines(const char* string, const char* end, float breakRowWidth, TextRow* rows, int maxRows, int skipSpaces) {
+	return draw::textBreakLines(*this, string, end, breakRowWidth, rows, maxRows, skipSpaces);
+}
+const Params& Context::internalParams() { return (*this)->params; }
+void Context::debugDumpPathCache() { draw::debugDumpPathCache(*this); }
+
 }

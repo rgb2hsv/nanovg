@@ -209,7 +209,7 @@ int main(int argc, char** argv)
 			glClearColor(0.3f, 0.3f, 0.32f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT|GL_STENCIL_BUFFER_BIT);
 
-		nvg::beginFrame(vg, (float)winWidth, (float)winHeight, pxRatio);
+		vg.beginFrame( (float)winWidth, (float)winHeight, pxRatio);
 
 		renderDemo(vg, (float)mx, (float)my, (float)winWidth, (float)winHeight, (float)t, blowup, &data);
 
@@ -220,7 +220,7 @@ int main(int argc, char** argv)
 				renderGraph(vg, 5+200+5+200+5,5, &gpuGraph);
 			}
 		}
-		nvg::endFrame(vg);
+		vg.endFrame();
 
 		// Measure the CPU time taken excluding swap buffers (as the swap may wait for GPU)
 		cpuTime = glfwGetTime() - t;

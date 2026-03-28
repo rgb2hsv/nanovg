@@ -82,50 +82,50 @@ void drawWindow(nvg::Context& vg, const char* title, float x, float y, float w, 
 	nvg::Paint shadowPaint;
 	nvg::Paint headerPaint;
 
-	nvg::save(vg);
+	vg.save();
 //	clearState(vg);
 
 	// Window
-	nvg::beginPath(vg);
-	nvg::roundedRect(vg, x,y, w,h, cornerRadius);
-	nvg::fillColor(vg, nvg::rgba(28,30,34,192));
-//	nvg::fillColor(vg, nvg::rgba(0,0,0,128));
-	nvg::fill(vg);
+	vg.beginPath();
+	vg.roundedRect( x,y, w,h, cornerRadius);
+	vg.fillColor( nvg::rgba(28,30,34,192));
+//	vg.fillColor( nvg::rgba(0,0,0,128));
+	vg.fill();
 
 	// Drop shadow
-	shadowPaint = nvg::boxGradient(vg, x,y+2, w,h, cornerRadius*2, 10, nvg::rgba(0,0,0,128), nvg::rgba(0,0,0,0));
-	nvg::beginPath(vg);
-	nvg::rect(vg, x-10,y-10, w+20,h+30);
-	nvg::roundedRect(vg, x,y, w,h, cornerRadius);
-	nvg::pathWinding(vg, static_cast<int>(nvg::Solidity::Hole));
-	nvg::fillPaint(vg, shadowPaint);
-	nvg::fill(vg);
+	shadowPaint = vg.boxGradient( x,y+2, w,h, cornerRadius*2, 10, nvg::rgba(0,0,0,128), nvg::rgba(0,0,0,0));
+	vg.beginPath();
+	vg.rect( x-10,y-10, w+20,h+30);
+	vg.roundedRect( x,y, w,h, cornerRadius);
+	vg.pathWinding( static_cast<int>(nvg::Solidity::Hole));
+	vg.fillPaint( shadowPaint);
+	vg.fill();
 
 	// Header
-	headerPaint = nvg::linearGradient(vg, x,y,x,y+15, nvg::rgba(255,255,255,8), nvg::rgba(0,0,0,16));
-	nvg::beginPath(vg);
-	nvg::roundedRect(vg, x+1,y+1, w-2,30, cornerRadius-1);
-	nvg::fillPaint(vg, headerPaint);
-	nvg::fill(vg);
-	nvg::beginPath(vg);
-	nvg::moveTo(vg, x+0.5f, y+0.5f+30);
-	nvg::lineTo(vg, x+0.5f+w-1, y+0.5f+30);
-	nvg::strokeColor(vg, nvg::rgba(0,0,0,32));
-	nvg::stroke(vg);
+	headerPaint = vg.linearGradient( x,y,x,y+15, nvg::rgba(255,255,255,8), nvg::rgba(0,0,0,16));
+	vg.beginPath();
+	vg.roundedRect( x+1,y+1, w-2,30, cornerRadius-1);
+	vg.fillPaint( headerPaint);
+	vg.fill();
+	vg.beginPath();
+	vg.moveTo( x+0.5f, y+0.5f+30);
+	vg.lineTo( x+0.5f+w-1, y+0.5f+30);
+	vg.strokeColor( nvg::rgba(0,0,0,32));
+	vg.stroke();
 
-	nvg::fontSize(vg, 15.0f);
-	nvg::fontFace(vg, "sans-bold");
-	nvg::textAlign(vg,static_cast<int>(nvg::Align::Center | nvg::Align::Middle));
+	vg.fontSize( 15.0f);
+	vg.fontFace( "sans-bold");
+	vg.textAlign(static_cast<int>(nvg::Align::Center | nvg::Align::Middle));
 
-	nvg::fontBlur(vg,2);
-	nvg::fillColor(vg, nvg::rgba(0,0,0,128));
-	nvg::text(vg, x+w/2,y+16+1, title, NULL);
+	vg.fontBlur(2);
+	vg.fillColor( nvg::rgba(0,0,0,128));
+	vg.text( x+w/2,y+16+1, title, NULL);
 
-	nvg::fontBlur(vg,0);
-	nvg::fillColor(vg, nvg::rgba(220,220,220,160));
-	nvg::text(vg, x+w/2,y+16, title, NULL);
+	vg.fontBlur(0);
+	vg.fillColor( nvg::rgba(220,220,220,160));
+	vg.text( x+w/2,y+16, title, NULL);
 
-	nvg::restore(vg);
+	vg.restore();
 }
 
 void drawSearchBox(nvg::Context& vg, const char* text, float x, float y, float w, float h)
@@ -135,35 +135,35 @@ void drawSearchBox(nvg::Context& vg, const char* text, float x, float y, float w
 	float cornerRadius = h/2-1;
 
 	// Edit
-	bg = nvg::boxGradient(vg, x,y+1.5f, w,h, h/2,5, nvg::rgba(0,0,0,16), nvg::rgba(0,0,0,92));
-	nvg::beginPath(vg);
-	nvg::roundedRect(vg, x,y, w,h, cornerRadius);
-	nvg::fillPaint(vg, bg);
-	nvg::fill(vg);
+	bg = vg.boxGradient( x,y+1.5f, w,h, h/2,5, nvg::rgba(0,0,0,16), nvg::rgba(0,0,0,92));
+	vg.beginPath();
+	vg.roundedRect( x,y, w,h, cornerRadius);
+	vg.fillPaint( bg);
+	vg.fill();
 
-/*	nvg::beginPath(vg);
-	nvg::roundedRect(vg, x+0.5f,y+0.5f, w-1,h-1, cornerRadius-0.5f);
-	nvg::strokeColor(vg, nvg::rgba(0,0,0,48));
-	nvg::stroke(vg);*/
+/*	vg.beginPath();
+	vg.roundedRect( x+0.5f,y+0.5f, w-1,h-1, cornerRadius-0.5f);
+	vg.strokeColor( nvg::rgba(0,0,0,48));
+	vg.stroke();*/
 
-	nvg::fontSize(vg, h*1.3f);
-	nvg::fontFace(vg, "icons");
-	nvg::fillColor(vg, nvg::rgba(255,255,255,64));
-	nvg::textAlign(vg,static_cast<int>(nvg::Align::Center | nvg::Align::Middle));
-	nvg::text(vg, x+h*0.55f, y+h*0.55f, cpToUTF8(ICON_SEARCH, icon.data()), NULL);
+	vg.fontSize( h*1.3f);
+	vg.fontFace( "icons");
+	vg.fillColor( nvg::rgba(255,255,255,64));
+	vg.textAlign(static_cast<int>(nvg::Align::Center | nvg::Align::Middle));
+	vg.text( x+h*0.55f, y+h*0.55f, cpToUTF8(ICON_SEARCH, icon.data()), NULL);
 
-	nvg::fontSize(vg, 17.0f);
-	nvg::fontFace(vg, "sans");
-	nvg::fillColor(vg, nvg::rgba(255,255,255,32));
+	vg.fontSize( 17.0f);
+	vg.fontFace( "sans");
+	vg.fillColor( nvg::rgba(255,255,255,32));
 
-	nvg::textAlign(vg,static_cast<int>(nvg::Align::Left | nvg::Align::Middle));
-	nvg::text(vg, x+h*1.05f,y+h*0.5f,text, NULL);
+	vg.textAlign(static_cast<int>(nvg::Align::Left | nvg::Align::Middle));
+	vg.text( x+h*1.05f,y+h*0.5f,text, NULL);
 
-	nvg::fontSize(vg, h*1.3f);
-	nvg::fontFace(vg, "icons");
-	nvg::fillColor(vg, nvg::rgba(255,255,255,32));
-	nvg::textAlign(vg,static_cast<int>(nvg::Align::Center | nvg::Align::Middle));
-	nvg::text(vg, x+w-h*0.55f, y+h*0.55f, cpToUTF8(ICON_CIRCLED_CROSS, icon.data()), NULL);
+	vg.fontSize( h*1.3f);
+	vg.fontFace( "icons");
+	vg.fillColor( nvg::rgba(255,255,255,32));
+	vg.textAlign(static_cast<int>(nvg::Align::Center | nvg::Align::Middle));
+	vg.text( x+w-h*0.55f, y+h*0.55f, cpToUTF8(ICON_CIRCLED_CROSS, icon.data()), NULL);
 }
 
 void drawDropDown(nvg::Context& vg, const char* text, float x, float y, float w, float h)
@@ -172,56 +172,56 @@ void drawDropDown(nvg::Context& vg, const char* text, float x, float y, float w,
 	std::array<char, 8> icon{};
 	float cornerRadius = 4.0f;
 
-	bg = nvg::linearGradient(vg, x,y,x,y+h, nvg::rgba(255,255,255,16), nvg::rgba(0,0,0,16));
-	nvg::beginPath(vg);
-	nvg::roundedRect(vg, x+1,y+1, w-2,h-2, cornerRadius-1);
-	nvg::fillPaint(vg, bg);
-	nvg::fill(vg);
+	bg = vg.linearGradient( x,y,x,y+h, nvg::rgba(255,255,255,16), nvg::rgba(0,0,0,16));
+	vg.beginPath();
+	vg.roundedRect( x+1,y+1, w-2,h-2, cornerRadius-1);
+	vg.fillPaint( bg);
+	vg.fill();
 
-	nvg::beginPath(vg);
-	nvg::roundedRect(vg, x+0.5f,y+0.5f, w-1,h-1, cornerRadius-0.5f);
-	nvg::strokeColor(vg, nvg::rgba(0,0,0,48));
-	nvg::stroke(vg);
+	vg.beginPath();
+	vg.roundedRect( x+0.5f,y+0.5f, w-1,h-1, cornerRadius-0.5f);
+	vg.strokeColor( nvg::rgba(0,0,0,48));
+	vg.stroke();
 
-	nvg::fontSize(vg, 17.0f);
-	nvg::fontFace(vg, "sans");
-	nvg::fillColor(vg, nvg::rgba(255,255,255,160));
-	nvg::textAlign(vg,static_cast<int>(nvg::Align::Left | nvg::Align::Middle));
-	nvg::text(vg, x+h*0.3f,y+h*0.5f,text, NULL);
+	vg.fontSize( 17.0f);
+	vg.fontFace( "sans");
+	vg.fillColor( nvg::rgba(255,255,255,160));
+	vg.textAlign(static_cast<int>(nvg::Align::Left | nvg::Align::Middle));
+	vg.text( x+h*0.3f,y+h*0.5f,text, NULL);
 
-	nvg::fontSize(vg, h*1.3f);
-	nvg::fontFace(vg, "icons");
-	nvg::fillColor(vg, nvg::rgba(255,255,255,64));
-	nvg::textAlign(vg,static_cast<int>(nvg::Align::Center | nvg::Align::Middle));
-	nvg::text(vg, x+w-h*0.5f, y+h*0.5f, cpToUTF8(ICON_CHEVRON_RIGHT, icon.data()), NULL);
+	vg.fontSize( h*1.3f);
+	vg.fontFace( "icons");
+	vg.fillColor( nvg::rgba(255,255,255,64));
+	vg.textAlign(static_cast<int>(nvg::Align::Center | nvg::Align::Middle));
+	vg.text( x+w-h*0.5f, y+h*0.5f, cpToUTF8(ICON_CHEVRON_RIGHT, icon.data()), NULL);
 }
 
 void drawLabel(nvg::Context& vg, const char* text, float x, float y, float w, float h)
 {
 	UNUSED(w);
 
-	nvg::fontSize(vg, 15.0f);
-	nvg::fontFace(vg, "sans");
-	nvg::fillColor(vg, nvg::rgba(255,255,255,128));
+	vg.fontSize( 15.0f);
+	vg.fontFace( "sans");
+	vg.fillColor( nvg::rgba(255,255,255,128));
 
-	nvg::textAlign(vg,static_cast<int>(nvg::Align::Left | nvg::Align::Middle));
-	nvg::text(vg, x,y+h*0.5f,text, NULL);
+	vg.textAlign(static_cast<int>(nvg::Align::Left | nvg::Align::Middle));
+	vg.text( x,y+h*0.5f,text, NULL);
 }
 
 void drawEditBoxBase(nvg::Context& vg, float x, float y, float w, float h)
 {
 	nvg::Paint bg;
 	// Edit
-	bg = nvg::boxGradient(vg, x+1,y+1+1.5f, w-2,h-2, 3,4, nvg::rgba(255,255,255,32), nvg::rgba(32,32,32,32));
-	nvg::beginPath(vg);
-	nvg::roundedRect(vg, x+1,y+1, w-2,h-2, 4-1);
-	nvg::fillPaint(vg, bg);
-	nvg::fill(vg);
+	bg = vg.boxGradient( x+1,y+1+1.5f, w-2,h-2, 3,4, nvg::rgba(255,255,255,32), nvg::rgba(32,32,32,32));
+	vg.beginPath();
+	vg.roundedRect( x+1,y+1, w-2,h-2, 4-1);
+	vg.fillPaint( bg);
+	vg.fill();
 
-	nvg::beginPath(vg);
-	nvg::roundedRect(vg, x+0.5f,y+0.5f, w-1,h-1, 4-0.5f);
-	nvg::strokeColor(vg, nvg::rgba(0,0,0,48));
-	nvg::stroke(vg);
+	vg.beginPath();
+	vg.roundedRect( x+0.5f,y+0.5f, w-1,h-1, 4-0.5f);
+	vg.strokeColor( nvg::rgba(0,0,0,48));
+	vg.stroke();
 }
 
 void drawEditBox(nvg::Context& vg, const char* text, float x, float y, float w, float h)
@@ -229,11 +229,11 @@ void drawEditBox(nvg::Context& vg, const char* text, float x, float y, float w, 
 
 	drawEditBoxBase(vg, x,y, w,h);
 
-	nvg::fontSize(vg, 17.0f);
-	nvg::fontFace(vg, "sans");
-	nvg::fillColor(vg, nvg::rgba(255,255,255,64));
-	nvg::textAlign(vg,static_cast<int>(nvg::Align::Left | nvg::Align::Middle));
-	nvg::text(vg, x+h*0.3f,y+h*0.5f,text, NULL);
+	vg.fontSize( 17.0f);
+	vg.fontFace( "sans");
+	vg.fillColor( nvg::rgba(255,255,255,64));
+	vg.textAlign(static_cast<int>(nvg::Align::Left | nvg::Align::Middle));
+	vg.text( x+h*0.3f,y+h*0.5f,text, NULL);
 }
 
 void drawEditBoxNum(nvg::Context& vg,
@@ -243,19 +243,19 @@ void drawEditBoxNum(nvg::Context& vg,
 
 	drawEditBoxBase(vg, x,y, w,h);
 
-	uw = nvg::textBounds(vg, 0,0, units, NULL, NULL);
+	uw = vg.textBounds( 0,0, units, NULL, NULL);
 
-	nvg::fontSize(vg, 15.0f);
-	nvg::fontFace(vg, "sans");
-	nvg::fillColor(vg, nvg::rgba(255,255,255,64));
-	nvg::textAlign(vg,static_cast<int>(nvg::Align::Right | nvg::Align::Middle));
-	nvg::text(vg, x+w-h*0.3f,y+h*0.5f,units, NULL);
+	vg.fontSize( 15.0f);
+	vg.fontFace( "sans");
+	vg.fillColor( nvg::rgba(255,255,255,64));
+	vg.textAlign(static_cast<int>(nvg::Align::Right | nvg::Align::Middle));
+	vg.text( x+w-h*0.3f,y+h*0.5f,units, NULL);
 
-	nvg::fontSize(vg, 17.0f);
-	nvg::fontFace(vg, "sans");
-	nvg::fillColor(vg, nvg::rgba(255,255,255,128));
-	nvg::textAlign(vg,static_cast<int>(nvg::Align::Right | nvg::Align::Middle));
-	nvg::text(vg, x+w-uw-h*0.5f,y+h*0.5f,text, NULL);
+	vg.fontSize( 17.0f);
+	vg.fontFace( "sans");
+	vg.fillColor( nvg::rgba(255,255,255,128));
+	vg.textAlign(static_cast<int>(nvg::Align::Right | nvg::Align::Middle));
+	vg.text( x+w-uw-h*0.5f,y+h*0.5f,text, NULL);
 }
 
 void drawCheckBox(nvg::Context& vg, const char* text, float x, float y, float w, float h)
@@ -264,24 +264,24 @@ void drawCheckBox(nvg::Context& vg, const char* text, float x, float y, float w,
 	std::array<char, 8> icon{};
 	UNUSED(w);
 
-	nvg::fontSize(vg, 15.0f);
-	nvg::fontFace(vg, "sans");
-	nvg::fillColor(vg, nvg::rgba(255,255,255,160));
+	vg.fontSize( 15.0f);
+	vg.fontFace( "sans");
+	vg.fillColor( nvg::rgba(255,255,255,160));
 
-	nvg::textAlign(vg,static_cast<int>(nvg::Align::Left | nvg::Align::Middle));
-	nvg::text(vg, x+28,y+h*0.5f,text, NULL);
+	vg.textAlign(static_cast<int>(nvg::Align::Left | nvg::Align::Middle));
+	vg.text( x+28,y+h*0.5f,text, NULL);
 
-	bg = nvg::boxGradient(vg, x+1,y+(int)(h*0.5f)-9+1, 18,18, 3,3, nvg::rgba(0,0,0,32), nvg::rgba(0,0,0,92));
-	nvg::beginPath(vg);
-	nvg::roundedRect(vg, x+1,y+(int)(h*0.5f)-9, 18,18, 3);
-	nvg::fillPaint(vg, bg);
-	nvg::fill(vg);
+	bg = vg.boxGradient( x+1,y+(int)(h*0.5f)-9+1, 18,18, 3,3, nvg::rgba(0,0,0,32), nvg::rgba(0,0,0,92));
+	vg.beginPath();
+	vg.roundedRect( x+1,y+(int)(h*0.5f)-9, 18,18, 3);
+	vg.fillPaint( bg);
+	vg.fill();
 
-	nvg::fontSize(vg, 33);
-	nvg::fontFace(vg, "icons");
-	nvg::fillColor(vg, nvg::rgba(255,255,255,128));
-	nvg::textAlign(vg,static_cast<int>(nvg::Align::Center | nvg::Align::Middle));
-	nvg::text(vg, x+9+2, y+h*0.5f, cpToUTF8(ICON_CHECK, icon.data()), NULL);
+	vg.fontSize( 33);
+	vg.fontFace( "icons");
+	vg.fillColor( nvg::rgba(255,255,255,128));
+	vg.textAlign(static_cast<int>(nvg::Align::Center | nvg::Align::Middle));
+	vg.text( x+9+2, y+h*0.5f, cpToUTF8(ICON_CHECK, icon.data()), NULL);
 }
 
 void drawButton(nvg::Context& vg, int preicon, const char* text, float x, float y, float w, float h, nvg::Color col)
@@ -291,46 +291,46 @@ void drawButton(nvg::Context& vg, int preicon, const char* text, float x, float 
 	float cornerRadius = 4.0f;
 	float tw = 0, iw = 0;
 
-	bg = nvg::linearGradient(vg, x,y,x,y+h, nvg::rgba(255,255,255,isBlack(col)?16:32), nvg::rgba(0,0,0,isBlack(col)?16:32));
-	nvg::beginPath(vg);
-	nvg::roundedRect(vg, x+1,y+1, w-2,h-2, cornerRadius-1);
+	bg = vg.linearGradient( x,y,x,y+h, nvg::rgba(255,255,255,isBlack(col)?16:32), nvg::rgba(0,0,0,isBlack(col)?16:32));
+	vg.beginPath();
+	vg.roundedRect( x+1,y+1, w-2,h-2, cornerRadius-1);
 	if (!isBlack(col)) {
-		nvg::fillColor(vg, col);
-		nvg::fill(vg);
+		vg.fillColor( col);
+		vg.fill();
 	}
-	nvg::fillPaint(vg, bg);
-	nvg::fill(vg);
+	vg.fillPaint( bg);
+	vg.fill();
 
-	nvg::beginPath(vg);
-	nvg::roundedRect(vg, x+0.5f,y+0.5f, w-1,h-1, cornerRadius-0.5f);
-	nvg::strokeColor(vg, nvg::rgba(0,0,0,48));
-	nvg::stroke(vg);
+	vg.beginPath();
+	vg.roundedRect( x+0.5f,y+0.5f, w-1,h-1, cornerRadius-0.5f);
+	vg.strokeColor( nvg::rgba(0,0,0,48));
+	vg.stroke();
 
-	nvg::fontSize(vg, 17.0f);
-	nvg::fontFace(vg, "sans-bold");
-	tw = nvg::textBounds(vg, 0,0, text, NULL, NULL);
+	vg.fontSize( 17.0f);
+	vg.fontFace( "sans-bold");
+	tw = vg.textBounds( 0,0, text, NULL, NULL);
 	if (preicon != 0) {
-		nvg::fontSize(vg, h*1.3f);
-		nvg::fontFace(vg, "icons");
-		iw = nvg::textBounds(vg, 0,0, cpToUTF8(preicon, icon.data()), NULL, NULL);
+		vg.fontSize( h*1.3f);
+		vg.fontFace( "icons");
+		iw = vg.textBounds( 0,0, cpToUTF8(preicon, icon.data()), NULL, NULL);
 		iw += h*0.15f;
 	}
 
 	if (preicon != 0) {
-		nvg::fontSize(vg, h*1.3f);
-		nvg::fontFace(vg, "icons");
-		nvg::fillColor(vg, nvg::rgba(255,255,255,96));
-		nvg::textAlign(vg,static_cast<int>(nvg::Align::Left | nvg::Align::Middle));
-		nvg::text(vg, x+w*0.5f-tw*0.5f-iw*0.75f, y+h*0.5f, cpToUTF8(preicon, icon.data()), NULL);
+		vg.fontSize( h*1.3f);
+		vg.fontFace( "icons");
+		vg.fillColor( nvg::rgba(255,255,255,96));
+		vg.textAlign(static_cast<int>(nvg::Align::Left | nvg::Align::Middle));
+		vg.text( x+w*0.5f-tw*0.5f-iw*0.75f, y+h*0.5f, cpToUTF8(preicon, icon.data()), NULL);
 	}
 
-	nvg::fontSize(vg, 17.0f);
-	nvg::fontFace(vg, "sans-bold");
-	nvg::textAlign(vg,static_cast<int>(nvg::Align::Left | nvg::Align::Middle));
-	nvg::fillColor(vg, nvg::rgba(0,0,0,160));
-	nvg::text(vg, x+w*0.5f-tw*0.5f+iw*0.25f,y+h*0.5f-1,text, NULL);
-	nvg::fillColor(vg, nvg::rgba(255,255,255,160));
-	nvg::text(vg, x+w*0.5f-tw*0.5f+iw*0.25f,y+h*0.5f,text, NULL);
+	vg.fontSize( 17.0f);
+	vg.fontFace( "sans-bold");
+	vg.textAlign(static_cast<int>(nvg::Align::Left | nvg::Align::Middle));
+	vg.fillColor( nvg::rgba(0,0,0,160));
+	vg.text( x+w*0.5f-tw*0.5f+iw*0.25f,y+h*0.5f-1,text, NULL);
+	vg.fillColor( nvg::rgba(255,255,255,160));
+	vg.text( x+w*0.5f-tw*0.5f+iw*0.25f,y+h*0.5f,text, NULL);
 }
 
 void drawSlider(nvg::Context& vg, float pos, float x, float y, float w, float h)
@@ -339,69 +339,69 @@ void drawSlider(nvg::Context& vg, float pos, float x, float y, float w, float h)
 	float cy = y + h*0.5f;
 	float kr = h*0.25f;
 
-	nvg::save(vg);
+	vg.save();
 //	clearState(vg);
 
 	// Slot
-	bg = nvg::boxGradient(vg, x,cy-2+1, w,4, 2,2, nvg::rgba(0,0,0,32), nvg::rgba(0,0,0,128));
-	nvg::beginPath(vg);
-	nvg::roundedRect(vg, x,cy-2, w,4, 2);
-	nvg::fillPaint(vg, bg);
-	nvg::fill(vg);
+	bg = vg.boxGradient( x,cy-2+1, w,4, 2,2, nvg::rgba(0,0,0,32), nvg::rgba(0,0,0,128));
+	vg.beginPath();
+	vg.roundedRect( x,cy-2, w,4, 2);
+	vg.fillPaint( bg);
+	vg.fill();
 
 	// Knob Shadow
-	bg = nvg::radialGradient(vg, x+(int)(pos*w),cy+1, kr-3,kr+3, nvg::rgba(0,0,0,64), nvg::rgba(0,0,0,0));
-	nvg::beginPath(vg);
-	nvg::rect(vg, x+(int)(pos*w)-kr-5,cy-kr-5,kr*2+5+5,kr*2+5+5+3);
-	nvg::circle(vg, x+(int)(pos*w),cy, kr);
-	nvg::pathWinding(vg, static_cast<int>(nvg::Solidity::Hole));
-	nvg::fillPaint(vg, bg);
-	nvg::fill(vg);
+	bg = vg.radialGradient( x+(int)(pos*w),cy+1, kr-3,kr+3, nvg::rgba(0,0,0,64), nvg::rgba(0,0,0,0));
+	vg.beginPath();
+	vg.rect( x+(int)(pos*w)-kr-5,cy-kr-5,kr*2+5+5,kr*2+5+5+3);
+	vg.circle( x+(int)(pos*w),cy, kr);
+	vg.pathWinding( static_cast<int>(nvg::Solidity::Hole));
+	vg.fillPaint( bg);
+	vg.fill();
 
 	// Knob
-	knob = nvg::linearGradient(vg, x,cy-kr,x,cy+kr, nvg::rgba(255,255,255,16), nvg::rgba(0,0,0,16));
-	nvg::beginPath(vg);
-	nvg::circle(vg, x+(int)(pos*w),cy, kr-1);
-	nvg::fillColor(vg, nvg::rgba(40,43,48,255));
-	nvg::fill(vg);
-	nvg::fillPaint(vg, knob);
-	nvg::fill(vg);
+	knob = vg.linearGradient( x,cy-kr,x,cy+kr, nvg::rgba(255,255,255,16), nvg::rgba(0,0,0,16));
+	vg.beginPath();
+	vg.circle( x+(int)(pos*w),cy, kr-1);
+	vg.fillColor( nvg::rgba(40,43,48,255));
+	vg.fill();
+	vg.fillPaint( knob);
+	vg.fill();
 
-	nvg::beginPath(vg);
-	nvg::circle(vg, x+(int)(pos*w),cy, kr-0.5f);
-	nvg::strokeColor(vg, nvg::rgba(0,0,0,92));
-	nvg::stroke(vg);
+	vg.beginPath();
+	vg.circle( x+(int)(pos*w),cy, kr-0.5f);
+	vg.strokeColor( nvg::rgba(0,0,0,92));
+	vg.stroke();
 
-	nvg::restore(vg);
+	vg.restore();
 }
 
 void drawFancyText(nvg::Context& vg, float x, float y){
-	nvg::fontSize(vg, 30.0f);
-	nvg::fontFace(vg, "sans-bold");
-	nvg::textAlign(vg,static_cast<int>(nvg::Align::Center | nvg::Align::Middle));
+	vg.fontSize( 30.0f);
+	vg.fontFace( "sans-bold");
+	vg.textAlign(static_cast<int>(nvg::Align::Center | nvg::Align::Middle));
 
-	nvg::fontBlur(vg, 10);
-	nvg::fillColor(vg, nvg::rgb(255, 0, 102));
-	nvg::text(vg, x, y, "Font Blur", NULL);
-	nvg::fontBlur(vg,0);
-	nvg::fillColor(vg, nvg::rgb(255,255,255));
-	nvg::text(vg, x, y, "Font Blur", NULL);
+	vg.fontBlur( 10);
+	vg.fillColor( nvg::rgb(255, 0, 102));
+	vg.text( x, y, "Font Blur", NULL);
+	vg.fontBlur(0);
+	vg.fillColor( nvg::rgb(255,255,255));
+	vg.text( x, y, "Font Blur", NULL);
 
-	fontDilate(vg, 2);
-	nvg::fillColor(vg, nvg::rgb(255, 0, 102));
-	nvg::text(vg, x, y+40, "Font Outline", NULL);
-	fontDilate(vg,0);
-	nvg::fillColor(vg, nvg::rgb(255,255,255));
-	nvg::text(vg, x, y+40, "Font Outline", NULL);
+	vg.fontDilate( 2);
+	vg.fillColor( nvg::rgb(255, 0, 102));
+	vg.text( x, y+40, "Font Outline", NULL);
+	vg.fontDilate(0);
+	vg.fillColor( nvg::rgb(255,255,255));
+	vg.text( x, y+40, "Font Outline", NULL);
 
-	fontDilate(vg, 3); // Dilate will always be applied before blur
-	nvg::fontBlur(vg, 2);
-	nvg::fillColor(vg, nvg::rgb(255, 0, 102));
-	nvg::text(vg, x, y+80, "Font Blur Outline", NULL);
-	fontDilate(vg,0);
-	nvg::fontBlur(vg,0);
-	nvg::fillColor(vg, nvg::rgb(255,255,255));
-	nvg::text(vg, x, y+80, "Font Blur Outline", NULL);
+	vg.fontDilate( 3); // Dilate will always be applied before blur
+	vg.fontBlur( 2);
+	vg.fillColor( nvg::rgb(255, 0, 102));
+	vg.text( x, y+80, "Font Blur Outline", NULL);
+	vg.fontDilate(0);
+	vg.fontBlur(0);
+	vg.fillColor( nvg::rgb(255,255,255));
+	vg.text( x, y+80, "Font Blur Outline", NULL);
 }
 
 void drawEyes(nvg::Context& vg, float x, float y, float w, float h, float mx, float my, float t)
@@ -417,32 +417,19 @@ void drawEyes(nvg::Context& vg, float x, float y, float w, float h, float mx, fl
 	float br = (ex < ey ? ex : ey) * 0.5f;
 	float blink = 1.0f - powf(sinf(t*0.5f), 200.0f)*0.8f;
 
-	bg = nvg::linearGradient(vg, x,y+h*0.5f,x+w*0.1f,y+h, nvg::rgba(0,0,0,32), nvg::rgba(0,0,0,16));
-	nvg::beginPath(vg);
-	nvg::ellipse(vg, lx+3.0f,ly+16.0f, ex,ey);
-	nvg::ellipse(vg, rx+3.0f,ry+16.0f, ex,ey);
-	nvg::fillPaint(vg, bg);
-	nvg::fill(vg);
+	bg = vg.linearGradient( x,y+h*0.5f,x+w*0.1f,y+h, nvg::rgba(0,0,0,32), nvg::rgba(0,0,0,16));
+	vg.beginPath();
+	vg.ellipse( lx+3.0f,ly+16.0f, ex,ey);
+	vg.ellipse( rx+3.0f,ry+16.0f, ex,ey);
+	vg.fillPaint( bg);
+	vg.fill();
 
-	bg = nvg::linearGradient(vg, x,y+h*0.25f,x+w*0.1f,y+h, nvg::rgba(220,220,220,255), nvg::rgba(128,128,128,255));
-	nvg::beginPath(vg);
-	nvg::ellipse(vg, lx,ly, ex,ey);
-	nvg::ellipse(vg, rx,ry, ex,ey);
-	nvg::fillPaint(vg, bg);
-	nvg::fill(vg);
-
-	dx = (mx - rx) / (ex * 10);
-	dy = (my - ry) / (ey * 10);
-	d = sqrtf(dx*dx+dy*dy);
-	if (d > 1.0f) {
-		dx /= d; dy /= d;
-	}
-	dx *= ex*0.4f;
-	dy *= ey*0.5f;
-	nvg::beginPath(vg);
-	nvg::ellipse(vg, lx+dx,ly+dy+ey*0.25f*(1-blink), br,br*blink);
-	nvg::fillColor(vg, nvg::rgba(32,32,32,255));
-	nvg::fill(vg);
+	bg = vg.linearGradient( x,y+h*0.25f,x+w*0.1f,y+h, nvg::rgba(220,220,220,255), nvg::rgba(128,128,128,255));
+	vg.beginPath();
+	vg.ellipse( lx,ly, ex,ey);
+	vg.ellipse( rx,ry, ex,ey);
+	vg.fillPaint( bg);
+	vg.fill();
 
 	dx = (mx - rx) / (ex * 10);
 	dy = (my - ry) / (ey * 10);
@@ -452,22 +439,35 @@ void drawEyes(nvg::Context& vg, float x, float y, float w, float h, float mx, fl
 	}
 	dx *= ex*0.4f;
 	dy *= ey*0.5f;
-	nvg::beginPath(vg);
-	nvg::ellipse(vg, rx+dx,ry+dy+ey*0.25f*(1-blink), br,br*blink);
-	nvg::fillColor(vg, nvg::rgba(32,32,32,255));
-	nvg::fill(vg);
+	vg.beginPath();
+	vg.ellipse( lx+dx,ly+dy+ey*0.25f*(1-blink), br,br*blink);
+	vg.fillColor( nvg::rgba(32,32,32,255));
+	vg.fill();
 
-	gloss = nvg::radialGradient(vg, lx-ex*0.25f,ly-ey*0.5f, ex*0.1f,ex*0.75f, nvg::rgba(255,255,255,128), nvg::rgba(255,255,255,0));
-	nvg::beginPath(vg);
-	nvg::ellipse(vg, lx,ly, ex,ey);
-	nvg::fillPaint(vg, gloss);
-	nvg::fill(vg);
+	dx = (mx - rx) / (ex * 10);
+	dy = (my - ry) / (ey * 10);
+	d = sqrtf(dx*dx+dy*dy);
+	if (d > 1.0f) {
+		dx /= d; dy /= d;
+	}
+	dx *= ex*0.4f;
+	dy *= ey*0.5f;
+	vg.beginPath();
+	vg.ellipse( rx+dx,ry+dy+ey*0.25f*(1-blink), br,br*blink);
+	vg.fillColor( nvg::rgba(32,32,32,255));
+	vg.fill();
 
-	gloss = nvg::radialGradient(vg, rx-ex*0.25f,ry-ey*0.5f, ex*0.1f,ex*0.75f, nvg::rgba(255,255,255,128), nvg::rgba(255,255,255,0));
-	nvg::beginPath(vg);
-	nvg::ellipse(vg, rx,ry, ex,ey);
-	nvg::fillPaint(vg, gloss);
-	nvg::fill(vg);
+	gloss = vg.radialGradient( lx-ex*0.25f,ly-ey*0.5f, ex*0.1f,ex*0.75f, nvg::rgba(255,255,255,128), nvg::rgba(255,255,255,0));
+	vg.beginPath();
+	vg.ellipse( lx,ly, ex,ey);
+	vg.fillPaint( gloss);
+	vg.fill();
+
+	gloss = vg.radialGradient( rx-ex*0.25f,ry-ey*0.5f, ex*0.1f,ex*0.75f, nvg::rgba(255,255,255,128), nvg::rgba(255,255,255,0));
+	vg.beginPath();
+	vg.ellipse( rx,ry, ex,ey);
+	vg.fillPaint( gloss);
+	vg.fill();
 }
 
 void drawGraph(nvg::Context& vg, float x, float y, float w, float h, float t)
@@ -491,54 +491,54 @@ void drawGraph(nvg::Context& vg, float x, float y, float w, float h, float t)
 	}
 
 	// Graph background
-	bg = nvg::linearGradient(vg, x,y,x,y+h, nvg::rgba(0,160,192,0), nvg::rgba(0,160,192,64));
-	nvg::beginPath(vg);
-	nvg::moveTo(vg, sx[0], sy[0]);
+	bg = vg.linearGradient( x,y,x,y+h, nvg::rgba(0,160,192,0), nvg::rgba(0,160,192,64));
+	vg.beginPath();
+	vg.moveTo( sx[0], sy[0]);
 	for (i = 1; i < 6; i++)
-		nvg::bezierTo(vg, sx[i-1]+dx*0.5f,sy[i-1], sx[i]-dx*0.5f,sy[i], sx[i],sy[i]);
-	nvg::lineTo(vg, x+w, y+h);
-	nvg::lineTo(vg, x, y+h);
-	nvg::fillPaint(vg, bg);
-	nvg::fill(vg);
+		vg.bezierTo( sx[i-1]+dx*0.5f,sy[i-1], sx[i]-dx*0.5f,sy[i], sx[i],sy[i]);
+	vg.lineTo( x+w, y+h);
+	vg.lineTo( x, y+h);
+	vg.fillPaint( bg);
+	vg.fill();
 
 	// Graph line
-	nvg::beginPath(vg);
-	nvg::moveTo(vg, sx[0], sy[0]+2);
+	vg.beginPath();
+	vg.moveTo( sx[0], sy[0]+2);
 	for (i = 1; i < 6; i++)
-		nvg::bezierTo(vg, sx[i-1]+dx*0.5f,sy[i-1]+2, sx[i]-dx*0.5f,sy[i]+2, sx[i],sy[i]+2);
-	nvg::strokeColor(vg, nvg::rgba(0,0,0,32));
-	nvg::strokeWidth(vg, 3.0f);
-	nvg::stroke(vg);
+		vg.bezierTo( sx[i-1]+dx*0.5f,sy[i-1]+2, sx[i]-dx*0.5f,sy[i]+2, sx[i],sy[i]+2);
+	vg.strokeColor( nvg::rgba(0,0,0,32));
+	vg.strokeWidth( 3.0f);
+	vg.stroke();
 
-	nvg::beginPath(vg);
-	nvg::moveTo(vg, sx[0], sy[0]);
+	vg.beginPath();
+	vg.moveTo( sx[0], sy[0]);
 	for (i = 1; i < 6; i++)
-		nvg::bezierTo(vg, sx[i-1]+dx*0.5f,sy[i-1], sx[i]-dx*0.5f,sy[i], sx[i],sy[i]);
-	nvg::strokeColor(vg, nvg::rgba(0,160,192,255));
-	nvg::strokeWidth(vg, 3.0f);
-	nvg::stroke(vg);
+		vg.bezierTo( sx[i-1]+dx*0.5f,sy[i-1], sx[i]-dx*0.5f,sy[i], sx[i],sy[i]);
+	vg.strokeColor( nvg::rgba(0,160,192,255));
+	vg.strokeWidth( 3.0f);
+	vg.stroke();
 
 	// Graph sample pos
 	for (i = 0; i < 6; i++) {
-		bg = nvg::radialGradient(vg, sx[i],sy[i]+2, 3.0f,8.0f, nvg::rgba(0,0,0,32), nvg::rgba(0,0,0,0));
-		nvg::beginPath(vg);
-		nvg::rect(vg, sx[i]-10, sy[i]-10+2, 20,20);
-		nvg::fillPaint(vg, bg);
-		nvg::fill(vg);
+		bg = vg.radialGradient( sx[i],sy[i]+2, 3.0f,8.0f, nvg::rgba(0,0,0,32), nvg::rgba(0,0,0,0));
+		vg.beginPath();
+		vg.rect( sx[i]-10, sy[i]-10+2, 20,20);
+		vg.fillPaint( bg);
+		vg.fill();
 	}
 
-	nvg::beginPath(vg);
+	vg.beginPath();
 	for (i = 0; i < 6; i++)
-		nvg::circle(vg, sx[i], sy[i], 4.0f);
-	nvg::fillColor(vg, nvg::rgba(0,160,192,255));
-	nvg::fill(vg);
-	nvg::beginPath(vg);
+		vg.circle( sx[i], sy[i], 4.0f);
+	vg.fillColor( nvg::rgba(0,160,192,255));
+	vg.fill();
+	vg.beginPath();
 	for (i = 0; i < 6; i++)
-		nvg::circle(vg, sx[i], sy[i], 2.0f);
-	nvg::fillColor(vg, nvg::rgba(220,220,220,255));
-	nvg::fill(vg);
+		vg.circle( sx[i], sy[i], 2.0f);
+	vg.fillColor( nvg::rgba(220,220,220,255));
+	vg.fill();
 
-	nvg::strokeWidth(vg, 1.0f);
+	vg.strokeWidth( 1.0f);
 }
 
 void drawSpinner(nvg::Context& vg, float cx, float cy, float r, float t)
@@ -550,21 +550,21 @@ void drawSpinner(nvg::Context& vg, float cx, float cy, float r, float t)
 	float ax,ay, bx,by;
 	nvg::Paint paint;
 
-	nvg::save(vg);
+	vg.save();
 
-	nvg::beginPath(vg);
-	nvg::arc(vg, cx,cy, r0, a0, a1, static_cast<int>(nvg::Winding::CW));
-	nvg::arc(vg, cx,cy, r1, a1, a0, static_cast<int>(nvg::Winding::CCW));
-	nvg::closePath(vg);
+	vg.beginPath();
+	vg.arc( cx,cy, r0, a0, a1, static_cast<int>(nvg::Winding::CW));
+	vg.arc( cx,cy, r1, a1, a0, static_cast<int>(nvg::Winding::CCW));
+	vg.closePath();
 	ax = cx + cosf(a0) * (r0+r1)*0.5f;
 	ay = cy + sinf(a0) * (r0+r1)*0.5f;
 	bx = cx + cosf(a1) * (r0+r1)*0.5f;
 	by = cy + sinf(a1) * (r0+r1)*0.5f;
-	paint = nvg::linearGradient(vg, ax,ay, bx,by, nvg::rgba(0,0,0,0), nvg::rgba(0,0,0,128));
-	nvg::fillPaint(vg, paint);
-	nvg::fill(vg);
+	paint = vg.linearGradient( ax,ay, bx,by, nvg::rgba(0,0,0,0), nvg::rgba(0,0,0,128));
+	vg.fillPaint( paint);
+	vg.fill();
 
-	nvg::restore(vg);
+	vg.restore();
 }
 
 void drawThumbnails(nvg::Context& vg, float x, float y, float w, float h, const int* images, int nimages, float t)
@@ -581,30 +581,30 @@ void drawThumbnails(nvg::Context& vg, float x, float y, float w, float h, const 
 	float u2 = (1-cosf(t*0.2f))*0.5f;
 	float scrollh, dv;
 
-	nvg::save(vg);
+	vg.save();
 //	clearState(vg);
 
 	// Drop shadow
-	shadowPaint = nvg::boxGradient(vg, x,y+4, w,h, cornerRadius*2, 20, nvg::rgba(0,0,0,128), nvg::rgba(0,0,0,0));
-	nvg::beginPath(vg);
-	nvg::rect(vg, x-10,y-10, w+20,h+30);
-	nvg::roundedRect(vg, x,y, w,h, cornerRadius);
-	nvg::pathWinding(vg, static_cast<int>(nvg::Solidity::Hole));
-	nvg::fillPaint(vg, shadowPaint);
-	nvg::fill(vg);
+	shadowPaint = vg.boxGradient( x,y+4, w,h, cornerRadius*2, 20, nvg::rgba(0,0,0,128), nvg::rgba(0,0,0,0));
+	vg.beginPath();
+	vg.rect( x-10,y-10, w+20,h+30);
+	vg.roundedRect( x,y, w,h, cornerRadius);
+	vg.pathWinding( static_cast<int>(nvg::Solidity::Hole));
+	vg.fillPaint( shadowPaint);
+	vg.fill();
 
 	// Window
-	nvg::beginPath(vg);
-	nvg::roundedRect(vg, x,y, w,h, cornerRadius);
-	nvg::moveTo(vg, x-10,y+arry);
-	nvg::lineTo(vg, x+1,y+arry-11);
-	nvg::lineTo(vg, x+1,y+arry+11);
-	nvg::fillColor(vg, nvg::rgba(200,200,200,255));
-	nvg::fill(vg);
+	vg.beginPath();
+	vg.roundedRect( x,y, w,h, cornerRadius);
+	vg.moveTo( x-10,y+arry);
+	vg.lineTo( x+1,y+arry-11);
+	vg.lineTo( x+1,y+arry+11);
+	vg.fillColor( nvg::rgba(200,200,200,255));
+	vg.fill();
 
-	nvg::save(vg);
-	nvg::scissor(vg, x,y,w,h);
-	nvg::translate(vg, 0, -(stackh - h)*u);
+	vg.save();
+	vg.scissor( x,y,w,h);
+	vg.translate( 0, -(stackh - h)*u);
 
 	dv = 1.0f / (float)(nimages-1);
 
@@ -614,7 +614,7 @@ void drawThumbnails(nvg::Context& vg, float x, float y, float w, float h, const 
 		ty = y+10;
 		tx += (i%2) * (thumb+10);
 		ty += (i/2) * (thumb+10);
-		nvg::imageSize(vg, images[i], imgw, imgh);
+		vg.imageSize( images[i], imgw, imgh);
 		if (imgw < imgh) {
 			iw = thumb;
 			ih = iw * (float)imgh/(float)imgw;
@@ -633,58 +633,58 @@ void drawThumbnails(nvg::Context& vg, float x, float y, float w, float h, const 
 		if (a < 1.0f)
 			drawSpinner(vg, tx+thumb/2,ty+thumb/2, thumb*0.25f, t);
 
-		imgPaint = nvg::imagePattern(vg, tx+ix, ty+iy, iw,ih, 0.0f/180.0f*M_PI, images[i], a);
-		nvg::beginPath(vg);
-		nvg::roundedRect(vg, tx,ty, thumb,thumb, 5);
-		nvg::fillPaint(vg, imgPaint);
-		nvg::fill(vg);
+		imgPaint = vg.imagePattern( tx+ix, ty+iy, iw,ih, 0.0f/180.0f*M_PI, images[i], a);
+		vg.beginPath();
+		vg.roundedRect( tx,ty, thumb,thumb, 5);
+		vg.fillPaint( imgPaint);
+		vg.fill();
 
-		shadowPaint = nvg::boxGradient(vg, tx-1,ty, thumb+2,thumb+2, 5, 3, nvg::rgba(0,0,0,128), nvg::rgba(0,0,0,0));
-		nvg::beginPath(vg);
-		nvg::rect(vg, tx-5,ty-5, thumb+10,thumb+10);
-		nvg::roundedRect(vg, tx,ty, thumb,thumb, 6);
-		nvg::pathWinding(vg, static_cast<int>(nvg::Solidity::Hole));
-		nvg::fillPaint(vg, shadowPaint);
-		nvg::fill(vg);
+		shadowPaint = vg.boxGradient( tx-1,ty, thumb+2,thumb+2, 5, 3, nvg::rgba(0,0,0,128), nvg::rgba(0,0,0,0));
+		vg.beginPath();
+		vg.rect( tx-5,ty-5, thumb+10,thumb+10);
+		vg.roundedRect( tx,ty, thumb,thumb, 6);
+		vg.pathWinding( static_cast<int>(nvg::Solidity::Hole));
+		vg.fillPaint( shadowPaint);
+		vg.fill();
 
-		nvg::beginPath(vg);
-		nvg::roundedRect(vg, tx+0.5f,ty+0.5f, thumb-1,thumb-1, 4-0.5f);
-		nvg::strokeWidth(vg,1.0f);
-		nvg::strokeColor(vg, nvg::rgba(255,255,255,192));
-		nvg::stroke(vg);
+		vg.beginPath();
+		vg.roundedRect( tx+0.5f,ty+0.5f, thumb-1,thumb-1, 4-0.5f);
+		vg.strokeWidth(1.0f);
+		vg.strokeColor( nvg::rgba(255,255,255,192));
+		vg.stroke();
 	}
-	nvg::restore(vg);
+	vg.restore();
 
 	// Hide fades
-	fadePaint = nvg::linearGradient(vg, x,y,x,y+6, nvg::rgba(200,200,200,255), nvg::rgba(200,200,200,0));
-	nvg::beginPath(vg);
-	nvg::rect(vg, x+4,y,w-8,6);
-	nvg::fillPaint(vg, fadePaint);
-	nvg::fill(vg);
+	fadePaint = vg.linearGradient( x,y,x,y+6, nvg::rgba(200,200,200,255), nvg::rgba(200,200,200,0));
+	vg.beginPath();
+	vg.rect( x+4,y,w-8,6);
+	vg.fillPaint( fadePaint);
+	vg.fill();
 
-	fadePaint = nvg::linearGradient(vg, x,y+h,x,y+h-6, nvg::rgba(200,200,200,255), nvg::rgba(200,200,200,0));
-	nvg::beginPath(vg);
-	nvg::rect(vg, x+4,y+h-6,w-8,6);
-	nvg::fillPaint(vg, fadePaint);
-	nvg::fill(vg);
+	fadePaint = vg.linearGradient( x,y+h,x,y+h-6, nvg::rgba(200,200,200,255), nvg::rgba(200,200,200,0));
+	vg.beginPath();
+	vg.rect( x+4,y+h-6,w-8,6);
+	vg.fillPaint( fadePaint);
+	vg.fill();
 
 	// Scroll bar
-	shadowPaint = nvg::boxGradient(vg, x+w-12+1,y+4+1, 8,h-8, 3,4, nvg::rgba(0,0,0,32), nvg::rgba(0,0,0,92));
-	nvg::beginPath(vg);
-	nvg::roundedRect(vg, x+w-12,y+4, 8,h-8, 3);
-	nvg::fillPaint(vg, shadowPaint);
-//	nvg::fillColor(vg, nvg::rgba(255,0,0,128));
-	nvg::fill(vg);
+	shadowPaint = vg.boxGradient( x+w-12+1,y+4+1, 8,h-8, 3,4, nvg::rgba(0,0,0,32), nvg::rgba(0,0,0,92));
+	vg.beginPath();
+	vg.roundedRect( x+w-12,y+4, 8,h-8, 3);
+	vg.fillPaint( shadowPaint);
+//	vg.fillColor( nvg::rgba(255,0,0,128));
+	vg.fill();
 
 	scrollh = (h/stackh) * (h-8);
-	shadowPaint = nvg::boxGradient(vg, x+w-12-1,y+4+(h-8-scrollh)*u-1, 8,scrollh, 3,4, nvg::rgba(220,220,220,255), nvg::rgba(128,128,128,255));
-	nvg::beginPath(vg);
-	nvg::roundedRect(vg, x+w-12+1,y+4+1 + (h-8-scrollh)*u, 8-2,scrollh-2, 2);
-	nvg::fillPaint(vg, shadowPaint);
-//	nvg::fillColor(vg, nvg::rgba(0,0,0,128));
-	nvg::fill(vg);
+	shadowPaint = vg.boxGradient( x+w-12-1,y+4+(h-8-scrollh)*u-1, 8,scrollh, 3,4, nvg::rgba(220,220,220,255), nvg::rgba(128,128,128,255));
+	vg.beginPath();
+	vg.roundedRect( x+w-12+1,y+4+1 + (h-8-scrollh)*u, 8-2,scrollh-2, 2);
+	vg.fillPaint( shadowPaint);
+//	vg.fillColor( nvg::rgba(0,0,0,128));
+	vg.fill();
 
-	nvg::restore(vg);
+	vg.restore();
 }
 
 void drawColorwheel(nvg::Context& vg, float x, float y, float w, float h, float t)
@@ -694,12 +694,12 @@ void drawColorwheel(nvg::Context& vg, float x, float y, float w, float h, float 
 	float hue = sinf(t * 0.12f);
 	nvg::Paint paint;
 
-	nvg::save(vg);
+	vg.save();
 
-/*	nvg::beginPath(vg);
-	nvg::rect(vg, x,y,w,h);
-	nvg::fillColor(vg, nvg::rgba(255,0,0,128));
-	nvg::fill(vg);*/
+/*	vg.beginPath();
+	vg.rect( x,y,w,h);
+	vg.fillColor( nvg::rgba(255,0,0,128));
+	vg.fill();*/
 
 	cx = x + w*0.5f;
 	cy = y + h*0.5f;
@@ -712,45 +712,45 @@ void drawColorwheel(nvg::Context& vg, float x, float y, float w, float h, float 
 	for (i = 0; i < 6; i++) {
 		float a0 = (float)i / 6.0f * twoPi - aeps;
 		float a1 = (float)(i+1.0f) / 6.0f * twoPi + aeps;
-		nvg::beginPath(vg);
-		nvg::arc(vg, cx,cy, r0, a0, a1, static_cast<int>(nvg::Winding::CW));
-		nvg::arc(vg, cx,cy, r1, a1, a0, static_cast<int>(nvg::Winding::CCW));
-		nvg::closePath(vg);
+		vg.beginPath();
+		vg.arc( cx,cy, r0, a0, a1, static_cast<int>(nvg::Winding::CW));
+		vg.arc( cx,cy, r1, a1, a0, static_cast<int>(nvg::Winding::CCW));
+		vg.closePath();
 		ax = cx + cosf(a0) * (r0+r1)*0.5f;
 		ay = cy + sinf(a0) * (r0+r1)*0.5f;
 		bx = cx + cosf(a1) * (r0+r1)*0.5f;
 		by = cy + sinf(a1) * (r0+r1)*0.5f;
-		paint = nvg::linearGradient(vg, ax,ay, bx,by, nvg::hsla(a0/twoPi,1.0f,0.55f,255), nvg::hsla(a1/twoPi,1.0f,0.55f,255));
-		nvg::fillPaint(vg, paint);
-		nvg::fill(vg);
+		paint = vg.linearGradient( ax,ay, bx,by, nvg::hsla(a0/twoPi,1.0f,0.55f,255), nvg::hsla(a1/twoPi,1.0f,0.55f,255));
+		vg.fillPaint( paint);
+		vg.fill();
 	}
 
-	nvg::beginPath(vg);
-	nvg::circle(vg, cx,cy, r0-0.5f);
-	nvg::circle(vg, cx,cy, r1+0.5f);
-	nvg::strokeColor(vg, nvg::rgba(0,0,0,64));
-	nvg::strokeWidth(vg, 1.0f);
-	nvg::stroke(vg);
+	vg.beginPath();
+	vg.circle( cx,cy, r0-0.5f);
+	vg.circle( cx,cy, r1+0.5f);
+	vg.strokeColor( nvg::rgba(0,0,0,64));
+	vg.strokeWidth( 1.0f);
+	vg.stroke();
 
 	// Selector
-	nvg::save(vg);
-	nvg::translate(vg, cx,cy);
-	nvg::rotate(vg, hue*twoPi);
+	vg.save();
+	vg.translate( cx,cy);
+	vg.rotate( hue*twoPi);
 
 	// Marker on
-	nvg::strokeWidth(vg, 2.0f);
-	nvg::beginPath(vg);
-	nvg::rect(vg, r0-1,-3,r1-r0+2,6);
-	nvg::strokeColor(vg, nvg::rgba(255,255,255,192));
-	nvg::stroke(vg);
+	vg.strokeWidth( 2.0f);
+	vg.beginPath();
+	vg.rect( r0-1,-3,r1-r0+2,6);
+	vg.strokeColor( nvg::rgba(255,255,255,192));
+	vg.stroke();
 
-	paint = nvg::boxGradient(vg, r0-3,-5,r1-r0+6,10, 2,4, nvg::rgba(0,0,0,128), nvg::rgba(0,0,0,0));
-	nvg::beginPath(vg);
-	nvg::rect(vg, r0-2-10,-4-10,r1-r0+4+20,8+20);
-	nvg::rect(vg, r0-2,-4,r1-r0+4,8);
-	nvg::pathWinding(vg, static_cast<int>(nvg::Solidity::Hole));
-	nvg::fillPaint(vg, paint);
-	nvg::fill(vg);
+	paint = vg.boxGradient( r0-3,-5,r1-r0+6,10, 2,4, nvg::rgba(0,0,0,128), nvg::rgba(0,0,0,0));
+	vg.beginPath();
+	vg.rect( r0-2-10,-4-10,r1-r0+4+20,8+20);
+	vg.rect( r0-2,-4,r1-r0+4,8);
+	vg.pathWinding( static_cast<int>(nvg::Solidity::Hole));
+	vg.fillPaint( paint);
+	vg.fill();
 
 	// Center triangle
 	r = r0 - 6;
@@ -758,76 +758,76 @@ void drawColorwheel(nvg::Context& vg, float x, float y, float w, float h, float 
 	ay = sinf(120.0f/180.0f*pi) * r;
 	bx = cosf(-120.0f/180.0f*pi) * r;
 	by = sinf(-120.0f/180.0f*pi) * r;
-	nvg::beginPath(vg);
-	nvg::moveTo(vg, r,0);
-	nvg::lineTo(vg, ax,ay);
-	nvg::lineTo(vg, bx,by);
-	nvg::closePath(vg);
-	paint = nvg::linearGradient(vg, r,0, ax,ay, nvg::hsla(hue,1.0f,0.5f,255), nvg::rgba(255,255,255,255));
-	nvg::fillPaint(vg, paint);
-	nvg::fill(vg);
-	paint = nvg::linearGradient(vg, (r+ax)*0.5f,(0+ay)*0.5f, bx,by, nvg::rgba(0,0,0,0), nvg::rgba(0,0,0,255));
-	nvg::fillPaint(vg, paint);
-	nvg::fill(vg);
-	nvg::strokeColor(vg, nvg::rgba(0,0,0,64));
-	nvg::stroke(vg);
+	vg.beginPath();
+	vg.moveTo( r,0);
+	vg.lineTo( ax,ay);
+	vg.lineTo( bx,by);
+	vg.closePath();
+	paint = vg.linearGradient( r,0, ax,ay, nvg::hsla(hue,1.0f,0.5f,255), nvg::rgba(255,255,255,255));
+	vg.fillPaint( paint);
+	vg.fill();
+	paint = vg.linearGradient( (r+ax)*0.5f,(0+ay)*0.5f, bx,by, nvg::rgba(0,0,0,0), nvg::rgba(0,0,0,255));
+	vg.fillPaint( paint);
+	vg.fill();
+	vg.strokeColor( nvg::rgba(0,0,0,64));
+	vg.stroke();
 
 	// Select circle on triangle
 	ax = cosf(120.0f/180.0f*pi) * r*0.3f;
 	ay = sinf(120.0f/180.0f*pi) * r*0.4f;
-	nvg::strokeWidth(vg, 2.0f);
-	nvg::beginPath(vg);
-	nvg::circle(vg, ax,ay,5);
-	nvg::strokeColor(vg, nvg::rgba(255,255,255,192));
-	nvg::stroke(vg);
+	vg.strokeWidth( 2.0f);
+	vg.beginPath();
+	vg.circle( ax,ay,5);
+	vg.strokeColor( nvg::rgba(255,255,255,192));
+	vg.stroke();
 
-	paint = nvg::radialGradient(vg, ax,ay, 7,9, nvg::rgba(0,0,0,64), nvg::rgba(0,0,0,0));
-	nvg::beginPath(vg);
-	nvg::rect(vg, ax-20,ay-20,40,40);
-	nvg::circle(vg, ax,ay,7);
-	nvg::pathWinding(vg, static_cast<int>(nvg::Solidity::Hole));
-	nvg::fillPaint(vg, paint);
-	nvg::fill(vg);
+	paint = vg.radialGradient( ax,ay, 7,9, nvg::rgba(0,0,0,64), nvg::rgba(0,0,0,0));
+	vg.beginPath();
+	vg.rect( ax-20,ay-20,40,40);
+	vg.circle( ax,ay,7);
+	vg.pathWinding( static_cast<int>(nvg::Solidity::Hole));
+	vg.fillPaint( paint);
+	vg.fill();
 
-	nvg::restore(vg);
+	vg.restore();
 
 	// Render hue label
 	const float tw = 50;
 	const float th = 25;
 	r1 += 0.5f*sqrt(tw*tw+th*th);
-	nvg::beginPath(vg);
-	nvg::fillColor(vg, nvg::rgb(32,32,32));
+	vg.beginPath();
+	vg.fillColor( nvg::rgb(32,32,32));
 	ax = cx + r1*cosf(hue*twoPi);
 	ay = cy + r1*sinf(hue*twoPi);
-	nvg::roundedRect(vg, ax - tw*0.5f, ay -th*0.5f, tw, th,5.0f);
-	nvg::fill(vg);
+	vg.roundedRect( ax - tw*0.5f, ay -th*0.5f, tw, th,5.0f);
+	vg.fill();
 
-	nvg::save(vg);
-	nvg::translate(vg, ax, ay);
-	nvg::scale(vg, 2.0f, 2.0f); // Check that local transforms work with text
-	nvg::fontSize(vg, 0.5f * th);
-	nvg::textAlign(vg, static_cast<int>(nvg::Align::Center | nvg::Align::Top));
-	nvg::fontFace(vg, "sans");
-	nvg::fillColor(vg, nvg::rgb(255,255,255));
+	vg.save();
+	vg.translate( ax, ay);
+	vg.scale( 2.0f, 2.0f); // Check that local transforms work with text
+	vg.fontSize( 0.5f * th);
+	vg.textAlign( static_cast<int>(nvg::Align::Center | nvg::Align::Top));
+	vg.fontFace( "sans");
+	vg.fillColor( nvg::rgb(255,255,255));
 	std::array<char, 128> str{};
 	sprintf(str.data(), "%d%%", (int)(100.0f * (hue + 1.0f)) % 100);
-	nvg::beginPath(vg);
-	nvg::text(vg, 0.0f, -0.2f * th, str.data(), 0);
-	nvg::fill(vg);
+	vg.beginPath();
+	vg.text( 0.0f, -0.2f * th, str.data(), 0);
+	vg.fill();
 
-	nvg::restore(vg);
-	nvg::restore(vg);
+	vg.restore();
+	vg.restore();
 }
 
 void drawStylizedLines(nvg::Context& vg, float x, float y, float w, float h){
-	nvg::lineJoin(vg, static_cast<int>(nvg::LineCap::Round));
-	nvg::lineStyle(vg, static_cast<int>(nvg::LineStyle::Dashed));
-	nvg::strokeColor(vg,nvg::rgbaf(0.6f,0.6f,1.0f,1.0f));
-	nvg::strokeWidth(vg, 5.0f);
-	nvg::beginPath(vg);
-	nvg::rect(vg, x, y, w, h);
-	nvg::stroke(vg);
-	nvg::lineStyle(vg, static_cast<int>(nvg::LineStyle::Solid));
+	vg.lineJoin( static_cast<int>(nvg::LineCap::Round));
+	vg.lineStyle( static_cast<int>(nvg::LineStyle::Dashed));
+	vg.strokeColor(nvg::rgbaf(0.6f,0.6f,1.0f,1.0f));
+	vg.strokeWidth( 5.0f);
+	vg.beginPath();
+	vg.rect( x, y, w, h);
+	vg.stroke();
+	vg.lineStyle( static_cast<int>(nvg::LineStyle::Solid));
 }
 
 void drawLines(nvg::Context& vg, float x, float y, float w, float h, float lineWidth, nvg::Color color, float t)
@@ -840,7 +840,7 @@ void drawLines(nvg::Context& vg, float x, float y, float w, float h, float lineW
 	const std::array<int, 3> caps = {static_cast<int>(nvg::LineCap::Butt), static_cast<int>(nvg::LineCap::Round), static_cast<int>(nvg::LineCap::Square)};
 	UNUSED(h);
 
-	nvg::save(vg);
+	vg.save();
 	pts[0] = -s*0.25f + cosf(t*0.3f) * s*0.5f;
 	pts[1] = sinf(t*0.3f) * s*0.5f;
 	pts[2] = -s*0.25f;
@@ -854,34 +854,34 @@ void drawLines(nvg::Context& vg, float x, float y, float w, float h, float lineW
 			fx = x + s*0.5f + (i*3+j)/9.0f*w + pad;
 			fy = y - s*0.5f + pad;
 
-			nvg::lineCap(vg, caps[i]);
-			nvg::lineJoin(vg, joins[j]);
+			vg.lineCap( caps[i]);
+			vg.lineJoin( joins[j]);
 
-			nvg::strokeWidth(vg, lineWidth);
-			nvg::strokeColor(vg, color);
-			nvg::beginPath(vg);
-			nvg::moveTo(vg, fx+pts[0], fy+pts[1]);
-			nvg::lineTo(vg, fx+pts[2], fy+pts[3]);
-			nvg::lineTo(vg, fx+pts[4], fy+pts[5]);
-			nvg::lineTo(vg, fx+pts[6], fy+pts[7]);
-			nvg::stroke(vg);
+			vg.strokeWidth( lineWidth);
+			vg.strokeColor( color);
+			vg.beginPath();
+			vg.moveTo( fx+pts[0], fy+pts[1]);
+			vg.lineTo( fx+pts[2], fy+pts[3]);
+			vg.lineTo( fx+pts[4], fy+pts[5]);
+			vg.lineTo( fx+pts[6], fy+pts[7]);
+			vg.stroke();
 
-			nvg::lineCap(vg, static_cast<int>(nvg::LineCap::Butt));
-			nvg::lineJoin(vg, static_cast<int>(nvg::LineCap::Bevel));
+			vg.lineCap( static_cast<int>(nvg::LineCap::Butt));
+			vg.lineJoin( static_cast<int>(nvg::LineCap::Bevel));
 
-			nvg::strokeWidth(vg, 1.0f);
-			nvg::strokeColor(vg, nvg::rgba(0,192,255,255));
-			nvg::beginPath(vg);
-			nvg::moveTo(vg, fx+pts[0], fy+pts[1]);
-			nvg::lineTo(vg, fx+pts[2], fy+pts[3]);
-			nvg::lineTo(vg, fx+pts[4], fy+pts[5]);
-			nvg::lineTo(vg, fx+pts[6], fy+pts[7]);
-			nvg::stroke(vg);
+			vg.strokeWidth( 1.0f);
+			vg.strokeColor( nvg::rgba(0,192,255,255));
+			vg.beginPath();
+			vg.moveTo( fx+pts[0], fy+pts[1]);
+			vg.lineTo( fx+pts[2], fy+pts[3]);
+			vg.lineTo( fx+pts[4], fy+pts[5]);
+			vg.lineTo( fx+pts[6], fy+pts[7]);
+			vg.stroke();
 		}
 	}
 
 
-	nvg::restore(vg);
+	vg.restore();
 }
 
 int loadDemoData(nvg::Context& vg, DemoData* data)
@@ -891,35 +891,35 @@ int loadDemoData(nvg::Context& vg, DemoData* data)
 	for (i = 0; i < 12; i++) {
 		std::array<char, 128> file{};
 		snprintf(file.data(), (int)file.size(), "../example/images/image%d.jpg", i+1);
-		data->images[i] = nvg::createImage(vg, file.data(), 0);
+		data->images[i] = vg.createImage( file.data(), 0);
 		if (data->images[i] == 0) {
 			printf("Could not load %s.\n", file.data());
 			return -1;
 		}
 	}
 
-	data->fontIcons = nvg::createFont(vg, "icons", "../example/entypo.ttf");
+	data->fontIcons = vg.createFont( "icons", "../example/entypo.ttf");
 	if (data->fontIcons == -1) {
 		printf("Could not add font icons.\n");
 		return -1;
 	}
-	data->fontNormal = nvg::createFont(vg, "sans", "../example/Roboto-Regular.ttf");
+	data->fontNormal = vg.createFont( "sans", "../example/Roboto-Regular.ttf");
 	if (data->fontNormal == -1) {
 		printf("Could not add font italic.\n");
 		return -1;
 	}
-	data->fontBold = nvg::createFont(vg, "sans-bold", "../example/Roboto-Bold.ttf");
+	data->fontBold = vg.createFont( "sans-bold", "../example/Roboto-Bold.ttf");
 	if (data->fontBold == -1) {
 		printf("Could not add font bold.\n");
 		return -1;
 	}
-	data->fontEmoji = nvg::createFont(vg, "emoji", "../example/NotoEmoji-Regular.ttf");
+	data->fontEmoji = vg.createFont( "emoji", "../example/NotoEmoji-Regular.ttf");
 	if (data->fontEmoji == -1) {
 		printf("Could not add font emoji.\n");
 		return -1;
 	}
-	nvg::addFallbackFontId(vg, data->fontNormal, data->fontEmoji);
-	nvg::addFallbackFontId(vg, data->fontBold, data->fontEmoji);
+	vg.addFallbackFontId( data->fontNormal, data->fontEmoji);
+	vg.addFallbackFontId( data->fontBold, data->fontEmoji);
 
 	return 0;
 }
@@ -929,7 +929,7 @@ void freeDemoData(nvg::Context& vg, DemoData* data)
 	int i;
 
 	for (i = 0; i < 12; i++)
-		nvg::deleteImage(vg, data->images[i]);
+		vg.deleteImage( data->images[i]);
 }
 
 void drawParagraph(nvg::Context& vg, float x, float y, float width, float height, float mx, float my)
@@ -949,35 +949,35 @@ void drawParagraph(nvg::Context& vg, float x, float y, float width, float height
 	int gutter = 0;
 	UNUSED(height);
 
-	nvg::save(vg);
+	vg.save();
 
-	nvg::fontSize(vg, 15.0f);
-	nvg::fontFace(vg, "sans");
-	nvg::textAlign(vg, static_cast<int>(nvg::Align::Left | nvg::Align::Top));
-	nvg::textMetrics(vg, NULL, NULL, &lineh);
+	vg.fontSize( 15.0f);
+	vg.fontFace( "sans");
+	vg.textAlign( static_cast<int>(nvg::Align::Left | nvg::Align::Top));
+	vg.textMetrics( NULL, NULL, &lineh);
 
 	// The text break API can be used to fill a large buffer of rows,
 	// or to iterate over the text just few lines (or just one) at a time.
 	// The "next" variable of the last returned item tells where to continue.
 	start = text;
 	end = text + strlen(text);
-	while ((nrows = nvg::textBreakLines(vg, start, end, width, rows.data(), (int)rows.size(), 0))) {
+	while ((nrows = vg.textBreakLines( start, end, width, rows.data(), (int)rows.size(), 0))) {
 		for (i = 0; i < nrows; i++) {
 			nvg::TextRow* row = &rows[(size_t)i];
 			int hit = mx > x && mx < (x+width) && my >= y && my < (y+lineh);
 
-			nvg::beginPath(vg);
-			nvg::fillColor(vg, nvg::rgba(255,255,255,hit?64:16));
-			nvg::rect(vg, x + row->minx, y, row->maxx - row->minx, lineh);
-			nvg::fill(vg);
+			vg.beginPath();
+			vg.fillColor( nvg::rgba(255,255,255,hit?64:16));
+			vg.rect( x + row->minx, y, row->maxx - row->minx, lineh);
+			vg.fill();
 
-			nvg::fillColor(vg, nvg::rgba(255,255,255,255));
-			nvg::text(vg, x, y, row->start, row->end);
+			vg.fillColor( nvg::rgba(255,255,255,255));
+			vg.text( x, y, row->start, row->end);
 
 			if (hit) {
 				caretx = (mx < x+row->width/2) ? x : x+row->width;
 				px = x;
-				nglyphs = nvg::textGlyphPositions(vg, x, y, row->start, row->end, glyphs.data(), (int)glyphs.size());
+				nglyphs = vg.textGlyphPositions( x, y, row->start, row->end, glyphs.data(), (int)glyphs.size());
 				for (j = 0; j < nglyphs; j++) {
 					float x0 = glyphs[(size_t)j].x;
 					float x1 = (j+1 < nglyphs) ? glyphs[(size_t)j+1].x : x+row->width;
@@ -986,10 +986,10 @@ void drawParagraph(nvg::Context& vg, float x, float y, float width, float height
 						caretx = glyphs[(size_t)j].x;
 					px = gx;
 				}
-				nvg::beginPath(vg);
-				nvg::fillColor(vg, nvg::rgba(255,192,0,255));
-				nvg::rect(vg, caretx, y, 1, lineh);
-				nvg::fill(vg);
+				vg.beginPath();
+				vg.fillColor( nvg::rgba(255,192,0,255));
+				vg.rect( caretx, y, 1, lineh);
+				vg.fill();
 
 				gutter = lnum+1;
 				gx = x - 10;
@@ -1005,74 +1005,73 @@ void drawParagraph(nvg::Context& vg, float x, float y, float width, float height
 	if (gutter) {
 		std::array<char, 16> txt{};
 		snprintf(txt.data(), (int)txt.size(), "%d", gutter);
-		nvg::fontSize(vg, 12.0f);
-		nvg::textAlign(vg, static_cast<int>(nvg::Align::Right | nvg::Align::Middle));
+		vg.fontSize( 12.0f);
+		vg.textAlign( static_cast<int>(nvg::Align::Right | nvg::Align::Middle));
 
-		nvg::textBounds(vg, gx,gy, txt.data(), NULL, bounds.data());
+		vg.textBounds( gx,gy, txt.data(), NULL, bounds.data());
 
-		nvg::beginPath(vg);
-		nvg::fillColor(vg, nvg::rgba(255,192,0,255));
-		nvg::roundedRect(
-			vg,
+		vg.beginPath();
+		vg.fillColor( nvg::rgba(255,192,0,255));
+		vg.roundedRect(
 			(float)((int)bounds[0] - 4), (float)((int)bounds[1] - 2),
 			(float)((int)(bounds[2]-bounds[0]) + 8), (float)((int)(bounds[3]-bounds[1]) + 4),
 			(float)(((int)(bounds[3]-bounds[1]) + 4)/2 - 1)
 		);
-		nvg::fill(vg);
+		vg.fill();
 
-		nvg::fillColor(vg, nvg::rgba(32,32,32,255));
-		nvg::text(vg, gx,gy, txt.data(), NULL);
+		vg.fillColor( nvg::rgba(32,32,32,255));
+		vg.text( gx,gy, txt.data(), NULL);
 	}
 
 	y += 20.0f;
 
-	nvg::fontSize(vg, 11.0f);
-	nvg::textAlign(vg, static_cast<int>(nvg::Align::Left | nvg::Align::Top));
-	nvg::textLineHeight(vg, 1.2f);
+	vg.fontSize( 11.0f);
+	vg.textAlign( static_cast<int>(nvg::Align::Left | nvg::Align::Top));
+	vg.textLineHeight( 1.2f);
 
-	nvg::textBoxBounds(vg, x,y, 150, hoverText, NULL, bounds.data());
+	vg.textBoxBounds( x,y, 150, hoverText, NULL, bounds.data());
 
 	// Fade the tooltip out when close to it.
 	gx = clampf(mx, bounds[0], bounds[2]) - mx;
 	gy = clampf(my, bounds[1], bounds[3]) - my;
 	a = sqrtf(gx*gx + gy*gy) / 30.0f;
 	a = clampf(a, 0, 1);
-	nvg::globalAlpha(vg, a);
+	vg.globalAlpha( a);
 
-	nvg::beginPath(vg);
-	nvg::fillColor(vg, nvg::rgba(220,220,220,255));
-	nvg::roundedRect(vg, bounds[0]-2.0f, bounds[1]-2.0f, (float)((int)(bounds[2]-bounds[0]) + 4), (float)((int)(bounds[3]-bounds[1]) + 4), 3.0f);
+	vg.beginPath();
+	vg.fillColor( nvg::rgba(220,220,220,255));
+	vg.roundedRect( bounds[0]-2.0f, bounds[1]-2.0f, (float)((int)(bounds[2]-bounds[0]) + 4), (float)((int)(bounds[3]-bounds[1]) + 4), 3.0f);
 	px = (bounds[2] + bounds[0]) * 0.5f;
-	nvg::moveTo(vg, px, bounds[1] - 10.0f);
-	nvg::lineTo(vg, px + 7.0f, bounds[1] + 1.0f);
-	nvg::lineTo(vg, px - 7.0f, bounds[1] + 1.0f);
-	nvg::fill(vg);
+	vg.moveTo( px, bounds[1] - 10.0f);
+	vg.lineTo( px + 7.0f, bounds[1] + 1.0f);
+	vg.lineTo( px - 7.0f, bounds[1] + 1.0f);
+	vg.fill();
 
-	nvg::fillColor(vg, nvg::rgba(0,0,0,220));
-	nvg::textBox(vg, x,y, 150, hoverText, NULL);
+	vg.fillColor( nvg::rgba(0,0,0,220));
+	vg.textBox( x,y, 150, hoverText, NULL);
 
-	nvg::restore(vg);
+	vg.restore();
 }
 
 void drawWidths(nvg::Context& vg, float x, float y, float width)
 {
 	int i;
 
-	nvg::save(vg);
+	vg.save();
 
-	nvg::strokeColor(vg, nvg::rgba(0,0,0,255));
+	vg.strokeColor( nvg::rgba(0,0,0,255));
 
 	for (i = 0; i < 20; i++) {
 		float w = (i+0.5f)*0.1f;
-		nvg::strokeWidth(vg, w);
-		nvg::beginPath(vg);
-		nvg::moveTo(vg, x,y);
-		nvg::lineTo(vg, x+width,y+width*0.3f);
-		nvg::stroke(vg);
+		vg.strokeWidth( w);
+		vg.beginPath();
+		vg.moveTo( x,y);
+		vg.lineTo( x+width,y+width*0.3f);
+		vg.stroke();
 		y += 10;
 	}
 
-	nvg::restore(vg);
+	vg.restore();
 }
 
 void drawCaps(nvg::Context& vg, float x, float y, float width)
@@ -1081,65 +1080,65 @@ void drawCaps(nvg::Context& vg, float x, float y, float width)
 	const std::array<int, 3> caps = {static_cast<int>(nvg::LineCap::Butt), static_cast<int>(nvg::LineCap::Round), static_cast<int>(nvg::LineCap::Square)};
 	float lineWidth = 8.0f;
 
-	nvg::save(vg);
+	vg.save();
 
-	nvg::beginPath(vg);
-	nvg::rect(vg, x-lineWidth/2, y, width+lineWidth, 40);
-	nvg::fillColor(vg, nvg::rgba(255,255,255,32));
-	nvg::fill(vg);
+	vg.beginPath();
+	vg.rect( x-lineWidth/2, y, width+lineWidth, 40);
+	vg.fillColor( nvg::rgba(255,255,255,32));
+	vg.fill();
 
-	nvg::beginPath(vg);
-	nvg::rect(vg, x, y, width, 40);
-	nvg::fillColor(vg, nvg::rgba(255,255,255,32));
-	nvg::fill(vg);
+	vg.beginPath();
+	vg.rect( x, y, width, 40);
+	vg.fillColor( nvg::rgba(255,255,255,32));
+	vg.fill();
 
-	nvg::strokeWidth(vg, lineWidth);
+	vg.strokeWidth( lineWidth);
 	for (i = 0; i < 3; i++) {
-		nvg::lineCap(vg, caps[i]);
-		nvg::strokeColor(vg, nvg::rgba(0,0,0,255));
-		nvg::beginPath(vg);
-		nvg::moveTo(vg, x, y + i*10 + 5);
-		nvg::lineTo(vg, x+width, y + i*10 + 5);
-		nvg::stroke(vg);
+		vg.lineCap( caps[i]);
+		vg.strokeColor( nvg::rgba(0,0,0,255));
+		vg.beginPath();
+		vg.moveTo( x, y + i*10 + 5);
+		vg.lineTo( x+width, y + i*10 + 5);
+		vg.stroke();
 	}
 
-	nvg::restore(vg);
+	vg.restore();
 }
 
 void drawScissor(nvg::Context& vg, float x, float y, float t)
 {
-	nvg::save(vg);
+	vg.save();
 
 	// Draw first rect and set scissor to it's area.
-	nvg::translate(vg, x, y);
-	nvg::rotate(vg, nvg::degToRad(5));
-	nvg::beginPath(vg);
-	nvg::rect(vg, -20,-20,60,40);
-	nvg::fillColor(vg, nvg::rgba(255,0,0,255));
-	nvg::fill(vg);
-	nvg::scissor(vg, -20,-20,60,40);
+	vg.translate( x, y);
+	vg.rotate( nvg::degToRad(5));
+	vg.beginPath();
+	vg.rect( -20,-20,60,40);
+	vg.fillColor( nvg::rgba(255,0,0,255));
+	vg.fill();
+	vg.scissor( -20,-20,60,40);
 
 	// Draw second rectangle with offset and rotation.
-	nvg::translate(vg, 40,0);
-	nvg::rotate(vg, t);
+	vg.translate( 40,0);
+	vg.rotate( t);
 
 	// Draw the intended second rectangle without any scissoring.
-	nvg::save(vg);
-	nvg::resetScissor(vg);
-	nvg::beginPath(vg);
-	nvg::rect(vg, -20,-10,60,30);
-	nvg::fillColor(vg, nvg::rgba(255,128,0,64));
-	nvg::fill(vg);
-	nvg::restore(vg);
+	vg.save();
+	vg.resetScissor();
+	vg.beginPath();
+	vg.rect( -20,-10,60,30);
+	vg.fillColor( nvg::rgba(255,128,0,64));
+	vg.fill();
+	vg.restore();
 
 	// Draw second rectangle with combined scissoring.
-	nvg::intersectScissor(vg, -20,-10,60,30);
-	nvg::beginPath(vg);
-	nvg::rect(vg, -20,-10,60,30);
-	nvg::fillColor(vg, nvg::rgba(255,128,0,255));
-	nvg::fill(vg);
+	vg.intersectScissor( -20,-10,60,30);
+	vg.beginPath();
+	vg.rect( -20,-10,60,30);
+	vg.fillColor( nvg::rgba(255,128,0,255));
+	vg.fill();
 
-	nvg::restore(vg);
+	vg.restore();
 }
 
 void drawBezierCurve(nvg::Context& vg, float x0, float y0, float radius, float t){
@@ -1153,53 +1152,53 @@ void drawBezierCurve(nvg::Context& vg, float x0, float y0, float radius, float t
 	float cx1 = x1;
 	float cy1 = y0 + ((y1 - y0) * 0.75f);
 
-	nvg::beginPath(vg);
-	nvg::moveTo(vg, x0, y0);
-	nvg::lineTo(vg, cx0, cy0);
-	nvg::lineTo(vg, cx1, cy1);
-	nvg::lineTo(vg, x1, y1);
-	nvg::strokeColor(vg,nvg::rgba(200,200,200,255));
-	nvg::strokeWidth(vg,2.0f);
-	nvg::stroke(vg);
+	vg.beginPath();
+	vg.moveTo( x0, y0);
+	vg.lineTo( cx0, cy0);
+	vg.lineTo( cx1, cy1);
+	vg.lineTo( x1, y1);
+	vg.strokeColor(nvg::rgba(200,200,200,255));
+	vg.strokeWidth(2.0f);
+	vg.stroke();
 
-	nvg::lineCap(vg, static_cast<int>(nvg::LineCap::Round));
-	nvg::strokeWidth(vg,5);
-	nvg::lineJoin(vg, static_cast<int>(nvg::LineCap::Round));
+	vg.lineCap( static_cast<int>(nvg::LineCap::Round));
+	vg.strokeWidth(5);
+	vg.lineJoin( static_cast<int>(nvg::LineCap::Round));
 
-	nvg::beginPath(vg);
-	nvg::moveTo(vg, x0, y0);
-	nvg::bezierTo(vg, cx0, cy0, cx1, cy1, x1, y1);
-	nvg::lineStyle(vg, static_cast<int>(nvg::LineStyle::Solid));
-	nvg::strokeColor(vg, nvg::rgba(40, 53, 147,255));
-	nvg::stroke(vg);
+	vg.beginPath();
+	vg.moveTo( x0, y0);
+	vg.bezierTo( cx0, cy0, cx1, cy1, x1, y1);
+	vg.lineStyle( static_cast<int>(nvg::LineStyle::Solid));
+	vg.strokeColor( nvg::rgba(40, 53, 147,255));
+	vg.stroke();
 
-	nvg::lineStyle(vg, static_cast<int>(nvg::LineStyle::Dashed));
-	nvg::strokeColor(vg, nvg::rgba(255, 195, 0,255));
-	nvg::stroke(vg);
+	vg.lineStyle( static_cast<int>(nvg::LineStyle::Dashed));
+	vg.strokeColor( nvg::rgba(255, 195, 0,255));
+	vg.stroke();
 	
-	nvg::beginPath(vg);
-	nvg::circle(vg,x0,y0,5.0f);
-	nvg::circle(vg,cx0,cy0,5.0f);
-	nvg::circle(vg,cx1,cy1,5.0f);
-	nvg::circle(vg,x1,y1,5.0f);
-	nvg::lineStyle(vg, static_cast<int>(nvg::LineStyle::Solid));
-	nvg::fillColor(vg,nvg::rgba(64,192,64,255));
-	nvg::fill(vg);
+	vg.beginPath();
+	vg.circle(x0,y0,5.0f);
+	vg.circle(cx0,cy0,5.0f);
+	vg.circle(cx1,cy1,5.0f);
+	vg.circle(x1,y1,5.0f);
+	vg.lineStyle( static_cast<int>(nvg::LineStyle::Solid));
+	vg.fillColor(nvg::rgba(64,192,64,255));
+	vg.fill();
 }
 
 void drawScaledText(nvg::Context& vg, float x0, float y0, float t){
-	nvg::save(vg);
+	vg.save();
 	const float textScale = (cosf(2.0f * (float)M_PI * t * 0.25f) + 1.0f) + 0.1f;
-	nvg::translate(vg, x0, y0);
-	nvg::scale(vg, textScale, textScale);
-	nvg::fontSize(vg, 24.0f);
-	nvg::fontFace(vg, "sans-bold");
-	nvg::textAlign(vg,static_cast<int>(nvg::Align::Center | nvg::Align::Middle));
-	nvg::fillColor(vg, nvg::rgba(255,255,255,255));
-	nvg::beginPath(vg);
-	nvg::text(vg, 0.0f, 0.0f, "NanoVG", NULL);
-	nvg::fill(vg);
-	nvg::restore(vg);
+	vg.translate( x0, y0);
+	vg.scale( textScale, textScale);
+	vg.fontSize( 24.0f);
+	vg.fontFace( "sans-bold");
+	vg.textAlign(static_cast<int>(nvg::Align::Center | nvg::Align::Middle));
+	vg.fillColor( nvg::rgba(255,255,255,255));
+	vg.beginPath();
+	vg.text( 0.0f, 0.0f, "NanoVG", NULL);
+	vg.fill();
+	vg.restore();
 }
 
 void renderDemo(nvg::Context& vg, float mx, float my, float width, float height,
@@ -1218,17 +1217,17 @@ void renderDemo(nvg::Context& vg, float mx, float my, float width, float height,
 
 	switch((int)(t/5.0f)%3){
 		case 0:
-			nvg::lineStyle(vg, static_cast<int>(nvg::LineStyle::Dashed));break;
+			vg.lineStyle( static_cast<int>(nvg::LineStyle::Dashed));break;
 		case 1:
-			nvg::lineStyle(vg, static_cast<int>(nvg::LineStyle::Dotted));break;
+			vg.lineStyle( static_cast<int>(nvg::LineStyle::Dotted));break;
 		case 2:
-			nvg::lineStyle(vg, static_cast<int>(nvg::LineStyle::Glow));break;
+			vg.lineStyle( static_cast<int>(nvg::LineStyle::Glow));break;
 		default:
-			nvg::lineStyle(vg, static_cast<int>(nvg::LineStyle::Solid));
+			vg.lineStyle( static_cast<int>(nvg::LineStyle::Solid));
 	}
 	drawLines(vg, 100, height-5, 800, 100, 10.0f, nvg::rgba(255, 153, 0, 255), t*3);
 
-	nvg::lineStyle(vg, static_cast<int>(nvg::LineStyle::Solid));
+	vg.lineStyle( static_cast<int>(nvg::LineStyle::Solid));
 	drawLines(vg, 120, height-75, 600, 50, 17.0f, nvg::rgba(0,0,0,160), t);
 
 	// Line caps
@@ -1239,10 +1238,10 @@ void renderDemo(nvg::Context& vg, float mx, float my, float width, float height,
 
 	drawScissor(vg, 50, height-80, t);
 
-	nvg::save(vg);
+	vg.save();
 	if (blowup) {
-		nvg::rotate(vg, sinf(t*0.3f)*5.0f/180.0f*(float)M_PI);
-		nvg::scale(vg, 2.0f, 2.0f);
+		vg.rotate( sinf(t*0.3f)*5.0f/180.0f*(float)M_PI);
+		vg.scale( 2.0f, 2.0f);
 	}
 
 	// Widgets
@@ -1278,7 +1277,7 @@ void renderDemo(nvg::Context& vg, float mx, float my, float width, float height,
 	// Thumbnails box
 	drawThumbnails(vg, 365, popy-30, 160, 300, data->images.data(), (int)data->images.size(), t);
 
-	nvg::restore(vg);
+	vg.restore();
 
 	drawBezierCurve(vg, width - 380, height - 220, 100, t);
 	drawScaledText(vg, 450.0, 50, t);

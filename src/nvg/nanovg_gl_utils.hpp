@@ -64,7 +64,7 @@ GlUtilsFramebuffer* nvgluCreateFramebuffer(nvg::Context& ctx, int w, int h, int 
 	fb = new (std::nothrow) GlUtilsFramebuffer{};
 	if (fb == NULL) goto error;
 
-	fb->image = nvg::createImageRGBA(ctx, w, h, imageFlags | static_cast<int>(nvg::ImageFlags::Flipy | nvg::ImageFlags::Premultiplied), NULL);
+	fb->image = ctx.createImageRGBA(w, h, imageFlags | static_cast<int>(nvg::ImageFlags::Flipy | nvg::ImageFlags::Premultiplied), NULL);
 
 #if defined NANOVG_GL2
 	fb->texture = nvg::nvglImageHandleGL2(ctx, fb->image);
@@ -140,7 +140,7 @@ void nvgluDeleteFramebuffer(GlUtilsFramebuffer* fb)
 	if (fb->rbo != 0)
 		glDeleteRenderbuffers(1, &fb->rbo);
 	if (fb->image >= 0 && fb->ctx != nullptr)
-		nvg::deleteImage(*fb->ctx, fb->image);
+		fb->ctx->deleteImage(fb->image);
 	fb->ctx = NULL;
 	fb->fbo = 0;
 	fb->rbo = 0;

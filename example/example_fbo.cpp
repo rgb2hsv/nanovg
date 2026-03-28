@@ -43,7 +43,7 @@ void renderPattern(nvg::Context& vg, GlUtilsFramebuffer* fb, float t, float pxRa
 
 	if (fb == NULL) return;
 
-	nvg::imageSize(vg, fb->image, fboWidth, fboHeight);
+	vg.imageSize( fb->image, fboWidth, fboHeight);
 	winWidth = (int)(fboWidth / pxRatio);
 	winHeight = (int)(fboHeight / pxRatio);
 
@@ -52,35 +52,35 @@ void renderPattern(nvg::Context& vg, GlUtilsFramebuffer* fb, float t, float pxRa
 	glViewport(0, 0, fboWidth, fboHeight);
 	glClearColor(0, 0, 0, 0);
 	glClear(GL_COLOR_BUFFER_BIT|GL_STENCIL_BUFFER_BIT);
-	nvg::beginFrame(vg, static_cast<float>(winWidth), static_cast<float>(winHeight), pxRatio);
+	vg.beginFrame( static_cast<float>(winWidth), static_cast<float>(winHeight), pxRatio);
 
 	pw = (int)ceilf(winWidth / s);
 	ph = (int)ceilf(winHeight / s);
 
-	nvg::beginPath(vg);
+	vg.beginPath();
 	for (y = 0; y < ph; y++) {
 		for (x = 0; x < pw; x++) {
 			float cx = (x+0.5f) * s;
 			float cy = (y+0.5f) * s;
-			nvg::circle(vg, cx,cy, r);
+			vg.circle( cx,cy, r);
 		}
 	}
-	nvg::fillColor(vg, nvg::rgba(220,160,0,200));
-	nvg::fill(vg);
+	vg.fillColor( nvg::rgba(220,160,0,200));
+	vg.fill();
 
-	nvg::endFrame(vg);
+	vg.endFrame();
 	nvgluBindFramebuffer(NULL);
 }
 
 int loadFonts(nvg::Context& vg)
 {
 	int font;
-	font = nvg::createFont(vg, "sans", "../example/Roboto-Regular.ttf");
+	font = vg.createFont( "sans", "../example/Roboto-Regular.ttf");
 	if (font == -1) {
 		printf("Could not add font regular.\n");
 		return -1;
 	}
-	font = nvg::createFont(vg, "sans-bold", "../example/Roboto-Bold.ttf");
+	font = vg.createFont( "sans-bold", "../example/Roboto-Bold.ttf");
 	if (font == -1) {
 		printf("Could not add font bold.\n");
 		return -1;
@@ -215,30 +215,30 @@ int main()
 		glClearColor(0.3f, 0.3f, 0.32f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT|GL_STENCIL_BUFFER_BIT);
 
-		nvg::beginFrame(vg, static_cast<float>(winWidth), static_cast<float>(winHeight), pxRatio);
+		vg.beginFrame( static_cast<float>(winWidth), static_cast<float>(winHeight), pxRatio);
 
 		// Use the FBO as image pattern.
 		if (fb != NULL) {
-			nvg::Paint img = nvg::imagePattern(vg, 0, 0, 100, 100, 0, fb->image, 1.0f);
-			nvg::save(vg);
+			nvg::Paint img = vg.imagePattern( 0, 0, 100, 100, 0, fb->image, 1.0f);
+			vg.save();
 
 			for (i = 0; i < 20; i++) {
-				nvg::beginPath(vg);
-				nvg::rect(vg, static_cast<float>(10 + i * 30), 10.f, 10.f, static_cast<float>(winHeight - 20));
-				nvg::fillColor(vg, nvg::hsla(i/19.0f, 0.5f, 0.5f, 255));
-				nvg::fill(vg);
+				vg.beginPath();
+				vg.rect( static_cast<float>(10 + i * 30), 10.f, 10.f, static_cast<float>(winHeight - 20));
+				vg.fillColor( nvg::hsla(i/19.0f, 0.5f, 0.5f, 255));
+				vg.fill();
 			}
 
-			nvg::beginPath(vg);
+			vg.beginPath();
 			const float animT = static_cast<float>(t);
-			nvg::roundedRect(vg, 140.f + sinf(animT * 1.3f) * 100.f, 140.f + cosf(animT * 1.71244f) * 100.f, 250.f, 250.f, 20.f);
-			nvg::fillPaint(vg, img);
-			nvg::fill(vg);
-			nvg::strokeColor(vg, nvg::rgba(220,160,0,255));
-			nvg::strokeWidth(vg, 3.0f);
-			nvg::stroke(vg);
+			vg.roundedRect( 140.f + sinf(animT * 1.3f) * 100.f, 140.f + cosf(animT * 1.71244f) * 100.f, 250.f, 250.f, 20.f);
+			vg.fillPaint( img);
+			vg.fill();
+			vg.strokeColor( nvg::rgba(220,160,0,255));
+			vg.strokeWidth( 3.0f);
+			vg.stroke();
 
-			nvg::restore(vg);
+			vg.restore();
 		}
 
 		renderGraph(vg, 5,5, &fps);
@@ -246,7 +246,7 @@ int main()
 		if (gpuTimer.supported)
 			renderGraph(vg, 5+200+5+200+5,5, &gpuGraph);
 
-		nvg::endFrame(vg);
+		vg.endFrame();
 
 		// Measure the CPU time taken excluding swap buffers (as the swap may wait for GPU)
 		cpuTime = glfwGetTime() - t;

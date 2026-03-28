@@ -114,13 +114,13 @@ void renderGraph(nvg::Context& vg, float x, float y, PerfGraph* fps)
 	w = 200;
 	h = 35;
 
-	nvg::beginPath(vg);
-	nvg::rect(vg, x,y, w,h);
-	nvg::fillColor(vg, nvg::rgba(0,0,0,128));
-	nvg::fill(vg);
+	vg.beginPath();
+	vg.rect( x,y, w,h);
+	vg.fillColor( nvg::rgba(0,0,0,128));
+	vg.fill();
 
-	nvg::beginPath(vg);
-	nvg::moveTo(vg, x, y+h);
+	vg.beginPath();
+	vg.moveTo( x, y+h);
 	if (fps->style == GRAPH_RENDER_FPS) {
 		for (i = 0; i < GRAPH_HISTORY_COUNT; i++) {
 			float v = 1.0f / (0.00001f + fps->values[(fps->head+i) % GRAPH_HISTORY_COUNT]);
@@ -128,7 +128,7 @@ void renderGraph(nvg::Context& vg, float x, float y, PerfGraph* fps)
 			if (v > 80.0f) v = 80.0f;
 			vx = x + ((float)i/(GRAPH_HISTORY_COUNT-1)) * w;
 			vy = y + h - ((v / 80.0f) * h);
-			nvg::lineTo(vg, vx, vy);
+			vg.lineTo( vx, vy);
 		}
 	} else if (fps->style == GRAPH_RENDER_PERCENT) {
 		for (i = 0; i < GRAPH_HISTORY_COUNT; i++) {
@@ -137,7 +137,7 @@ void renderGraph(nvg::Context& vg, float x, float y, PerfGraph* fps)
 			if (v > 100.0f) v = 100.0f;
 			vx = x + ((float)i/(GRAPH_HISTORY_COUNT-1)) * w;
 			vy = y + h - ((v / 100.0f) * h);
-			nvg::lineTo(vg, vx, vy);
+			vg.lineTo( vx, vy);
 		}
 	} else {
 		for (i = 0; i < GRAPH_HISTORY_COUNT; i++) {
@@ -146,46 +146,46 @@ void renderGraph(nvg::Context& vg, float x, float y, PerfGraph* fps)
 			if (v > 20.0f) v = 20.0f;
 			vx = x + ((float)i/(GRAPH_HISTORY_COUNT-1)) * w;
 			vy = y + h - ((v / 20.0f) * h);
-			nvg::lineTo(vg, vx, vy);
+			vg.lineTo( vx, vy);
 		}
 	}
-	nvg::lineTo(vg, x+w, y+h);
-	nvg::fillColor(vg, nvg::rgba(255,192,0,128));
-	nvg::fill(vg);
+	vg.lineTo( x+w, y+h);
+	vg.fillColor( nvg::rgba(255,192,0,128));
+	vg.fill();
 
-	nvg::fontFace(vg, "sans");
+	vg.fontFace( "sans");
 
 	if (fps->name[0] != '\0') {
-		nvg::fontSize(vg, 12.0f);
-		nvg::textAlign(vg, static_cast<int>(nvg::Align::Left | nvg::Align::Top));
-		nvg::fillColor(vg, nvg::rgba(240,240,240,192));
-		nvg::text(vg, x+3,y+3, fps->name.data(), NULL);
+		vg.fontSize( 12.0f);
+		vg.textAlign( static_cast<int>(nvg::Align::Left | nvg::Align::Top));
+		vg.fillColor( nvg::rgba(240,240,240,192));
+		vg.text( x+3,y+3, fps->name.data(), NULL);
 	}
 
 	if (fps->style == GRAPH_RENDER_FPS) {
-		nvg::fontSize(vg, 15.0f);
-		nvg::textAlign(vg, static_cast<int>(nvg::Align::Right | nvg::Align::Top));
-		nvg::fillColor(vg, nvg::rgba(240,240,240,255));
+		vg.fontSize( 15.0f);
+		vg.textAlign( static_cast<int>(nvg::Align::Right | nvg::Align::Top));
+		vg.fillColor( nvg::rgba(240,240,240,255));
 		sprintf(str.data(), "%.2f FPS", 1.0f / avg);
-		nvg::text(vg, x+w-3,y+3, str.data(), NULL);
+		vg.text( x+w-3,y+3, str.data(), NULL);
 
-		nvg::fontSize(vg, 13.0f);
-		nvg::textAlign(vg, static_cast<int>(nvg::Align::Right | nvg::Align::Baseline));
-		nvg::fillColor(vg, nvg::rgba(240,240,240,160));
+		vg.fontSize( 13.0f);
+		vg.textAlign( static_cast<int>(nvg::Align::Right | nvg::Align::Baseline));
+		vg.fillColor( nvg::rgba(240,240,240,160));
 		sprintf(str.data(), "%.2f ms", avg * 1000.0f);
-		nvg::text(vg, x+w-3,y+h-3, str.data(), NULL);
+		vg.text( x+w-3,y+h-3, str.data(), NULL);
 	}
 	else if (fps->style == GRAPH_RENDER_PERCENT) {
-		nvg::fontSize(vg, 15.0f);
-		nvg::textAlign(vg, static_cast<int>(nvg::Align::Right | nvg::Align::Top));
-		nvg::fillColor(vg, nvg::rgba(240,240,240,255));
+		vg.fontSize( 15.0f);
+		vg.textAlign( static_cast<int>(nvg::Align::Right | nvg::Align::Top));
+		vg.fillColor( nvg::rgba(240,240,240,255));
 		sprintf(str.data(), "%.1f %%", avg * 1.0f);
-		nvg::text(vg, x+w-3,y+3, str.data(), NULL);
+		vg.text( x+w-3,y+3, str.data(), NULL);
 	} else {
-		nvg::fontSize(vg, 15.0f);
-		nvg::textAlign(vg, static_cast<int>(nvg::Align::Right | nvg::Align::Top));
-		nvg::fillColor(vg, nvg::rgba(240,240,240,255));
+		vg.fontSize( 15.0f);
+		vg.textAlign( static_cast<int>(nvg::Align::Right | nvg::Align::Top));
+		vg.fillColor( nvg::rgba(240,240,240,255));
 		sprintf(str.data(), "%.2f ms", avg * 1000.0f);
-		nvg::text(vg, x+w-3,y+3, str.data(), NULL);
+		vg.text( x+w-3,y+3, str.data(), NULL);
 	}
 }

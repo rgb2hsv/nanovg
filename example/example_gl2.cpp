@@ -138,12 +138,12 @@ int main()
 			glClearColor(0.3f, 0.3f, 0.32f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT|GL_STENCIL_BUFFER_BIT);
 
-		nvg::beginFrame(vg, static_cast<float>(winWidth), static_cast<float>(winHeight), pxRatio);
+		vg.beginFrame( static_cast<float>(winWidth), static_cast<float>(winHeight), pxRatio);
 
 		renderDemo(vg, static_cast<float>(mx), static_cast<float>(my), static_cast<float>(winWidth), static_cast<float>(winHeight), static_cast<float>(t), blowup, &data);
 		renderGraph(vg, 5,5, &fps);
 
-		nvg::endFrame(vg);
+		vg.endFrame();
 
 		if (screenshot) {
 			screenshot = 0;

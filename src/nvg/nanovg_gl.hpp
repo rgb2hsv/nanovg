@@ -1667,7 +1667,7 @@ int nvglCreateImageFromHandleGLES2(Context& ctx, GLuint textureId, int w, int h,
 int nvglCreateImageFromHandleGLES3(Context& ctx, GLuint textureId, int w, int h, int imageFlags)
 #endif
 {
-	GLContext* gl = (GLContext*)internalParams(ctx).userPtr;
+	GLContext* gl = (GLContext*)ctx.internalParams().userPtr;
 	GlTexture* tex = glnvg__allocTexture(gl);
 
 	if (tex == NULL) return 0;
@@ -1691,7 +1691,7 @@ GLuint nvglImageHandleGLES2(Context& ctx, int image)
 GLuint nvglImageHandleGLES3(Context& ctx, int image)
 #endif
 {
-	GLContext* gl = (GLContext*)internalParams(ctx).userPtr;
+	GLContext* gl = (GLContext*)ctx.internalParams().userPtr;
 	GlTexture* tex = glnvg__findTexture(gl, image);
 	return tex->tex;
 }
