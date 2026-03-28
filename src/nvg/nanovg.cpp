@@ -153,6 +153,10 @@ struct PathCache {
 struct Context {
 	explicit Context(const Params& params);
 	~Context();
+	Context(const Context&) = delete;
+	Context& operator=(const Context&) = delete;
+	Context(Context&&) = delete;
+	Context& operator=(Context&&) = delete;
 
 	Params params;
 	std::vector<float> commands;
@@ -161,8 +165,8 @@ struct Context {
 	float distTol;
 	float fringeWidth;
 	float devicePxRatio;
-	struct FONScontext* fs=nullptr;
-	std::array<int, NVG_MAX_FONTIMAGES> fontImages;
+	std::shared_ptr<FONScontext> fs;
+	std::vector<int> fontImages;
 	size_t fontImageIdx;
 	size_t drawCallCount;
 	size_t fillTriCount;
@@ -1282,12 +1286,12 @@ static void flushTextTexture(Context& ctx)
 {
 	std::array<int, 4> dirty{};
 
-	if (fonsValidateTexture(ctx.fs, dirty.data())) {
+	if (fonsValidateTexture(ctx.fs.get(), dirty.data())) {
 		int fontImage = ctx.fontImages[ctx.fontImageIdx];
 		// Update texture
 		if (fontImage != 0) {
 			int iw, ih;
-			const unsigned char* data = fonsGetTextureData(ctx.fs, &iw, &ih);
+			const unsigned char* data = fonsGetTextureData(ctx.fs.get(), &iw, &ih);
 			int x = dirty[0];
 			int y = dirty[1];
 			int w = dirty[2] - dirty[0];
@@ -1316,7 +1320,7 @@ static int allocTextAtlas(Context& ctx)
 		ctx.fontImages[ctx.fontImageIdx+1] = ctx.params.renderCreateTexture(ctx.params.userPtr, static_cast<int>(Texture::Alpha), iw, ih, 0, NULL);
 	}
 	++ctx.fontImageIdx;
-	fonsResetAtlas(ctx.fs, iw, ih);
+	fonsResetAtlas(ctx.fs.get(), iw, ih);
 	return 1;
 }
 static void renderText(Context& ctx, Vertex* verts, int nverts)
@@ -1345,11 +1349,7 @@ static int isTransformFlipped(const float *xform)
 } // namespace detail
 
 Context::~Context() {
-	int i;
-	if (fs)
-		fonsDeleteInternal(fs);
-
-	for (i = 0; i < NVG_MAX_FONTIMAGES; i++) {
+	for (size_t i = 0; i < fontImages.size(); ++i) {
 		if (fontImages[i] != 0) {
 			deleteImage(*this, fontImages[i]);
 			fontImages[i] = 0;
@@ -1360,10 +1360,8 @@ Context::~Context() {
 		params.renderDelete(params.userPtr);
 }
 Context::Context(const Params& params):params(params){
-	int i;
 	FONSparams fontParams;
-	for (i = 0; i < NVG_MAX_FONTIMAGES; i++)
-		fontImages[i] = 0;
+	fontImages.resize(NVG_MAX_FONTIMAGES, 0);
 
 	cache = detail::allocPathCache();
 
@@ -1384,8 +1382,9 @@ Context::Context(const Params& params):params(params){
 	fontParams.renderDraw = nullptr;
 	fontParams.renderDelete = nullptr;
 	fontParams.userPtr = nullptr;
-	fs = fonsCreateInternal(&fontParams);
-	if (fs == nullptr) throw std::runtime_error("Could not create font context");
+	FONScontext* rawFs = fonsCreateInternal(&fontParams);
+	if (rawFs == nullptr) throw std::runtime_error("Could not create font context");
+	fs = std::shared_ptr<FONScontext>(rawFs, [](FONScontext* p) { fonsDeleteInternal(p); });
 
 	// Create font texture
 	fontImages[0] = params.renderCreateTexture(params.userPtr, static_cast<int>(Texture::Alpha), fontParams.width, fontParams.height, 0, nullptr);
@@ -2454,35 +2453,35 @@ void stroke(Context& ctx)
 // Add fonts
 int createFont(Context& ctx, const char* name, const char* filename)
 {
-	return fonsAddFont(ctx.fs, name, filename, 0);
+	return fonsAddFont(ctx.fs.get(), name, filename, 0);
 }
 
 int createFontAtIndex(Context& ctx, const char* name, const char* filename, const int fontIndex)
 {
-	return fonsAddFont(ctx.fs, name, filename, fontIndex);
+	return fonsAddFont(ctx.fs.get(), name, filename, fontIndex);
 }
 
 int createFontMem(Context& ctx, const char* name, unsigned char* data, int ndata, int freeData)
 {
-	return fonsAddFontMem(ctx.fs, name, data, ndata, freeData, 0);
+	return fonsAddFontMem(ctx.fs.get(), name, data, ndata, freeData, 0);
 }
 
 int createFontMemAtIndex(Context& ctx, const char* name, unsigned char* data, int ndata, int freeData, const int fontIndex)
 {
-	return fonsAddFontMem(ctx.fs, name, data, ndata, freeData, fontIndex);
+	return fonsAddFontMem(ctx.fs.get(), name, data, ndata, freeData, fontIndex);
 }
 
 int findFont(Context& ctx, const char* name)
 {
 	if (name == NULL) return -1;
-	return fonsGetFontByName(ctx.fs, name);
+	return fonsGetFontByName(ctx.fs.get(), name);
 }
 
 
 int addFallbackFontId(Context& ctx, int baseFont, int fallbackFont)
 {
 	if(baseFont == -1 || fallbackFont == -1) return 0;
-	return fonsAddFallbackFont(ctx.fs, baseFont, fallbackFont);
+	return fonsAddFallbackFont(ctx.fs.get(), baseFont, fallbackFont);
 }
 
 int addFallbackFont(Context& ctx, const char* baseFont, const char* fallbackFont)
@@ -2492,7 +2491,7 @@ int addFallbackFont(Context& ctx, const char* baseFont, const char* fallbackFont
 
 void resetFallbackFontsId(Context& ctx, int baseFont)
 {
-	fonsResetFallbackFont(ctx.fs, baseFont);
+	fonsResetFallbackFont(ctx.fs.get(), baseFont);
 }
 
 void resetFallbackFonts(Context& ctx, const char* baseFont)
@@ -2546,7 +2545,7 @@ void fontFaceId(Context& ctx, int font)
 void fontFace(Context& ctx, const char* font)
 {
 	State& state = detail::getState(ctx);
-	state.fontId = fonsGetFontByName(ctx.fs, font);
+	state.fontId = fonsGetFontByName(ctx.fs.get(), font);
 }
 
 
@@ -2571,19 +2570,19 @@ float text(Context& ctx, float x, float y, const char* string, const char* end)
 
 	if (state.fontId == FONS_INVALID) return x;
 
-	fonsSetSize(ctx.fs, state.fontSize*scale);
-	fonsSetSpacing(ctx.fs, state.letterSpacing*scale);
-	fonsSetBlur(ctx.fs, state.fontBlur*scale);
-	fonsSetDilate(ctx.fs, state.fontDilate*scale);
-	fonsSetAlign(ctx.fs, state.textAlign);
-	fonsSetFont(ctx.fs, state.fontId);
+	fonsSetSize(ctx.fs.get(), state.fontSize*scale);
+	fonsSetSpacing(ctx.fs.get(), state.letterSpacing*scale);
+	fonsSetBlur(ctx.fs.get(), state.fontBlur*scale);
+	fonsSetDilate(ctx.fs.get(), state.fontDilate*scale);
+	fonsSetAlign(ctx.fs.get(), state.textAlign);
+	fonsSetFont(ctx.fs.get(), state.fontId);
 
 	cverts = detail::maxi(2, (int)(end - string)) * 6; // conservative estimate.
 	detail::prepareTempVerts(ctx, cverts);
 
-	fonsTextIterInit(ctx.fs, &iter, 0, 0, string, end, FONS_GLYPH_BITMAP_REQUIRED);
+	fonsTextIterInit(ctx.fs.get(), &iter, 0, 0, string, end, FONS_GLYPH_BITMAP_REQUIRED);
 	prevIter = iter;
-	while (fonsTextIterNext(ctx.fs, &iter, &q)) {
+	while (fonsTextIterNext(ctx.fs.get(), &iter, &q)) {
 		std::array<float, 8> c{};
 		if (iter.prevGlyphIndex == -1) { // can not retrieve glyph?
 			if (!buf.empty()) {
@@ -2593,7 +2592,7 @@ float text(Context& ctx, float x, float y, const char* string, const char* end)
 			if (!detail::allocTextAtlas(ctx))
 				break; // no memory :(
 			iter = prevIter;
-			fonsTextIterNext(ctx.fs, &iter, &q); // try again
+			fonsTextIterNext(ctx.fs.get(), &iter, &q); // try again
 			if (iter.prevGlyphIndex == -1) // still can not find glyph?
 				break;
 		}
@@ -2677,18 +2676,18 @@ int textGlyphPositions(Context& ctx, float x, float y, const char* string, const
 	if (string == end)
 		return 0;
 
-	fonsSetSize(ctx.fs, state.fontSize*scale);
-	fonsSetSpacing(ctx.fs, state.letterSpacing*scale);
-	fonsSetBlur(ctx.fs, state.fontBlur*scale);
-	fonsSetAlign(ctx.fs, state.textAlign);
-	fonsSetFont(ctx.fs, state.fontId);
+	fonsSetSize(ctx.fs.get(), state.fontSize*scale);
+	fonsSetSpacing(ctx.fs.get(), state.letterSpacing*scale);
+	fonsSetBlur(ctx.fs.get(), state.fontBlur*scale);
+	fonsSetAlign(ctx.fs.get(), state.textAlign);
+	fonsSetFont(ctx.fs.get(), state.fontId);
 
-	fonsTextIterInit(ctx.fs, &iter, 0, 0, string, end, FONS_GLYPH_BITMAP_OPTIONAL);
+	fonsTextIterInit(ctx.fs.get(), &iter, 0, 0, string, end, FONS_GLYPH_BITMAP_OPTIONAL);
 	prevIter = iter;
-	while (fonsTextIterNext(ctx.fs, &iter, &q)) {
+	while (fonsTextIterNext(ctx.fs.get(), &iter, &q)) {
 		if (iter.prevGlyphIndex < 0 && detail::allocTextAtlas(ctx)) { // can not retrieve glyph?
 			iter = prevIter;
-			fonsTextIterNext(ctx.fs, &iter, &q); // try again
+			fonsTextIterNext(ctx.fs.get(), &iter, &q); // try again
 		}
 		prevIter = iter;
 		positions[npos].str = iter.str;
@@ -2741,21 +2740,21 @@ int textBreakLines(Context& ctx, const char* string, const char* end, float brea
 
 	if (string == end) return 0;
 
-	fonsSetSize(ctx.fs, state.fontSize*scale);
-	fonsSetSpacing(ctx.fs, state.letterSpacing*scale);
-	fonsSetBlur(ctx.fs, state.fontBlur*scale);
-	fonsSetDilate(ctx.fs, state.fontDilate*scale);
-	fonsSetAlign(ctx.fs, state.textAlign);
-	fonsSetFont(ctx.fs, state.fontId);
+	fonsSetSize(ctx.fs.get(), state.fontSize*scale);
+	fonsSetSpacing(ctx.fs.get(), state.letterSpacing*scale);
+	fonsSetBlur(ctx.fs.get(), state.fontBlur*scale);
+	fonsSetDilate(ctx.fs.get(), state.fontDilate*scale);
+	fonsSetAlign(ctx.fs.get(), state.textAlign);
+	fonsSetFont(ctx.fs.get(), state.fontId);
 
 	breakRowWidth *= scale;
 
-	fonsTextIterInit(ctx.fs, &iter, 0, 0, string, end, FONS_GLYPH_BITMAP_OPTIONAL);
+	fonsTextIterInit(ctx.fs.get(), &iter, 0, 0, string, end, FONS_GLYPH_BITMAP_OPTIONAL);
 	prevIter = iter;
-	while (fonsTextIterNext(ctx.fs, &iter, &q)) {
+	while (fonsTextIterNext(ctx.fs.get(), &iter, &q)) {
 		if (iter.prevGlyphIndex < 0 && detail::allocTextAtlas(ctx)) { // can not retrieve glyph?
 			iter = prevIter;
-			fonsTextIterNext(ctx.fs, &iter, &q); // try again
+			fonsTextIterNext(ctx.fs.get(), &iter, &q); // try again
 		}
 		prevIter = iter;
 		switch (iter.codepoint) {
@@ -2934,17 +2933,17 @@ float textBounds(Context& ctx, float x, float y, const char* string, const char*
 
 	if (state.fontId == FONS_INVALID) return 0;
 
-	fonsSetSize(ctx.fs, state.fontSize*scale);
-	fonsSetSpacing(ctx.fs, state.letterSpacing*scale);
-	fonsSetBlur(ctx.fs, state.fontBlur*scale);
-	fonsSetDilate(ctx.fs, state.fontDilate*scale);
-	fonsSetAlign(ctx.fs, state.textAlign);
-	fonsSetFont(ctx.fs, state.fontId);
+	fonsSetSize(ctx.fs.get(), state.fontSize*scale);
+	fonsSetSpacing(ctx.fs.get(), state.letterSpacing*scale);
+	fonsSetBlur(ctx.fs.get(), state.fontBlur*scale);
+	fonsSetDilate(ctx.fs.get(), state.fontDilate*scale);
+	fonsSetAlign(ctx.fs.get(), state.textAlign);
+	fonsSetFont(ctx.fs.get(), state.fontId);
 
-	width = fonsTextBounds(ctx.fs, 0, 0, string, end, bounds);
+	width = fonsTextBounds(ctx.fs.get(), 0, 0, string, end, bounds);
 	if (bounds != NULL) {
 		// Use line bounds for height.
-		fonsLineBounds(ctx.fs, 0, &bounds[1], &bounds[3]);
+		fonsLineBounds(ctx.fs.get(), 0, &bounds[1], &bounds[3]);
 		bounds[0] = bounds[0] * invscale + x;
 		bounds[1] = bounds[1] * invscale + y;
 		bounds[2] = bounds[2] * invscale + x;
@@ -2980,13 +2979,13 @@ void textBoxBounds(Context& ctx, float x, float y, float breakRowWidth, const ch
 	minx = maxx = 0;
 	miny = maxy = 0;
 
-	fonsSetSize(ctx.fs, state.fontSize*scale);
-	fonsSetSpacing(ctx.fs, state.letterSpacing*scale);
-	fonsSetBlur(ctx.fs, state.fontBlur*scale);
-	fonsSetDilate(ctx.fs, state.fontDilate*scale);
-	fonsSetAlign(ctx.fs, state.textAlign);
-	fonsSetFont(ctx.fs, state.fontId);
-	fonsLineBounds(ctx.fs, 0, &rminy, &rmaxy);
+	fonsSetSize(ctx.fs.get(), state.fontSize*scale);
+	fonsSetSpacing(ctx.fs.get(), state.letterSpacing*scale);
+	fonsSetBlur(ctx.fs.get(), state.fontBlur*scale);
+	fonsSetDilate(ctx.fs.get(), state.fontDilate*scale);
+	fonsSetAlign(ctx.fs.get(), state.textAlign);
+	fonsSetFont(ctx.fs.get(), state.fontId);
+	fonsLineBounds(ctx.fs.get(), 0, &rminy, &rmaxy);
 	rminy *= invscale;
 	rmaxy *= invscale;
 
@@ -3032,14 +3031,14 @@ void textMetrics(Context& ctx, float* ascender, float* descender, float* lineh)
 
 	if (state.fontId == FONS_INVALID) return;
 
-	fonsSetSize(ctx.fs, state.fontSize*scale);
-	fonsSetSpacing(ctx.fs, state.letterSpacing*scale);
-	fonsSetBlur(ctx.fs, state.fontBlur*scale);
-	fonsSetDilate(ctx.fs, state.fontDilate*scale);
-	fonsSetAlign(ctx.fs, state.textAlign);
-	fonsSetFont(ctx.fs, state.fontId);
+	fonsSetSize(ctx.fs.get(), state.fontSize*scale);
+	fonsSetSpacing(ctx.fs.get(), state.letterSpacing*scale);
+	fonsSetBlur(ctx.fs.get(), state.fontBlur*scale);
+	fonsSetDilate(ctx.fs.get(), state.fontDilate*scale);
+	fonsSetAlign(ctx.fs.get(), state.textAlign);
+	fonsSetFont(ctx.fs.get(), state.fontId);
 
-	fonsVertMetrics(ctx.fs, ascender, descender, lineh);
+	fonsVertMetrics(ctx.fs.get(), ascender, descender, lineh);
 	if (ascender != NULL)
 		*ascender *= invscale;
 	if (descender != NULL)
