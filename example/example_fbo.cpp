@@ -104,7 +104,7 @@ static void key(GLFWwindow* window, int key, int scancode, int action, int mods)
 int main()
 {
 	GLFWwindow* window;
-	std::shared_ptr<nvg::Context> vgOwner;
+	std::unique_ptr<nvg::Context> vgOwner;
 	GPUtimer gpuTimer;
 	PerfGraph fps, cpuGraph, gpuGraph;
 	double prevt = 0, cpuTime = 0;
