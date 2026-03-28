@@ -26,7 +26,7 @@
 #include "nanovg_gl.hpp"
 #include "nanovg_gl_utils.hpp"
 #include "demo.hpp"
-#include "perf.h"
+#include "perf.hpp"
 
 
 void errorcb(int error, const char* desc)

@@ -17,17 +17,16 @@
 //
 
 #include <stdio.h>
-#include <memory>
 #ifdef NANOVG_GLEW
 #  include <GL/glew.h>
 #endif
 #define GLFW_INCLUDE_GLEXT
 #include <GLFW/glfw3.h>
-#include "nanovg.hpp"
+#include "nanovg.h"
 #define NANOVG_GL2_IMPLEMENTATION
-#include "nanovg_gl.hpp"
-#include "demo.hpp"
-#include "perf.hpp"
+#include "nanovg_gl.h"
+#include "demo.h"
+#include "perf.h"
 
 
 void errorcb(int error, const char* desc)
@@ -41,8 +40,8 @@ int premult = 0;
 
 static void key(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-	UNUSED(scancode);
-	UNUSED(mods);
+	NVG_NOTUSED(scancode);
+	NVG_NOTUSED(mods);
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, GL_TRUE);
 	if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
@@ -57,6 +56,7 @@ int main()
 {
 	GLFWwindow* window;
 	DemoData data;
+	NVGcontext* vg = NULL;
 	PerfGraph fps;
 	double prevt = 0;
 
@@ -93,15 +93,14 @@ int main()
 #endif
 
 #ifdef DEMO_MSAA
-	auto vgOwner = nvg::createGL(static_cast<int>(nvg::CreateFlags::StencilStrokes | nvg::CreateFlags::Debug));
+	vg = nvgCreateGL2(NVG_STENCIL_STROKES | NVG_DEBUG);
 #else
-	auto vgOwner = nvg::createGL(static_cast<int>(nvg::CreateFlags::Antialias | nvg::CreateFlags::StencilStrokes | nvg::CreateFlags::Debug));
+	vg = nvgCreateGL2(NVG_ANTIALIAS | NVG_STENCIL_STROKES | NVG_DEBUG);
 #endif
-	if (!vgOwner) {
+	if (vg == NULL) {
 		printf("Could not init nanovg.\n");
 		return -1;
 	}
-	nvg::Context& vg = *vgOwner;
 
 	if (loadDemoData(vg, &data) == -1)
 		return -1;
@@ -121,7 +120,7 @@ int main()
 		t = glfwGetTime();
 		dt = t - prevt;
 		prevt = t;
-		updateGraph(&fps, static_cast<float>(dt));
+		updateGraph(&fps, dt);
 
 		glfwGetCursorPos(window, &mx, &my);
 		glfwGetWindowSize(window, &winWidth, &winHeight);
@@ -138,12 +137,12 @@ int main()
 			glClearColor(0.3f, 0.3f, 0.32f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT|GL_STENCIL_BUFFER_BIT);
 
-		vg.beginFrame( static_cast<float>(winWidth), static_cast<float>(winHeight), pxRatio);
+		nvgBeginFrame(vg, winWidth, winHeight, pxRatio);
 
-		renderDemo(vg, static_cast<float>(mx), static_cast<float>(my), static_cast<float>(winWidth), static_cast<float>(winHeight), static_cast<float>(t), blowup, &data);
+		renderDemo(vg, mx,my, winWidth,winHeight, t, blowup, &data);
 		renderGraph(vg, 5,5, &fps);
 
-		vg.endFrame();
+		nvgEndFrame(vg);
 
 		if (screenshot) {
 			screenshot = 0;
@@ -156,11 +155,8 @@ int main()
 
 	freeDemoData(vg, &data);
 
-	nvg::deleteGL(vgOwner);
+	nvgDeleteGL2(vg);
 
 	glfwTerminate();
 	return 0;
 }
-
-
-

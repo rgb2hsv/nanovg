@@ -1,13 +1,13 @@
-#include "perf.hpp"
+#include "perf.h"
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
-#include <array>
 #ifdef NANOVG_GLEW
 #  include <GL/glew.h>
 #endif
 #include <GLFW/glfw3.h>
-#include "nanovg.hpp"
+#include "nanovg.h"
+
 #ifdef _MSC_VER
 #define snprintf _snprintf
 #elif !defined(__MINGW32__)
@@ -23,10 +23,7 @@
 
 void initGPUTimer(GPUtimer* timer)
 {
-	timer->supported = 0;
-	timer->cur = 0;
-	timer->ret = 0;
-	timer->queries.fill(0u);
+	memset(timer, 0, sizeof(*timer));
 
 /*	timer->supported = glfwExtensionSupported("GL_ARB_timer_query");
 	if (timer->supported) {
@@ -38,7 +35,7 @@ void initGPUTimer(GPUtimer* timer)
 			return;
 		}
 #endif
-		glGenQueries(GPU_QUERY_COUNT, timer->queries.data());
+		glGenQueries(GPU_QUERY_COUNT, timer->queries);
 	}*/
 }
 
@@ -52,8 +49,8 @@ void startGPUTimer(GPUtimer* timer)
 
 int stopGPUTimer(GPUtimer* timer, float* times, int maxTimes)
 {
-	UNUSED(times);
-	UNUSED(maxTimes);
+	NVG_NOTUSED(times);
+	NVG_NOTUSED(maxTimes);
 	GLint available = 1;
 	int n = 0;
 	if (!timer->supported)
@@ -79,12 +76,10 @@ int stopGPUTimer(GPUtimer* timer, float* times, int maxTimes)
 
 void initGraph(PerfGraph* fps, int style, const char* name)
 {
+	memset(fps, 0, sizeof(PerfGraph));
 	fps->style = style;
-	fps->head = 0;
-	fps->values.fill(0.0f);
-	fps->name.fill('\0');
-	strncpy(fps->name.data(), name, fps->name.size());
-	fps->name[fps->name.size()-1] = '\0';
+	strncpy(fps->name, name, sizeof(fps->name));
+	fps->name[sizeof(fps->name)-1] = '\0';
 }
 
 void updateGraph(PerfGraph* fps, float frameTime)
@@ -103,24 +98,24 @@ float getGraphAverage(PerfGraph* fps)
 	return avg / (float)GRAPH_HISTORY_COUNT;
 }
 
-void renderGraph(nvg::Context& vg, float x, float y, PerfGraph* fps)
+void renderGraph(NVGcontext* vg, float x, float y, PerfGraph* fps)
 {
 	int i;
 	float avg, w, h;
-	std::array<char, 64> str{};
+	char str[64];
 
 	avg = getGraphAverage(fps);
 
 	w = 200;
 	h = 35;
 
-	vg.beginPath();
-	vg.rect( x,y, w,h);
-	vg.fillColor( nvg::rgba(0,0,0,128));
-	vg.fill();
+	nvgBeginPath(vg);
+	nvgRect(vg, x,y, w,h);
+	nvgFillColor(vg, nvgRGBA(0,0,0,128));
+	nvgFill(vg);
 
-	vg.beginPath();
-	vg.moveTo( x, y+h);
+	nvgBeginPath(vg);
+	nvgMoveTo(vg, x, y+h);
 	if (fps->style == GRAPH_RENDER_FPS) {
 		for (i = 0; i < GRAPH_HISTORY_COUNT; i++) {
 			float v = 1.0f / (0.00001f + fps->values[(fps->head+i) % GRAPH_HISTORY_COUNT]);
@@ -128,7 +123,7 @@ void renderGraph(nvg::Context& vg, float x, float y, PerfGraph* fps)
 			if (v > 80.0f) v = 80.0f;
 			vx = x + ((float)i/(GRAPH_HISTORY_COUNT-1)) * w;
 			vy = y + h - ((v / 80.0f) * h);
-			vg.lineTo( vx, vy);
+			nvgLineTo(vg, vx, vy);
 		}
 	} else if (fps->style == GRAPH_RENDER_PERCENT) {
 		for (i = 0; i < GRAPH_HISTORY_COUNT; i++) {
@@ -137,7 +132,7 @@ void renderGraph(nvg::Context& vg, float x, float y, PerfGraph* fps)
 			if (v > 100.0f) v = 100.0f;
 			vx = x + ((float)i/(GRAPH_HISTORY_COUNT-1)) * w;
 			vy = y + h - ((v / 100.0f) * h);
-			vg.lineTo( vx, vy);
+			nvgLineTo(vg, vx, vy);
 		}
 	} else {
 		for (i = 0; i < GRAPH_HISTORY_COUNT; i++) {
@@ -146,46 +141,46 @@ void renderGraph(nvg::Context& vg, float x, float y, PerfGraph* fps)
 			if (v > 20.0f) v = 20.0f;
 			vx = x + ((float)i/(GRAPH_HISTORY_COUNT-1)) * w;
 			vy = y + h - ((v / 20.0f) * h);
-			vg.lineTo( vx, vy);
+			nvgLineTo(vg, vx, vy);
 		}
 	}
-	vg.lineTo( x+w, y+h);
-	vg.fillColor( nvg::rgba(255,192,0,128));
-	vg.fill();
+	nvgLineTo(vg, x+w, y+h);
+	nvgFillColor(vg, nvgRGBA(255,192,0,128));
+	nvgFill(vg);
 
-	vg.fontFace( "sans");
+	nvgFontFace(vg, "sans");
 
 	if (fps->name[0] != '\0') {
-		vg.fontSize( 12.0f);
-		vg.textAlign( static_cast<int>(nvg::Align::Left | nvg::Align::Top));
-		vg.fillColor( nvg::rgba(240,240,240,192));
-		vg.text( x+3,y+3, fps->name.data(), NULL);
+		nvgFontSize(vg, 12.0f);
+		nvgTextAlign(vg, NVG_ALIGN_LEFT|NVG_ALIGN_TOP);
+		nvgFillColor(vg, nvgRGBA(240,240,240,192));
+		nvgText(vg, x+3,y+3, fps->name, NULL);
 	}
 
 	if (fps->style == GRAPH_RENDER_FPS) {
-		vg.fontSize( 15.0f);
-		vg.textAlign( static_cast<int>(nvg::Align::Right | nvg::Align::Top));
-		vg.fillColor( nvg::rgba(240,240,240,255));
-		sprintf(str.data(), "%.2f FPS", 1.0f / avg);
-		vg.text( x+w-3,y+3, str.data(), NULL);
+		nvgFontSize(vg, 15.0f);
+		nvgTextAlign(vg,NVG_ALIGN_RIGHT|NVG_ALIGN_TOP);
+		nvgFillColor(vg, nvgRGBA(240,240,240,255));
+		sprintf(str, "%.2f FPS", 1.0f / avg);
+		nvgText(vg, x+w-3,y+3, str, NULL);
 
-		vg.fontSize( 13.0f);
-		vg.textAlign( static_cast<int>(nvg::Align::Right | nvg::Align::Baseline));
-		vg.fillColor( nvg::rgba(240,240,240,160));
-		sprintf(str.data(), "%.2f ms", avg * 1000.0f);
-		vg.text( x+w-3,y+h-3, str.data(), NULL);
+		nvgFontSize(vg, 13.0f);
+		nvgTextAlign(vg,NVG_ALIGN_RIGHT|NVG_ALIGN_BASELINE);
+		nvgFillColor(vg, nvgRGBA(240,240,240,160));
+		sprintf(str, "%.2f ms", avg * 1000.0f);
+		nvgText(vg, x+w-3,y+h-3, str, NULL);
 	}
 	else if (fps->style == GRAPH_RENDER_PERCENT) {
-		vg.fontSize( 15.0f);
-		vg.textAlign( static_cast<int>(nvg::Align::Right | nvg::Align::Top));
-		vg.fillColor( nvg::rgba(240,240,240,255));
-		sprintf(str.data(), "%.1f %%", avg * 1.0f);
-		vg.text( x+w-3,y+3, str.data(), NULL);
+		nvgFontSize(vg, 15.0f);
+		nvgTextAlign(vg,NVG_ALIGN_RIGHT|NVG_ALIGN_TOP);
+		nvgFillColor(vg, nvgRGBA(240,240,240,255));
+		sprintf(str, "%.1f %%", avg * 1.0f);
+		nvgText(vg, x+w-3,y+3, str, NULL);
 	} else {
-		vg.fontSize( 15.0f);
-		vg.textAlign( static_cast<int>(nvg::Align::Right | nvg::Align::Top));
-		vg.fillColor( nvg::rgba(240,240,240,255));
-		sprintf(str.data(), "%.2f ms", avg * 1000.0f);
-		vg.text( x+w-3,y+3, str.data(), NULL);
+		nvgFontSize(vg, 15.0f);
+		nvgTextAlign(vg,NVG_ALIGN_RIGHT|NVG_ALIGN_TOP);
+		nvgFillColor(vg, nvgRGBA(240,240,240,255));
+		sprintf(str, "%.2f ms", avg * 1000.0f);
+		nvgText(vg, x+w-3,y+3, str, NULL);
 	}
 }
