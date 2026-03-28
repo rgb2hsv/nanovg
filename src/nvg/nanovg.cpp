@@ -47,6 +47,13 @@
 	} while (0)
 	
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable: 4100)  // unreferenced formal parameter
+#pragma warning(disable: 4127)  // conditional expression is constant
+#pragma warning(disable: 4204)  // nonstandard extension used : non-constant aggregate initializer
+#pragma warning(disable: 4706)  // assignment within conditional expression
+#endif
 #define NANOVG_FAST_SQRT
 #define FONTSTASH_IMPLEMENTATION
 #include "fontstash.h"
@@ -55,12 +62,8 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #endif
-
 #ifdef _MSC_VER
-#pragma warning(disable: 4100)  // unreferenced formal parameter
-#pragma warning(disable: 4127)  // conditional expression is constant
-#pragma warning(disable: 4204)  // nonstandard extension used : non-constant aggregate initializer
-#pragma warning(disable: 4706)  // assignment within conditional expression
+#pragma warning(pop)
 #endif
 
 #include "nanovg_detail.hpp"
@@ -1369,6 +1372,7 @@ void Context::textBox(float x, float y, float breakRowWidth, const char* string,
 
 int Context::textGlyphPositions(float x, float y, const char* string, const char* end, GlyphPosition* positions, int maxPositions)
 {
+	UNUSED(y);
 	State& state = mImpl->topState();
 	float scale = detail::getFontScale(&state) * mImpl->devicePxRatio;
 	float invscale = 1.0f / scale;

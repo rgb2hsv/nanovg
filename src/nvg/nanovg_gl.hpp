@@ -204,6 +204,10 @@ struct GlFragUniforms {
 		// note: after modifying layout or size of uniform array,
 		// don't forget to also update the fragment shader source!
 		#define NANOVG_GL_UNIFORMARRAY_SIZE 12
+		#ifdef _MSC_VER
+		#pragma warning(push)
+		#pragma warning(disable: 4201)  // nonstandard extension: nameless struct/union
+		#endif
 		union {
 			struct {
 				float scissorMat[12]; // matrices are actually 3 vec4s
@@ -226,6 +230,9 @@ struct GlFragUniforms {
 			};
 			float uniformArray[NANOVG_GL_UNIFORMARRAY_SIZE][4];
 		};
+		#ifdef _MSC_VER
+		#pragma warning(pop)
+		#endif
 	#endif
 };
 typedef struct GlFragUniforms GlFragUniforms;

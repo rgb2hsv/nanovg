@@ -54,12 +54,12 @@ static GLint defaultFBO = -1;
 GlUtilsFramebuffer* nvgluCreateFramebuffer(nvg::Context& ctx, int w, int h, int imageFlags)
 {
 #ifdef NANOVG_FBO_VALID
-	GLint defaultFBO;
-	GLint defaultRBO;
+	GLint prevFramebufferBinding;
+	GLint prevRenderbufferBinding;
 	GlUtilsFramebuffer* fb = NULL;
 
-	glGetIntegerv(GL_FRAMEBUFFER_BINDING, &defaultFBO);
-	glGetIntegerv(GL_RENDERBUFFER_BINDING, &defaultRBO);
+	glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prevFramebufferBinding);
+	glGetIntegerv(GL_RENDERBUFFER_BINDING, &prevRenderbufferBinding);
 
 	fb = new (std::nothrow) GlUtilsFramebuffer{};
 	if (fb == NULL) goto error;
@@ -104,12 +104,12 @@ GlUtilsFramebuffer* nvgluCreateFramebuffer(nvg::Context& ctx, int w, int h, int 
 			goto error;
 	}
 
-	glBindFramebuffer(GL_FRAMEBUFFER, defaultFBO);
-	glBindRenderbuffer(GL_RENDERBUFFER, defaultRBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, prevFramebufferBinding);
+	glBindRenderbuffer(GL_RENDERBUFFER, prevRenderbufferBinding);
 	return fb;
 error:
-	glBindFramebuffer(GL_FRAMEBUFFER, defaultFBO);
-	glBindRenderbuffer(GL_RENDERBUFFER, defaultRBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, prevFramebufferBinding);
+	glBindRenderbuffer(GL_RENDERBUFFER, prevRenderbufferBinding);
 	nvgluDeleteFramebuffer(fb);
 	return NULL;
 #else

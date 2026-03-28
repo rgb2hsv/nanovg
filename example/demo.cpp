@@ -70,7 +70,7 @@ static char* cpToUTF8(int cp, char* str)
 	case 4: str[3] = 0x80 | (cp & 0x3f); cp = cp >> 6; cp |= 0x10000;
 	case 3: str[2] = 0x80 | (cp & 0x3f); cp = cp >> 6; cp |= 0x800;
 	case 2: str[1] = 0x80 | (cp & 0x3f); cp = cp >> 6; cp |= 0xc0;
-	case 1: str[0] = cp;
+	case 1: str[0] = static_cast<char>(cp);
 	}
 	return str;
 }
@@ -945,7 +945,8 @@ void drawParagraph(nvg::Context& vg, float x, float y, float width, float height
 	std::array<float, 4> bounds{};
 	float a;
 	const char* hoverText = "Hover your mouse over the text to see calculated caret position.";
-	float gx,gy;
+	float gx = 0.0f;
+	float gy = 0.0f;
 	int gutter = 0;
 	UNUSED(height);
 
@@ -981,10 +982,10 @@ void drawParagraph(nvg::Context& vg, float x, float y, float width, float height
 				for (j = 0; j < nglyphs; j++) {
 					float x0 = glyphs[(size_t)j].x;
 					float x1 = (j+1 < nglyphs) ? glyphs[(size_t)j+1].x : x+row->width;
-					float gx = x0 * 0.3f + x1 * 0.7f;
-					if (mx >= px && mx < gx)
+					float splitX = x0 * 0.3f + x1 * 0.7f;
+					if (mx >= px && mx < splitX)
 						caretx = glyphs[(size_t)j].x;
-					px = gx;
+					px = splitX;
 				}
 				vg.beginPath();
 				vg.fillColor( nvg::rgba(255,192,0,255));
@@ -1295,9 +1296,9 @@ static void unpremultiplyAlpha(unsigned char* image, int w, int h, int stride)
 		for (x = 0; x < w; x++) {
 			int r = row[0], g = row[1], b = row[2], a = row[3];
 			if (a != 0) {
-				row[0] = (int)mini(r*255/a, 255);
-				row[1] = (int)mini(g*255/a, 255);
-				row[2] = (int)mini(b*255/a, 255);
+				row[0] = static_cast<unsigned char>(mini(r*255/a, 255));
+				row[1] = static_cast<unsigned char>(mini(g*255/a, 255));
+				row[2] = static_cast<unsigned char>(mini(b*255/a, 255));
 			}
 			row += 4;
 		}
@@ -1334,9 +1335,9 @@ static void unpremultiplyAlpha(unsigned char* image, int w, int h, int stride)
 					n++;
 				}
 				if (n > 0) {
-					row[0] = r/n;
-					row[1] = g/n;
-					row[2] = b/n;
+					row[0] = static_cast<unsigned char>(r/n);
+					row[1] = static_cast<unsigned char>(g/n);
+					row[2] = static_cast<unsigned char>(b/n);
 				}
 			}
 			row += 4;
@@ -1396,9 +1397,9 @@ bool comparePreviousScreenShot(int nw, int nh, int premult, unsigned char* nimg,
 			int gd=abs(img[idx+1] - nimg[idx+1]);
 			int bd=abs(img[idx+2] - nimg[idx+2]);
 			int ad=abs(img[idx+3] - nimg[idx+3]);
-			diff[idx]=std::min(rd*4,255);
-			diff[idx+1]=std::min(gd*4,255);
-			diff[idx+2]=std::min(bd*4,255);
+			diff[idx]=static_cast<unsigned char>(std::min(rd*4,255));
+			diff[idx+1]=static_cast<unsigned char>(std::min(gd*4,255));
+			diff[idx+2]=static_cast<unsigned char>(std::min(bd*4,255));
 			diff[idx+3]=255;
 			if(rd > Threshold || gd > Threshold || bd > Threshold || ad > Threshold){
 				ret=false;
