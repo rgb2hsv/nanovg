@@ -18,6 +18,7 @@
 
 #pragma once
 #include <type_traits>
+#include <memory>
 
 #ifndef UNUSED
 #define UNUSED(v) (void)(v)
@@ -312,13 +313,13 @@ Color hsla(float h, float s, float l, unsigned char a);
 
 // Pushes and saves the current render state into a state stack.
 // A matching restore() must be used to restore the state.
-void save(Context* ctx);
+void save(Context& ctx);
 
 // Pops and restores current render state.
-void restore(Context* ctx);
+void restore(Context& ctx);
 
 // Resets current render state to default values. Does not affect the render state stack.
-void reset(Context* ctx);
+void reset(Context& ctx);
 
 // Gets the current scissor bounds
 ScissorBounds currentScissor(Context* ctx);
@@ -484,7 +485,7 @@ void updateImage(Context* ctx, int image, const unsigned char* data);
 void imageSize(Context* ctx, int image, int* w, int* h);
 
 // Deletes created image.
-void deleteImage(Context* ctx, int image);
+void deleteImage(Context& ctx, int image);
 
 //
 // Paints
@@ -742,8 +743,8 @@ int getImageTextureId(Context* ctx, int handle);
 
 //
 // Constructor and destructor, called by the render back-end.
-Context* createInternal(Params* params);
-void deleteInternal(Context* ctx);
+std::shared_ptr<Context> createInternal(Params* params);
+void deleteInternal(const std::shared_ptr<Context>& ctx);
 
 Params* internalParams(Context* ctx);
 

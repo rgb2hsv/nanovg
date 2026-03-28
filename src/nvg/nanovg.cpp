@@ -23,13 +23,26 @@
 #define _USE_MATH_DEFINES
 #endif
 #include <cmath>
-
-
+#include <vector>
+#include <algorithm>
+#include <array>
+#include <memory>
+#include <exception>
+#include <stdexcept>
+#include <ranges>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <array>
 
+#define Expects(condition) \
+	do { \
+		if (!(condition)) { \
+			printf("Precondition failed: %s\n  at %s:%d in %s()\n", \
+				#condition, __FILE__, __LINE__, __func__); \
+			std::terminate(); \
+		} \
+	} while (0)
+	
 #define FONTSTASH_IMPLEMENTATION
 #include "fontstash.h"
 
@@ -107,7 +120,7 @@ struct State {
 	int lineCap;
 	int lineStyle;
 	float alpha;
-	std::array<float, 6> xform{};
+	std::array<float, 6> xform;
 	Scissor scissor;
 	float fontSize;
 	float letterSpacing;
@@ -117,7 +130,6 @@ struct State {
 	int textAlign;
 	int fontId;
 };
-typedef struct State State;
 
 struct Point {
 	float x,y;
@@ -126,7 +138,6 @@ struct Point {
 	float dmx, dmy;
 	unsigned char flags;
 };
-typedef struct Point Point;
 
 struct PathCache {
 	Point* points;
@@ -138,36 +149,32 @@ struct PathCache {
 	Vertex* verts;
 	int nverts;
 	int cverts;
-	std::array<float, 4> bounds{};
+	std::array<float, 4> bounds;
 };
-typedef struct PathCache PathCache;
 
 struct Context {
 	Params params;
-	float* commands;
-	int ccommands;
-	int ncommands;
+	std::vector<float> commands;
 	float commandx, commandy;
-	std::array<State, NVG_MAX_STATES> states{};
-	int nstates;
-	PathCache* cache;
 	float tessTol;
 	float distTol;
 	float fringeWidth;
 	float devicePxRatio;
 	struct FONScontext* fs;
 	std::array<int, NVG_MAX_FONTIMAGES> fontImages{};
-	int fontImageIdx;
-	int drawCallCount;
-	int fillTriCount;
-	int strokeTriCount;
-	int textTriCount;
-	struct ScissorBounds scissor;
+	size_t fontImageIdx;
+	size_t drawCallCount;
+	size_t fillTriCount;
+	size_t strokeTriCount;
+	size_t textTriCount;
+	ScissorBounds scissor;
+	std::vector<State> states;
+	std::shared_ptr<PathCache> cache;
 };
 
 namespace detail {
 
-static float sqrtf(float a) { return ::sqrtf(a); }
+static float sqrtf(float a) { return ::sqrtf(a); } //TODO: change to use fast sqrt approximation
 static float modf(float a, float b) { return ::fmodf(a, b); }
 static float sinf(float a) { return ::sinf(a); }
 static float cosf(float a) { return ::cosf(a); }
@@ -183,56 +190,48 @@ static float absf(float a) { return a >= 0.0f ? a : -a; }
 static float signf(float a) { return a >= 0.0f ? 1.0f : -1.0f; }
 static float clampf(float a, float mn, float mx) { return a < mn ? mn : (a > mx ? mx : a); }
 static float cross(float dx0, float dy0, float dx1, float dy1) { return dx1*dy0 - dx0*dy1; }
-static float normalize(float *x, float* y)
+static float normalize(float& x, float& y)
 {
-	float d = sqrtf((*x)*(*x) + (*y)*(*y));
+	float d = sqrtf((x)*(x) + (y)*(y));
 	if (d > 1e-6f) {
 		float id = 1.0f / d;
-		*x *= id;
-		*y *= id;
+		x *= id;
+		y *= id;
 	}
 	return d;
 }
-static void deletePathCache(PathCache* c)
+static void deletePathCache(std::shared_ptr<PathCache>& c)
 {
 	if (c == nullptr) return;
 	if (c->points != nullptr) std::free(c->points);
 	if (c->paths != nullptr) std::free(c->paths);
 	if (c->verts != nullptr) std::free(c->verts);
-	std::free(c);
+	c.reset();
 }
-static PathCache* allocPathCache(void)
+static std::shared_ptr<PathCache> allocPathCache(void)
 {
-	PathCache* c = static_cast<PathCache*>(std::malloc(sizeof(PathCache)));
-	if (c == nullptr) goto error;
-	std::memset(c, 0, sizeof(PathCache));
+	auto c = std::make_shared<PathCache>();
 
 	c->points = static_cast<Point*>(std::malloc(sizeof(Point)*NVG_INIT_POINTS_SIZE));
-	if (!c->points) goto error;
 	c->npoints = 0;
 	c->cpoints = NVG_INIT_POINTS_SIZE;
 
 	c->paths = static_cast<Path*>(std::malloc(sizeof(Path)*NVG_INIT_PATHS_SIZE));
-	if (!c->paths) goto error;
 	c->npaths = 0;
 	c->cpaths = NVG_INIT_PATHS_SIZE;
 
 	c->verts = static_cast<Vertex*>(std::malloc(sizeof(Vertex)*NVG_INIT_VERTS_SIZE));
-	if (!c->verts) goto error;
 	c->nverts = 0;
 	c->cverts = NVG_INIT_VERTS_SIZE;
 
 	return c;
-error:
-	deletePathCache(c);
-	return nullptr;
 }
-static void setDeviceM_PIxelRatio(Context* ctx, float ratio)
+static void setDevicePixelRatio(Context& ctx, float ratio)
 {
-	ctx->tessTol = 0.25f / ratio;
-	ctx->distTol = 0.01f / ratio;
-	ctx->fringeWidth = 1.0f / ratio;
-	ctx->devicePxRatio = ratio;
+	ctx.tessTol = 0.25f / ratio;
+	ctx.distTol = 0.01f / ratio;
+	ctx.fringeWidth = 1.0f / ratio;
+	ctx.devicePxRatio = ratio;
 }
 static CompositeOperationState compositeOperationState(int op)
 {
@@ -308,7 +307,7 @@ static CompositeOperationState compositeOperationState(int op)
 }
 static State& getState(Context& ctx)
 {
-	return ctx.states[(size_t)ctx.nstates - 1];
+	return ctx.states.back();
 }
 static float hue(float h, float m1, float m2)
 {
@@ -366,47 +365,36 @@ static float distPtSeg(float x, float y, float px, float py, float qx, float qy)
 	dy = py + t*pqy - y;
 	return dx*dx + dy*dy;
 }
-static void appendCommands(Context& ctx, const float* vals, int nvals)
+template<class C>
+requires std::ranges::range<C> && std::same_as<std::ranges::range_value_t<C>, float> 
+static void appendCommands(Context& ctx, C& vals)
 {
-	State& state = getState(ctx);
-	int i;
-
-	if (ctx.ncommands+nvals > ctx.ccommands) {
-		float* commands;
-		int ccommands = ctx.ncommands+nvals + ctx.ccommands/2;
-		commands = static_cast<float*>(std::realloc(ctx.commands, sizeof(float)*ccommands));
-		if (commands == nullptr) return;
-		ctx.commands = commands;
-		ctx.ccommands = ccommands;
+	auto& state = getState(ctx);
+	auto nvals = std::ranges::size(vals);
+	Expects(nvals>0);
+	if (auto front=(int)vals.front(); front != static_cast<int>(PathCommand::Close) && front != static_cast<int>(PathCommand::Winding)) {
+		auto iter=std::rbegin(vals);
+		ctx->commandy = *iter++;
+		ctx->commandx = *iter;
 	}
 
-	if ((int)vals[0] != static_cast<int>(PathCommand::Close) && (int)vals[0] != static_cast<int>(PathCommand::Winding)) {
-		ctx.commandx = vals[nvals-2];
-		ctx.commandy = vals[nvals-1];
-	}
-
-	// transform commands into a local buffer
-	std::array<float, 64> tmpSmall{};
-	float* tmp = (nvals <= (int)tmpSmall.size()) ? tmpSmall.data() : static_cast<float*>(std::malloc((size_t)nvals * sizeof(float)));
-	if (tmp == nullptr) return;
-	std::memcpy(tmp, vals, (size_t)nvals * sizeof(float));
-
-	i = 0;
+	// transform commands
+	size_t i=0;
 	while (i < nvals) {
-		int cmd = (int)tmp[i];
+		int cmd = (int)(vals[i]);
 		switch (cmd) {
 		case static_cast<int>(PathCommand::MoveTo):
-			transformPoint(&tmp[i+1],&tmp[i+2], state.xform.data(), tmp[i+1],tmp[i+2]);
+			transformPoint(&vals[i+1],&vals[i+2], state->xform.data(), vals[i+1],vals[i+2]);
 			i += 3;
 			break;
 		case static_cast<int>(PathCommand::LineTo):
-			transformPoint(&tmp[i+1],&tmp[i+2], state.xform.data(), tmp[i+1],tmp[i+2]);
+			transformPoint(&vals[i+1],&vals[i+2], state->xform.data(), vals[i+1],vals[i+2]);
 			i += 3;
 			break;
 		case static_cast<int>(PathCommand::BezierTo):
-			transformPoint(&tmp[i+1],&tmp[i+2], state.xform.data(), tmp[i+1],tmp[i+2]);
-			transformPoint(&tmp[i+3],&tmp[i+4], state.xform.data(), tmp[i+3],tmp[i+4]);
-			transformPoint(&tmp[i+5],&tmp[i+6], state.xform.data(), tmp[i+5],tmp[i+6]);
+			transformPoint(&vals[i+1],&vals[i+2], state->xform.data(), vals[i+1],vals[i+2]);
+			transformPoint(&vals[i+3],&vals[i+4], state->xform.data(), vals[i+3],vals[i+4]);
+			transformPoint(&vals[i+5],&vals[i+6], state->xform.data(), vals[i+5],vals[i+6]);
 			i += 7;
 			break;
 		case static_cast<int>(PathCommand::Close):
@@ -419,12 +407,9 @@ static void appendCommands(Context& ctx, const float* vals, int nvals)
 			i++;
 		}
 	}
-
-	std::memcpy(&ctx.commands[ctx.ncommands], tmp, (size_t)nvals * sizeof(float));
-	if (tmp != tmpSmall.data()) std::free(tmp);
-
-	ctx.ncommands += nvals;
+	ctx->commands.insert(ctx->commands.end(), vals.begin(), vals.end());
 }
+
 static void clearPathCache(Context& ctx)
 {
 	ctx.cache->npoints = 0;
@@ -565,7 +550,7 @@ static void vset(Vertex* vtx, float x, float y, float u, float v, float s, float
 	vtx->s = s; // Normalized line width [-1, 1]
 	vtx->t = t; // Path length normalized by stroke width
 }
-static void tesselateBezier(Context* ctx,
+static void tesselateBezier(Context& ctx,
 								 float x1, float y1, float x2, float y2,
 								 float x3, float y3, float x4, float y4,
 								 int level, int type)
@@ -589,8 +574,8 @@ static void tesselateBezier(Context* ctx,
 	d2 = absf(((x2 - x4) * dy - (y2 - y4) * dx));
 	d3 = absf(((x3 - x4) * dy - (y3 - y4) * dx));
 
-	if ((d2 + d3)*(d2 + d3) < ctx->tessTol * (dx*dx + dy*dy)) {
-		addPoint(*ctx, x4, y4, type);
+	if ((d2 + d3)*(d2 + d3) < ctx.tessTol * (dx*dx + dy*dy)) {
+		addPoint(ctx, x4, y4, type);
 		return;
 	}
 
@@ -607,9 +592,9 @@ static void tesselateBezier(Context* ctx,
 	tesselateBezier(ctx, x1,y1, x12,y12, x123,y123, x1234,y1234, level+1, 0);
 	tesselateBezier(ctx, x1234,y1234, x234,y234, x34,y34, x4,y4, level+1, type);
 }
-static void flattenPaths(Context* ctx)
+static void flattenPaths(Context& ctx)
 {
-	PathCache* cache = ctx->cache;
+	auto& cache = ctx.cache;
 	// State* state = getState(ctx);
 	Point* last;
 	Point* p0;
@@ -627,36 +612,36 @@ static void flattenPaths(Context* ctx)
 
 	// Flatten
 	i = 0;
-	while (i < ctx->ncommands) {
-		int cmd = (int)ctx->commands[i];
+	while (i < ctx.commands.size()) {
+		int cmd = (int)ctx.commands[i];
 		switch (cmd) {
 		case static_cast<int>(PathCommand::MoveTo):
-			addPath(*ctx);
-			p = &ctx->commands[i+1];
-			addPoint(*ctx, p[0], p[1], static_cast<int>(PointFlags::Corner));
+			addPath(ctx);
+			p = &ctx.commands[i+1];
+			addPoint(ctx, p[0], p[1], static_cast<int>(PointFlags::Corner));
 			i += 3;
 			break;
 		case static_cast<int>(PathCommand::LineTo):
-			p = &ctx->commands[i+1];
-			addPoint(*ctx, p[0], p[1], static_cast<int>(PointFlags::Corner));
+			p = &ctx.commands[i+1];
+			addPoint(ctx, p[0], p[1], static_cast<int>(PointFlags::Corner));
 			i += 3;
 			break;
 		case static_cast<int>(PathCommand::BezierTo):
-			last = lastPoint(*ctx);
+			last = lastPoint(ctx);
 			if (last != NULL) {
-				cp1 = &ctx->commands[i+1];
-				cp2 = &ctx->commands[i+3];
-				p = &ctx->commands[i+5];
+				cp1 = &ctx.commands[i+1];
+				cp2 = &ctx.commands[i+3];
+				p = &ctx.commands[i+5];
 				tesselateBezier(ctx, last->x,last->y, cp1[0],cp1[1], cp2[0],cp2[1], p[0],p[1], 0, static_cast<int>(PointFlags::Corner));
 			}
 			i += 7;
 			break;
 		case static_cast<int>(PathCommand::Close):
-			detail::closePath(*ctx);
+			detail::closePath(ctx);
 			i++;
 			break;
 		case static_cast<int>(PathCommand::Winding):
-			detail::pathWinding(*ctx, (int)ctx->commands[i+1]);
+			detail::pathWinding(ctx, (int)ctx.commands[i+1]);
 			i += 2;
 			break;
 		default:
@@ -675,7 +660,7 @@ static void flattenPaths(Context* ctx)
 		// If the first and last points are the same, remove the last, mark as closed path.
 		p0 = &pts[path->count-1];
 		p1 = &pts[0];
-		if (ptEquals(p0->x,p0->y, p1->x,p1->y, ctx->distTol)) {
+		if (ptEquals(p0->x,p0->y, p1->x,p1->y, ctx.distTol)) {
 			path->count--;
 			p0 = &pts[path->count-1];
 			path->closed = 1;
@@ -699,7 +684,7 @@ static void flattenPaths(Context* ctx)
 			// Calculate segment direction and length
 			p0->dx = p1->x - p0->x;
 			p0->dy = p1->y - p0->y;
-			p0->len = normalize(&p0->dx, &p0->dy);
+			p0->len = normalize(p0->dx, p0->dy);
 			// Update bounds
 			cache->bounds[0] = minf(cache->bounds[0], p0->x);
 			cache->bounds[1] = minf(cache->bounds[1], p0->y);
@@ -939,9 +924,9 @@ static Vertex* roundCapEnd(Vertex* dst, Point* p,
 	}
 	return dst;
 }
-static void calculateJoins(Context* ctx, float w, int lineJoin, float miterLimit)
+static void calculateJoins(Context& ctx, float w, int lineJoin, float miterLimit)
 {
-	PathCache* cache = ctx->cache;
+	auto& cache = ctx.cache;
 	int i, j;
 	float iw = 0.0f;
 
@@ -1007,16 +992,16 @@ static void calculateJoins(Context* ctx, float w, int lineJoin, float miterLimit
 		path->convex = (nleft == path->count) ? 1 : 0;
 	}
 }
-static int expandStroke(Context* ctx, float w, float fringe, int lineCap, int lineJoin, int lineStyle, float miterLimit)
+static int expandStroke(Context& ctx, float w, float fringe, int lineCap, int lineJoin, int lineStyle, float miterLimit)
 {
-	PathCache* cache = ctx->cache;
+	auto& cache = ctx.cache;
 	Vertex* verts;
 	Vertex* dst;
 	int cverts, i, j;
 	float t;
 	float aa = fringe;//ctx->fringeWidth;
 	float u0 = 0.0f, u1 = 1.0f;
-	int ncap = curveDivs(w, (float)M_PI, ctx->tessTol);	// Calculate divisions per half circle.
+	int ncap = curveDivs(w, (float)M_PI, ctx.tessTol);	// Calculate divisions per half circle.
 
 	w += aa * 0.5f;
 	const float invStrokeWidth = 1.0f / w;
@@ -1051,7 +1036,7 @@ static int expandStroke(Context* ctx, float w, float fringe, int lineCap, int li
 		}
 	}
 
-	verts = allocTempVerts(*ctx, cverts);
+	verts = allocTempVerts(ctx, cverts);
 	if (verts == NULL) return 0;
 
 	for (i = 0; i < cache->npaths; i++) {
@@ -1092,7 +1077,7 @@ static int expandStroke(Context* ctx, float w, float fringe, int lineCap, int li
 			for (j = s; j < path->count; ++j) {
 				dx = p1->x - p0->x;
 				dy = p1->y - p0->y;
-				t+=normalize(&dx, &dy) * invStrokeWidth;
+				t+=normalize(dx, dy) * invStrokeWidth;
 				p0 = p1++;
 			}
 			if (loop) {
@@ -1110,7 +1095,7 @@ static int expandStroke(Context* ctx, float w, float fringe, int lineCap, int li
 			// Add cap
 			dx = p1->x - p0->x;
 			dy = p1->y - p0->y;
-			normalize(&dx, &dy);
+			normalize(dx, dy);
 			if (lineCap == static_cast<int>(LineCap::Butt))
 				dst = buttCapStart(dst, p0, dx, dy, w, -aa*0.5f, aa, u0, u1, t, dir);
 			else if (lineCap == static_cast<int>(LineCap::Butt) || lineCap == static_cast<int>(LineCap::Square))
@@ -1122,7 +1107,7 @@ static int expandStroke(Context* ctx, float w, float fringe, int lineCap, int li
 			if(lineStyle > 1){
 				dx = p1->x - p0->x;
 				dy = p1->y - p0->y;
-				float dt=normalize(&dx, &dy);
+				float dt=normalize(dx, dy);
 				dst = insertSpacer(dst, p0, dx, dy, w, u0, u1, t);
 				t+=dir*dt*invStrokeWidth;
 				dst = insertSpacer(dst, p1, dx, dy, w, u0, u1, t);
@@ -1147,7 +1132,7 @@ static int expandStroke(Context* ctx, float w, float fringe, int lineCap, int li
 		} else {
 			dx = p1->x - p0->x;
 			dy = p1->y - p0->y;
-			float dt = normalize(&dx, &dy);
+			float dt = normalize(dx, dy);
 			if(lineStyle > 1){
 				dst = insertSpacer(dst, p0, dx, dy, w, u0, u1, t);
 				t+=dir*dt*invStrokeWidth;
@@ -1167,13 +1152,13 @@ static int expandStroke(Context* ctx, float w, float fringe, int lineCap, int li
 
 	return 1;
 }
-static int expandFill(Context* ctx, float w, int lineJoin, float miterLimit)
+static int expandFill(Context& ctx, float w, int lineJoin, float miterLimit)
 {
-	PathCache* cache = ctx->cache;
+	auto& cache = ctx.cache;
 	Vertex* verts;
 	Vertex* dst;
 	int cverts, convex, i, j;
-	float aa = ctx->fringeWidth;
+	float aa = ctx.fringeWidth;
 	int fringe = w > 0.0f;
 
 	calculateJoins(ctx, w, lineJoin, miterLimit);
@@ -1187,7 +1172,7 @@ static int expandFill(Context* ctx, float w, int lineJoin, float miterLimit)
 			cverts += (path->count + path->nbevel*5 + 1) * 2; // plus one for loop
 	}
 
-	verts = allocTempVerts(*ctx, cverts);
+	verts = allocTempVerts(ctx, cverts);
 	if (verts == NULL) return 0;
 
 	convex = cache->npaths == 1 && cache->paths[0].convex;
@@ -1264,7 +1249,7 @@ static int expandFill(Context* ctx, float w, int lineJoin, float miterLimit)
 
 			for (j = 0; j < path->count; ++j) {
 				if ((p1->flags & (PointFlags::Bevel | PointFlags::InnerBevel)) != 0) {
-					dst = bevelJoin(dst, p0, p1, lw, rw, lu, ru, ctx->fringeWidth, 0);
+					dst = bevelJoin(dst, p0, p1, lw, rw, lu, ru, ctx.fringeWidth, 0);
 				} else {
 					vset(dst, p1->x + (p1->dmx * lw), p1->y + (p1->dmy * lw), lu,1,0, 0); dst++;
 					vset(dst, p1->x - (p1->dmx * rw), p1->y - (p1->dmy * rw), ru,1,0, 0); dst++;
@@ -1360,32 +1345,25 @@ static int isTransformFlipped(const float *xform)
 
 } // namespace detail
 
-Context* createInternal(Params* params)
+std::shared_ptr<Context> createInternal(Params* params)
 {
 	FONSparams fontParams;
-	Context* ctx = static_cast<Context*>(std::malloc(sizeof(Context)));
+	auto ctx = std::make_shared<Context>();
 	int i;
-	if (ctx == nullptr) goto error;
-	std::memset(ctx, 0, sizeof(Context));
-
 	ctx->params = *params;
 	for (i = 0; i < NVG_MAX_FONTIMAGES; i++)
 		ctx->fontImages[i] = 0;
 
-	ctx->commands = static_cast<float*>(std::malloc(sizeof(float)*NVG_INIT_COMMANDS_SIZE));
-	if (!ctx->commands) goto error;
-	ctx->ncommands = 0;
-	ctx->ccommands = NVG_INIT_COMMANDS_SIZE;
-
+	ctx->commands.clear();
 	ctx->cache = detail::allocPathCache();
-	if (ctx->cache == nullptr) goto error;
 
-	save(ctx);
-	reset(ctx);
+	save(*ctx);
+	reset(*ctx);
 
-	detail::setDeviceM_PIxelRatio(ctx, 1.0f);
+	detail::setDevicePixelRatio(*ctx, 1.0f);
 
-	if (ctx->params.renderCreate(ctx->params.userPtr) == 0) goto error;
+	if (ctx->params.renderCreate(ctx->params.userPtr) == 0)
+		throw std::runtime_error("Could not init render context.");
 
 	// Init font rendering
 	std::memset(&fontParams, 0, sizeof(fontParams));
@@ -1398,18 +1376,14 @@ Context* createInternal(Params* params)
 	fontParams.renderDelete = nullptr;
 	fontParams.userPtr = nullptr;
 	ctx->fs = fonsCreateInternal(&fontParams);
-	if (ctx->fs == nullptr) goto error;
+	if (ctx->fs == nullptr) throw std::runtime_error("Could not create font context");
 
 	// Create font texture
 	ctx->fontImages[0] = ctx->params.renderCreateTexture(ctx->params.userPtr, static_cast<int>(Texture::Alpha), fontParams.width, fontParams.height, 0, nullptr);
-	if (ctx->fontImages[0] == 0) goto error;
+	if (ctx->fontImages[0] == 0) throw std::runtime_error("Could not create font texture");
 	ctx->fontImageIdx = 0;
 	ctx->scissor = ScissorBounds{0.0f, 0.0f, -1.0f, -1.0f};
 	return ctx;
-
-error:
-	deleteInternal(ctx);
-	return nullptr;
 }
 
 int getImageTextureId(Context* ctx, int handle)
@@ -1426,11 +1400,13 @@ ScissorBounds currentScissor(Context* ctx) {
 	return ctx->scissor;
 }
 
-void deleteInternal(Context* ctx)
+void deleteInternal(const std::shared_ptr<Context>& ctx)
 {
 	int i;
-	if (ctx == nullptr) return;
-	if (ctx->commands != nullptr) std::free(ctx->commands);
+	if(!ctx)
+		return
+
+	ctx->commands.clear();
 	if (ctx->cache != nullptr) detail::deletePathCache(ctx->cache);
 
 	if (ctx->fs)
@@ -1438,7 +1414,7 @@ void deleteInternal(Context* ctx)
 
 	for (i = 0; i < NVG_MAX_FONTIMAGES; i++) {
 		if (ctx->fontImages[i] != 0) {
-			deleteImage(ctx, ctx->fontImages[i]);
+			deleteImage(*ctx, ctx->fontImages[i]);
 			ctx->fontImages[i] = 0;
 		}
 	}
@@ -1446,27 +1422,26 @@ void deleteInternal(Context* ctx)
 	if (ctx->params.renderDelete != nullptr)
 		ctx->params.renderDelete(ctx->params.userPtr);
 
-	std::free(ctx);
 }
 
-void beginFrame(Context* ctx, float windowWidth, float windowHeight, float deviceM_PIxelRatio)
+void beginFrame(Context& ctx, float windowWidth, float windowHeight, float deviceM_PIxelRatio)
 {
 /*	printf("Tris: draws:%d  fill:%d  stroke:%d  text:%d  TOT:%d\n",
 		ctx->drawCallCount, ctx->fillTriCount, ctx->strokeTriCount, ctx->textTriCount,
 		ctx->fillTriCount+ctx->strokeTriCount+ctx->textTriCount);*/
 
-	ctx->nstates = 0;
+	ctx.states.clear();
 	save(ctx);
 	reset(ctx);
 
-	detail::setDeviceM_PIxelRatio(ctx, deviceM_PIxelRatio);
+	detail::setDevicePixelRatio(ctx, deviceM_PIxelRatio);
 
-	ctx->params.renderViewport(ctx->params.userPtr, windowWidth, windowHeight, deviceM_PIxelRatio);
+	ctx.params.renderViewport(ctx.params.userPtr, windowWidth, windowHeight, deviceM_PIxelRatio);
 
-	ctx->drawCallCount = 0;
-	ctx->fillTriCount = 0;
-	ctx->strokeTriCount = 0;
-	ctx->textTriCount = 0;
+	ctx.drawCallCount = 0;
+	ctx.fillTriCount = 0;
+	ctx.strokeTriCount = 0;
+	ctx.textTriCount = 0;
 }
 
 void cancelFrame(Context* ctx)
@@ -1474,33 +1449,33 @@ void cancelFrame(Context* ctx)
 	ctx->params.renderCancel(ctx->params.userPtr);
 }
 
-void endFrame(Context* ctx)
+void endFrame(Context& ctx)
 {
-	ctx->params.renderFlush(ctx->params.userPtr);
-	if (ctx->fontImageIdx != 0) {
-		int fontImage = ctx->fontImages[ctx->fontImageIdx];
-		ctx->fontImages[ctx->fontImageIdx] = 0;
+	ctx.params.renderFlush(ctx.params.userPtr);
+	if (ctx.fontImageIdx != 0) {
+		int fontImage = ctx.fontImages[ctx.fontImageIdx];
+		ctx.fontImages[ctx.fontImageIdx] = 0;
 		int i, j, iw, ih;
 		// delete images that smaller than current one
 		if (fontImage == 0)
 			return;
 		imageSize(ctx, fontImage, &iw, &ih);
-		for (i = j = 0; i < ctx->fontImageIdx; i++) {
-			if (ctx->fontImages[i] != 0) {
+		for (i = j = 0; i < ctx.fontImageIdx; i++) {
+			if (ctx.fontImages[i] != 0) {
 				int nw, nh;
-				int image = ctx->fontImages[i];
-				ctx->fontImages[i] = 0;
+				int image = ctx.fontImages[i];
+				ctx.fontImages[i] = 0;
 				imageSize(ctx, image, &nw, &nh);
 				if (nw < iw || nh < ih)
 					deleteImage(ctx, image);
 				else
-					ctx->fontImages[j++] = image;
+					ctx.fontImages[j++] = image;
 			}
 		}
 		// make current font image to first
-		ctx->fontImages[j] = ctx->fontImages[0];
-		ctx->fontImages[0] = fontImage;
-		ctx->fontImageIdx = 0;
+		ctx.fontImages[j] = ctx.fontImages[0];
+		ctx.fontImages[0] = fontImage;
+		ctx.fontImageIdx = 0;
 	}
 }
 
@@ -1687,25 +1662,22 @@ float radToDeg(float rad)
 
 
 // State handling
-void save(Context* ctx)
+void save(Context& ctx)
 {
-	if (ctx->nstates >= NVG_MAX_STATES)
-		return;
-	if (ctx->nstates > 0)
-		memcpy(&ctx->states[ctx->nstates], &ctx->states[ctx->nstates-1], sizeof(State));
-	ctx->nstates++;
+	ctx.states.push_back({});
 }
 
-void restore(Context* ctx)
+void restore(Context& ctx)
 {
-	if (ctx->nstates <= 1)
+	if(ctx.states.size()<=1)
 		return;
-	ctx->nstates--;
+
+	ctx.states.pop_back();
 }
 
-void reset(Context* ctx)
+void reset(Context& ctx)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(ctx);
 	std::memset(&state, 0, sizeof(state));
 
 	detail::setPaintColor(&state.fill, rgba(255,255,255,255));
@@ -1929,9 +1901,9 @@ void imageSize(Context* ctx, int image, int* w, int* h)
 	ctx->params.renderGetTextureSize(ctx->params.userPtr, image, w, h);
 }
 
-void deleteImage(Context* ctx, int image)
+void deleteImage(Context& ctx, int image)
 {
-	ctx->params.renderDeleteTexture(ctx->params.userPtr, image);
+	ctx.params.renderDeleteTexture(ctx.params.userPtr, image);
 }
 
 Paint linearGradient(Context* ctx,
