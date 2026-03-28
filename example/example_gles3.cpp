@@ -57,7 +57,6 @@ int main()
 	GLFWwindow* window;
 	DemoData data;
 	std::shared_ptr<nvg::Context> vgOwner;
-	nvg::Context* vg = nullptr;
 	PerfGraph fps;
 	double prevt = 0;
 
@@ -86,11 +85,11 @@ int main()
 	glfwMakeContextCurrent(window);
 
 	vgOwner = nvg::createGLES3(static_cast<int>(nvg::CreateFlags::Antialias | nvg::CreateFlags::StencilStrokes | nvg::CreateFlags::Debug));
-	vg = vgOwner.get();
-	if (!vg) {
+	if (!vgOwner) {
 		printf("Could not init nanovg.\n");
 		return -1;
 	}
+	nvg::Context& vg = *vgOwner;
 
 	if (loadDemoData(vg, &data) == -1)
 		return -1;

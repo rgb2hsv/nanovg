@@ -30,7 +30,7 @@ typedef struct GlUtilsFramebuffer GlUtilsFramebuffer;
 
 // Helper function to create GL frame buffer to render to.
 void nvgluBindFramebuffer(GlUtilsFramebuffer* fb);
-GlUtilsFramebuffer* nvgluCreateFramebuffer(nvg::Context* ctx, int w, int h, int imageFlags);
+GlUtilsFramebuffer* nvgluCreateFramebuffer(nvg::Context& ctx, int w, int h, int imageFlags);
 void nvgluDeleteFramebuffer(GlUtilsFramebuffer* fb);
 
 #ifdef NANOVG_GL_IMPLEMENTATION
@@ -51,7 +51,7 @@ void nvgluDeleteFramebuffer(GlUtilsFramebuffer* fb);
 
 static GLint defaultFBO = -1;
 
-GlUtilsFramebuffer* nvgluCreateFramebuffer(nvg::Context* ctx, int w, int h, int imageFlags)
+GlUtilsFramebuffer* nvgluCreateFramebuffer(nvg::Context& ctx, int w, int h, int imageFlags)
 {
 #ifdef NANOVG_FBO_VALID
 	GLint defaultFBO;
@@ -76,7 +76,7 @@ GlUtilsFramebuffer* nvgluCreateFramebuffer(nvg::Context* ctx, int w, int h, int 
 	fb->texture = nvg::nvglImageHandleGLES3(ctx, fb->image);
 #endif
 
-	fb->ctx = ctx;
+	fb->ctx = &ctx;
 
 	// frame buffer object
 	glGenFramebuffers(1, &fb->fbo);
@@ -139,8 +139,8 @@ void nvgluDeleteFramebuffer(GlUtilsFramebuffer* fb)
 		glDeleteFramebuffers(1, &fb->fbo);
 	if (fb->rbo != 0)
 		glDeleteRenderbuffers(1, &fb->rbo);
-	if (fb->image >= 0)
-		nvg::deleteImage(fb->ctx, fb->image);
+	if (fb->image >= 0 && fb->ctx != nullptr)
+		nvg::deleteImage(*fb->ctx, fb->image);
 	fb->ctx = NULL;
 	fb->fbo = 0;
 	fb->rbo = 0;

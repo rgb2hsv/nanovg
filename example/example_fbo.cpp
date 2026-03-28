@@ -32,7 +32,7 @@
 #include "nanovg_gl_utils.hpp"
 #include "perf.h"
 
-void renderPattern(nvg::Context* vg, GlUtilsFramebuffer* fb, float t, float pxRatio)
+void renderPattern(nvg::Context& vg, GlUtilsFramebuffer* fb, float t, float pxRatio)
 {
 	int winWidth, winHeight;
 	int fboWidth, fboHeight;
@@ -72,7 +72,7 @@ void renderPattern(nvg::Context* vg, GlUtilsFramebuffer* fb, float t, float pxRa
 	nvgluBindFramebuffer(NULL);
 }
 
-int loadFonts(nvg::Context* vg)
+int loadFonts(nvg::Context& vg)
 {
 	int font;
 	font = nvg::createFont(vg, "sans", "../example/Roboto-Regular.ttf");
@@ -105,7 +105,6 @@ int main()
 {
 	GLFWwindow* window;
 	std::shared_ptr<nvg::Context> vgOwner;
-	nvg::Context* vg = nullptr;
 	GPUtimer gpuTimer;
 	PerfGraph fps, cpuGraph, gpuGraph;
 	double prevt = 0, cpuTime = 0;
@@ -160,11 +159,11 @@ int main()
 #else
 	vgOwner = nvg::createGL3(static_cast<int>(nvg::CreateFlags::Antialias | nvg::CreateFlags::StencilStrokes | nvg::CreateFlags::Debug));
 #endif
-	vg = vgOwner.get();
-	if (!vg) {
+	if (!vgOwner) {
 		printf("Could not init nanovg.\n");
 		return -1;
 	}
+	nvg::Context& vg = *vgOwner;
 
 	// Create hi-dpi FBO for hi-dpi screens.
 	glfwGetWindowSize(window, &winWidth, &winHeight);

@@ -64,7 +64,6 @@ int main(int argc, char** argv)
 	GLFWwindow* window;
 	DemoData data;
 	std::shared_ptr<nvg::Context> vgOwner;
-	nvg::Context* vg = nullptr;
 	GPUtimer gpuTimer;
 	PerfGraph fps, cpuGraph, gpuGraph;
 	double prevt = 0, cpuTime = 0;
@@ -144,11 +143,11 @@ int main(int argc, char** argv)
 #else
 	vgOwner = nvg::createGL3(static_cast<int>(nvg::CreateFlags::Antialias | nvg::CreateFlags::StencilStrokes | nvg::CreateFlags::Debug));
 #endif
-	vg = vgOwner.get();
-	if (!vg) {
+	if (!vgOwner) {
 		printf("Could not init nanovg.\n");
 		return -1;
 	}
+	nvg::Context& vg = *vgOwner;
 
 	if (loadDemoData(vg, &data) == -1) {
 		printf("Could not load demo data.\n");

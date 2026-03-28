@@ -559,8 +559,8 @@ static void tesselateBezier(Context& ctx,
 		return;
 	}
 
-/*	if (absf(x1+x3-x2-x2) + absf(y1+y3-y2-y2) + absf(x2+x4-x3-x3) + absf(y2+y4-y3-y3) < ctx->tessTol) {
-		addPoint(*ctx, x4, y4, type);
+/*	if (absf(x1+x3-x2-x2) + absf(y1+y3-y2-y2) + absf(x2+x4-x3-x3) + absf(y2+y4-y3-y3) < ctx.tessTol) {
+		addPoint(ctx, x4, y4, type);
 		return;
 	}*/
 
@@ -971,7 +971,7 @@ static int expandStroke(Context& ctx, float w, float fringe, int lineCap, int li
 	std::vector<Vertex>& buf = ctx.cache->verts;
 	int cverts, i, j;
 	float t;
-	float aa = fringe;//ctx->fringeWidth;
+	float aa = fringe;//ctx.fringeWidth;
 	float u0 = 0.0f, u1 = 1.0f;
 	int ncap = curveDivs(w, (float)M_PI, ctx.tessTol);	// Calculate divisions per half circle.
 
@@ -1244,63 +1244,63 @@ static float getFontScale(State* state)
 {
 	return minf(quantize(getAverageScale(state->xform.data()), 0.01f), 4.0f);
 }
-static void flushTextTexture(Context* ctx)
+static void flushTextTexture(Context& ctx)
 {
 	std::array<int, 4> dirty{};
 
-	if (fonsValidateTexture(ctx->fs, dirty.data())) {
-		int fontImage = ctx->fontImages[ctx->fontImageIdx];
+	if (fonsValidateTexture(ctx.fs, dirty.data())) {
+		int fontImage = ctx.fontImages[ctx.fontImageIdx];
 		// Update texture
 		if (fontImage != 0) {
 			int iw, ih;
-			const unsigned char* data = fonsGetTextureData(ctx->fs, &iw, &ih);
+			const unsigned char* data = fonsGetTextureData(ctx.fs, &iw, &ih);
 			int x = dirty[0];
 			int y = dirty[1];
 			int w = dirty[2] - dirty[0];
 			int h = dirty[3] - dirty[1];
-			ctx->params.renderUpdateTexture(ctx->params.userPtr, fontImage, x,y, w,h, data);
+			ctx.params.renderUpdateTexture(ctx.params.userPtr, fontImage, x,y, w,h, data);
 		}
 	}
 }
-static int allocTextAtlas(Context* ctx)
+static int allocTextAtlas(Context& ctx)
 {
 	int iw, ih;
 	flushTextTexture(ctx);
-	if (ctx->fontImageIdx >= NVG_MAX_FONTIMAGES-1)
+	if (ctx.fontImageIdx >= NVG_MAX_FONTIMAGES-1)
 		return 0;
 	// if next fontImage already have a texture
-	if (ctx->fontImages[ctx->fontImageIdx+1] != 0)
-		imageSize(*ctx, ctx->fontImages[ctx->fontImageIdx+1], iw, ih);
+	if (ctx.fontImages[ctx.fontImageIdx+1] != 0)
+		imageSize(ctx, ctx.fontImages[ctx.fontImageIdx+1], iw, ih);
 	else { // calculate the new font image size and create it.
-		imageSize(*ctx, ctx->fontImages[ctx->fontImageIdx], iw, ih);
+		imageSize(ctx, ctx.fontImages[ctx.fontImageIdx], iw, ih);
 		if (iw > ih)
 			ih *= 2;
 		else
 			iw *= 2;
 		if (iw > NVG_MAX_FONTIMAGE_SIZE || ih > NVG_MAX_FONTIMAGE_SIZE)
 			iw = ih = NVG_MAX_FONTIMAGE_SIZE;
-		ctx->fontImages[ctx->fontImageIdx+1] = ctx->params.renderCreateTexture(ctx->params.userPtr, static_cast<int>(Texture::Alpha), iw, ih, 0, NULL);
+		ctx.fontImages[ctx.fontImageIdx+1] = ctx.params.renderCreateTexture(ctx.params.userPtr, static_cast<int>(Texture::Alpha), iw, ih, 0, NULL);
 	}
-	++ctx->fontImageIdx;
-	fonsResetAtlas(ctx->fs, iw, ih);
+	++ctx.fontImageIdx;
+	fonsResetAtlas(ctx.fs, iw, ih);
 	return 1;
 }
-static void renderText(Context* ctx, Vertex* verts, int nverts)
+static void renderText(Context& ctx, Vertex* verts, int nverts)
 {
-	State& state = getState(*ctx);
+	State& state = getState(ctx);
 	Paint paint = state.fill;
 
 	// Render triangles.
-	paint.image = ctx->fontImages[ctx->fontImageIdx];
+	paint.image = ctx.fontImages[ctx.fontImageIdx];
 
 	// Apply global alpha
 	paint.innerColor.a *= state.alpha;
 	paint.outerColor.a *= state.alpha;
 
-	ctx->params.renderTriangles(ctx->params.userPtr, &paint, state.compositeOperation, &state.scissor, verts, nverts, ctx->fringeWidth);
+	ctx.params.renderTriangles(ctx.params.userPtr, &paint, state.compositeOperation, &state.scissor, verts, nverts, ctx.fringeWidth);
 
-	ctx->drawCallCount++;
-	ctx->textTriCount += nverts/3;
+	ctx.drawCallCount++;
+	ctx.textTriCount += nverts/3;
 }
 static int isTransformFlipped(const float *xform)
 {
@@ -1313,21 +1313,21 @@ static int isTransformFlipped(const float *xform)
 std::shared_ptr<Context> createInternal(Params* params)
 {
 	FONSparams fontParams;
-	auto ctx = std::make_shared<Context>();
+	auto sp = std::make_shared<Context>();
 	int i;
-	ctx->params = *params;
+	sp->params = *params;
 	for (i = 0; i < NVG_MAX_FONTIMAGES; i++)
-		ctx->fontImages[i] = 0;
+		sp->fontImages[i] = 0;
 
-	ctx->commands.clear();
-	ctx->cache = detail::allocPathCache();
+	sp->commands.clear();
+	sp->cache = detail::allocPathCache();
 
-	save(*ctx);
-	reset(*ctx);
+	save(*sp);
+	reset(*sp);
 
-	detail::setDevicePixelRatio(*ctx, 1.0f);
+	detail::setDevicePixelRatio(*sp, 1.0f);
 
-	if (ctx->params.renderCreate(ctx->params.userPtr) == 0)
+	if (sp->params.renderCreate(sp->params.userPtr) == 0)
 		throw std::runtime_error("Could not init render context.");
 
 	// Init font rendering
@@ -1340,60 +1340,60 @@ std::shared_ptr<Context> createInternal(Params* params)
 	fontParams.renderDraw = nullptr;
 	fontParams.renderDelete = nullptr;
 	fontParams.userPtr = nullptr;
-	ctx->fs = fonsCreateInternal(&fontParams);
-	if (ctx->fs == nullptr) throw std::runtime_error("Could not create font context");
+	sp->fs = fonsCreateInternal(&fontParams);
+	if (sp->fs == nullptr) throw std::runtime_error("Could not create font context");
 
 	// Create font texture
-	ctx->fontImages[0] = ctx->params.renderCreateTexture(ctx->params.userPtr, static_cast<int>(Texture::Alpha), fontParams.width, fontParams.height, 0, nullptr);
-	if (ctx->fontImages[0] == 0) throw std::runtime_error("Could not create font texture");
-	ctx->fontImageIdx = 0;
-	ctx->scissor = ScissorBounds{0.0f, 0.0f, -1.0f, -1.0f};
-	return ctx;
+	sp->fontImages[0] = sp->params.renderCreateTexture(sp->params.userPtr, static_cast<int>(Texture::Alpha), fontParams.width, fontParams.height, 0, nullptr);
+	if (sp->fontImages[0] == 0) throw std::runtime_error("Could not create font texture");
+	sp->fontImageIdx = 0;
+	sp->scissor = ScissorBounds{0.0f, 0.0f, -1.0f, -1.0f};
+	return sp;
 }
 
-int getImageTextureId(Context* ctx, int handle)
+int getImageTextureId(Context& ctx, int handle)
 {
-	return ctx->params.renderGetImageTextureId(ctx->params.userPtr, handle);
+	return ctx.params.renderGetImageTextureId(ctx.params.userPtr, handle);
 }
 
-Params* internalParams(Context* ctx)
+Params* internalParams(Context& ctx)
 {
-    return &ctx->params;
+    return &ctx.params;
 }
 
-ScissorBounds currentScissor(Context* ctx) {
-	return ctx->scissor;
+ScissorBounds currentScissor(Context& ctx) {
+	return ctx.scissor;
 }
 
-void deleteInternal(const std::shared_ptr<Context>& ctx)
+void deleteInternal(const std::shared_ptr<Context>& sp)
 {
 	int i;
-	if (!ctx)
+	if (!sp)
 		return;
 
-	ctx->commands.clear();
-	if (ctx->cache != nullptr) detail::deletePathCache(ctx->cache);
+	sp->commands.clear();
+	if (sp->cache != nullptr) detail::deletePathCache(sp->cache);
 
-	if (ctx->fs)
-		fonsDeleteInternal(ctx->fs);
+	if (sp->fs)
+		fonsDeleteInternal(sp->fs);
 
 	for (i = 0; i < NVG_MAX_FONTIMAGES; i++) {
-		if (ctx->fontImages[i] != 0) {
-			deleteImage(*ctx, ctx->fontImages[i]);
-			ctx->fontImages[i] = 0;
+		if (sp->fontImages[i] != 0) {
+			deleteImage(*sp, sp->fontImages[i]);
+			sp->fontImages[i] = 0;
 		}
 	}
 
-	if (ctx->params.renderDelete != nullptr)
-		ctx->params.renderDelete(ctx->params.userPtr);
+	if (sp->params.renderDelete != nullptr)
+		sp->params.renderDelete(sp->params.userPtr);
 
 }
 
 void beginFrame(Context& ctx, float windowWidth, float windowHeight, float devicePixelRatio)
 {
 /*	printf("Tris: draws:%d  fill:%d  stroke:%d  text:%d  TOT:%d\n",
-		ctx->drawCallCount, ctx->fillTriCount, ctx->strokeTriCount, ctx->textTriCount,
-		ctx->fillTriCount+ctx->strokeTriCount+ctx->textTriCount);*/
+		ctx.drawCallCount, ctx.fillTriCount, ctx.strokeTriCount, ctx.textTriCount,
+		ctx.fillTriCount+ctx.strokeTriCount+ctx.textTriCount);*/
 
 	ctx.states.clear();
 	save(ctx);
@@ -1409,9 +1409,9 @@ void beginFrame(Context& ctx, float windowWidth, float windowHeight, float devic
 	ctx.textTriCount = 0;
 }
 
-void cancelFrame(Context* ctx)
+void cancelFrame(Context& ctx)
 {
-	ctx->params.renderCancel(ctx->params.userPtr);
+	ctx.params.renderCancel(ctx.params.userPtr);
 }
 
 void endFrame(Context& ctx)
@@ -1673,154 +1673,154 @@ void reset(Context& ctx)
 }
 
 // State setting
-void shapeAntiAlias(Context* ctx, int enabled)
+void shapeAntiAlias(Context& ctx, int enabled)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(ctx);
 	state.shapeAntiAlias = enabled;
 }
 
-void strokeWidth(Context* ctx, float width)
+void strokeWidth(Context& ctx, float width)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(ctx);
 	state.strokeWidth = width;
 }
 
-float getStrokeWidth(Context* ctx) {
-	State& state = detail::getState(*ctx);
+float getStrokeWidth(Context& ctx) {
+	State& state = detail::getState(ctx);
 	return state.strokeWidth;
 }
 
-int getTextAlign(Context* ctx) {
-	State& state = detail::getState(*ctx);
+int getTextAlign(Context& ctx) {
+	State& state = detail::getState(ctx);
 	return state.textAlign;
 }
 
-float getFontSize(Context* ctx) {
-	State& state = detail::getState(*ctx);
+float getFontSize(Context& ctx) {
+	State& state = detail::getState(ctx);
 	return state.fontSize;
 }
-int getFontFaceId(Context* ctx) {
-	State& state = detail::getState(*ctx);
+int getFontFaceId(Context& ctx) {
+	State& state = detail::getState(ctx);
 	return state.fontId;
 }
 
-void miterLimit(Context* ctx, float limit)
+void miterLimit(Context& ctx, float limit)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(ctx);
 	state.miterLimit = limit;
 }
 
-void lineStyle(Context* ctx, int lineStyle) {
-	State& state = detail::getState(*ctx);
+void lineStyle(Context& ctx, int lineStyle) {
+	State& state = detail::getState(ctx);
 	state.lineStyle = lineStyle;
 }
 
-void lineCap(Context* ctx, int cap)
+void lineCap(Context& ctx, int cap)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(ctx);
 	state.lineCap = cap;
 }
 
-void lineJoin(Context* ctx, int join)
+void lineJoin(Context& ctx, int join)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(ctx);
 	state.lineJoin = join;
 }
 
-void globalAlpha(Context* ctx, float alpha)
+void globalAlpha(Context& ctx, float alpha)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(ctx);
 	state.alpha = alpha;
 }
 
-void transform(Context* ctx, float a, float b, float c, float d, float e, float f)
+void transform(Context& ctx, float a, float b, float c, float d, float e, float f)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(ctx);
 	const std::array<float, 6> t = { a, b, c, d, e, f };
 	transformPremultiply(state.xform.data(), t.data());
 }
 
-void resetTransform(Context* ctx)
+void resetTransform(Context& ctx)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(ctx);
 	transformIdentity(state.xform.data());
 }
 
-void translate(Context* ctx, float x, float y)
+void translate(Context& ctx, float x, float y)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(ctx);
 	std::array<float, 6> t{};
 	transformTranslate(t.data(), x,y);
 	transformPremultiply(state.xform.data(), t.data());
 }
 
-void rotate(Context* ctx, float angle)
+void rotate(Context& ctx, float angle)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(ctx);
 	std::array<float, 6> t{};
 	transformRotate(t.data(), angle);
 	transformPremultiply(state.xform.data(), t.data());
 }
 
-void skewX(Context* ctx, float angle)
+void skewX(Context& ctx, float angle)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(ctx);
 	std::array<float, 6> t{};
 	transformSkewX(t.data(), angle);
 	transformPremultiply(state.xform.data(), t.data());
 }
 
-void skewY(Context* ctx, float angle)
+void skewY(Context& ctx, float angle)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(ctx);
 	std::array<float, 6> t{};
 	transformSkewY(t.data(), angle);
 	transformPremultiply(state.xform.data(), t.data());
 }
 
-void scale(Context* ctx, float x, float y)
+void scale(Context& ctx, float x, float y)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(ctx);
 	std::array<float, 6> t{};
 	transformScale(t.data(), x,y);
 	transformPremultiply(state.xform.data(), t.data());
 }
 
-void currentTransform(Context* ctx, float* xform)
+void currentTransform(Context& ctx, float* xform)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(ctx);
 	if (xform == NULL) return;
 	memcpy(xform, state.xform.data(), sizeof(float)*6);
 }
 
-void strokeColor(Context* ctx, Color color)
+void strokeColor(Context& ctx, Color color)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(ctx);
 	detail::setPaintColor(&state.stroke, color);
 }
 
-void strokePaint(Context* ctx, Paint paint)
+void strokePaint(Context& ctx, Paint paint)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(ctx);
 	state.stroke = paint;
 	transformMultiply(state.stroke.xform, state.xform.data());
 }
 
-void fillColor(Context* ctx, Color color)
+void fillColor(Context& ctx, Color color)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(ctx);
 	detail::setPaintColor(&state.fill, color);
 }
 
-void fillPaint(Context* ctx, Paint paint)
+void fillPaint(Context& ctx, Paint paint)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(ctx);
 	state.fill = paint;
 	transformMultiply(state.fill.xform, state.xform.data());
 }
 
 #ifndef NVG_NO_STB
-int createImage(Context* ctx, const char* filename, int imageFlags)
+int createImage(Context& ctx, const char* filename, int imageFlags)
 {
 	int w, h, n, image;
 	unsigned char* img;
@@ -1836,7 +1836,7 @@ int createImage(Context* ctx, const char* filename, int imageFlags)
 	return image;
 }
 
-int createImageMem(Context* ctx, int imageFlags, unsigned char* data, int ndata)
+int createImageMem(Context& ctx, int imageFlags, unsigned char* data, int ndata)
 {
 	int w, h, n, image;
 	stbi_set_unpremultiply_on_load(1);
@@ -1852,16 +1852,16 @@ int createImageMem(Context* ctx, int imageFlags, unsigned char* data, int ndata)
 }
 #endif
 
-int createImageRGBA(Context* ctx, int w, int h, int imageFlags, const unsigned char* data)
+int createImageRGBA(Context& ctx, int w, int h, int imageFlags, const unsigned char* data)
 {
-	return ctx->params.renderCreateTexture(ctx->params.userPtr, static_cast<int>(Texture::Rgba), w, h, imageFlags, data);
+	return ctx.params.renderCreateTexture(ctx.params.userPtr, static_cast<int>(Texture::Rgba), w, h, imageFlags, data);
 }
 
-void updateImage(Context* ctx, int image, const unsigned char* data)
+void updateImage(Context& ctx, int image, const unsigned char* data)
 {
 	int w, h;
-	ctx->params.renderGetTextureSize(ctx->params.userPtr, image, &w, &h);
-	ctx->params.renderUpdateTexture(ctx->params.userPtr, image, 0,0, w,h, data);
+	ctx.params.renderGetTextureSize(ctx.params.userPtr, image, &w, &h);
+	ctx.params.renderUpdateTexture(ctx.params.userPtr, image, 0,0, w,h, data);
 }
 
 void imageSize(Context& ctx, int image, int& w, int& h)
@@ -1874,7 +1874,7 @@ void deleteImage(Context& ctx, int image)
 	ctx.params.renderDeleteTexture(ctx.params.userPtr, image);
 }
 
-Paint linearGradient(Context* ctx,
+Paint linearGradient(Context& ctx,
 								  float sx, float sy, float ex, float ey,
 								  Color icol, Color ocol)
 {
@@ -1913,7 +1913,7 @@ Paint linearGradient(Context* ctx,
 	return p;
 }
 
-Paint radialGradient(Context* ctx,
+Paint radialGradient(Context& ctx,
 								  float cx, float cy, float inr, float outr,
 								  Color icol, Color ocol)
 {
@@ -1940,7 +1940,7 @@ Paint radialGradient(Context* ctx,
 	return p;
 }
 
-Paint boxGradient(Context* ctx,
+Paint boxGradient(Context& ctx,
 							   float x, float y, float w, float h, float r, float f,
 							   Color icol, Color ocol)
 {
@@ -1966,7 +1966,7 @@ Paint boxGradient(Context* ctx,
 }
 
 
-Paint imagePattern(Context* ctx,
+Paint imagePattern(Context& ctx,
 								float cx, float cy, float w, float h, float angle,
 								int image, float alpha)
 {
@@ -1989,10 +1989,10 @@ Paint imagePattern(Context* ctx,
 }
 
 // Scissoring
-void scissor(Context* ctx, float x, float y, float w, float h)
+void scissor(Context& ctx, float x, float y, float w, float h)
 {
-	State& state = detail::getState(*ctx);
-	ctx->scissor = ScissorBounds{x, y, w, h};
+	State& state = detail::getState(ctx);
+	ctx.scissor = ScissorBounds{x, y, w, h};
 	w = detail::maxf(0.0f, w);
 	h = detail::maxf(0.0f, h);
 
@@ -2006,9 +2006,9 @@ void scissor(Context* ctx, float x, float y, float w, float h)
 }
 
 
-void intersectScissor(Context* ctx, float x, float y, float w, float h)
+void intersectScissor(Context& ctx, float x, float y, float w, float h)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(ctx);
 	std::array<float, 6> pxform{};
 	std::array<float, 6> invxorm{};
 	std::array<float, 4> rect{};
@@ -2036,27 +2036,27 @@ void intersectScissor(Context* ctx, float x, float y, float w, float h)
 	scissor(ctx, rect[0], rect[1], rect[2], rect[3]);
 }
 
-void resetScissor(Context* ctx)
+void resetScissor(Context& ctx)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(ctx);
 	memset(state.scissor.xform, 0, sizeof(state.scissor.xform));
 	state.scissor.extent[0] = -1.0f;
 	state.scissor.extent[1] = -1.0f;
 }
 
 // Global composite operation.
-void globalCompositeOperation(Context* ctx, int op)
+void globalCompositeOperation(Context& ctx, int op)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(ctx);
 	state.compositeOperation = detail::compositeOperationState(op);
 }
 
-void globalCompositeBlendFunc(Context* ctx, int sfactor, int dfactor)
+void globalCompositeBlendFunc(Context& ctx, int sfactor, int dfactor)
 {
 	globalCompositeBlendFuncSeparate(ctx, sfactor, dfactor, sfactor, dfactor);
 }
 
-void globalCompositeBlendFuncSeparate(Context* ctx, int srcRGB, int dstRGB, int srcAlpha, int dstAlpha)
+void globalCompositeBlendFuncSeparate(Context& ctx, int srcRGB, int dstRGB, int srcAlpha, int dstAlpha)
 {
 	CompositeOperationState op;
 	op.srcRGB = srcRGB;
@@ -2064,7 +2064,7 @@ void globalCompositeBlendFuncSeparate(Context* ctx, int srcRGB, int dstRGB, int 
 	op.srcAlpha = srcAlpha;
 	op.dstAlpha = dstAlpha;
 
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(ctx);
 	state.compositeOperation = op;
 }
 
@@ -2106,57 +2106,57 @@ void globalCompositeBlendFuncSeparate(Context* ctx, int srcRGB, int dstRGB, int 
 
 
 // Draw
-void beginPath(Context* ctx)
+void beginPath(Context& ctx)
 {
-	ctx->commands.clear();
-	detail::clearPathCache(*ctx);
+	ctx.commands.clear();
+	detail::clearPathCache(ctx);
 }
 
-void moveTo(Context* ctx, float x, float y)
+void moveTo(Context& ctx, float x, float y)
 {
 	std::array<float, 3> vals = { static_cast<float>(to_underlying(PathCommand::MoveTo)), x, y };
-	detail::appendCommands(*ctx, vals);
+	detail::appendCommands(ctx, vals);
 }
 
-void lineTo(Context* ctx, float x, float y)
+void lineTo(Context& ctx, float x, float y)
 {
 	std::array<float, 3> vals = { static_cast<float>(to_underlying(PathCommand::LineTo)), x, y };
-	detail::appendCommands(*ctx, vals);
+	detail::appendCommands(ctx, vals);
 }
 
-void bezierTo(Context* ctx, float c1x, float c1y, float c2x, float c2y, float x, float y)
+void bezierTo(Context& ctx, float c1x, float c1y, float c2x, float c2y, float x, float y)
 {
 	std::array<float, 7> vals = { static_cast<float>(to_underlying(PathCommand::BezierTo)), c1x, c1y, c2x, c2y, x, y };
-	detail::appendCommands(*ctx, vals);
+	detail::appendCommands(ctx, vals);
 }
 
-void quadTo(Context* ctx, float cx, float cy, float x, float y)
+void quadTo(Context& ctx, float cx, float cy, float x, float y)
 {
-    float x0 = ctx->commandx;
-    float y0 = ctx->commandy;
+    float x0 = ctx.commandx;
+    float y0 = ctx.commandy;
     std::array<float, 7> vals = { static_cast<float>(to_underlying(PathCommand::BezierTo)),
         x0 + 2.0f/3.0f*(cx - x0), y0 + 2.0f/3.0f*(cy - y0),
         x + 2.0f/3.0f*(cx - x), y + 2.0f/3.0f*(cy - y),
         x, y };
-   detail::appendCommands(*ctx, vals);
+   detail::appendCommands(ctx, vals);
 }
 
-void arcTo(Context* ctx, float x1, float y1, float x2, float y2, float radius)
+void arcTo(Context& ctx, float x1, float y1, float x2, float y2, float radius)
 {
-	float x0 = ctx->commandx;
-	float y0 = ctx->commandy;
+	float x0 = ctx.commandx;
+	float y0 = ctx.commandy;
 	float dx0,dy0, dx1,dy1, a, d, cx,cy, a0,a1;
 	int dir;
 
-	if (ctx->commands.empty()) {
+	if (ctx.commands.empty()) {
 		return;
 	}
 
 	// Handle degenerate cases.
-	if (detail::ptEquals(x0,y0, x1,y1, ctx->distTol) ||
-		detail::ptEquals(x1,y1, x2,y2, ctx->distTol) ||
-		detail::distPtSeg(x1,y1, x0,y0, x2,y2) < ctx->distTol*ctx->distTol ||
-		radius < ctx->distTol) {
+	if (detail::ptEquals(x0,y0, x1,y1, ctx.distTol) ||
+		detail::ptEquals(x1,y1, x2,y2, ctx.distTol) ||
+		detail::distPtSeg(x1,y1, x0,y0, x2,y2) < ctx.distTol*ctx.distTol ||
+		radius < ctx.distTol) {
 		lineTo(ctx, x1,y1);
 		return;
 	}
@@ -2197,19 +2197,19 @@ void arcTo(Context* ctx, float x1, float y1, float x2, float y2, float radius)
 	arc(ctx, cx, cy, radius, a0, a1, dir);
 }
 
-void closePath(Context* ctx)
+void closePath(Context& ctx)
 {
 	std::array<float, 1> vals = { static_cast<float>(to_underlying(PathCommand::Close)) };
-	detail::appendCommands(*ctx, vals);
+	detail::appendCommands(ctx, vals);
 }
 
-void pathWinding(Context* ctx, int dir)
+void pathWinding(Context& ctx, int dir)
 {
 	std::array<float, 2> vals = { static_cast<float>(to_underlying(PathCommand::Winding)), (float)dir };
-	detail::appendCommands(*ctx, vals);
+	detail::appendCommands(ctx, vals);
 }
 
-void arc(Context* ctx, float cx, float cy, float r, float a0, float a1, int dir)
+void arc(Context& ctx, float cx, float cy, float r, float a0, float a1, int dir)
 {
 	const float pi = (float)M_PI;
 	const float twoPi = pi * 2.0f;
@@ -2218,7 +2218,7 @@ void arc(Context* ctx, float cx, float cy, float r, float a0, float a1, int dir)
 	float px = 0, py = 0, ptanx = 0, ptany = 0;
 	std::array<float, 3 + 5*7 + 100> vals{};
 	int i, ndivs, nvals;
-	int move = !ctx->commands.empty() ? static_cast<int>(PathCommand::LineTo) : static_cast<int>(PathCommand::MoveTo);
+	int move = !ctx.commands.empty() ? static_cast<int>(PathCommand::LineTo) : static_cast<int>(PathCommand::MoveTo);
 
 	// Clamp angles
 	da = a1 - a0;
@@ -2274,10 +2274,10 @@ void arc(Context* ctx, float cx, float cy, float r, float a0, float a1, int dir)
 	}
 
 	std::span<float> span(vals.data(), static_cast<size_t>(nvals));
-	detail::appendCommands(*ctx, span);
+	detail::appendCommands(ctx, span);
 }
 
-void rect(Context* ctx, float x, float y, float w, float h)
+void rect(Context& ctx, float x, float y, float w, float h)
 {
 	std::array<float, 13> vals = {
 		static_cast<float>(to_underlying(PathCommand::MoveTo)), x,y,
@@ -2286,15 +2286,15 @@ void rect(Context* ctx, float x, float y, float w, float h)
 		static_cast<float>(to_underlying(PathCommand::LineTo)), x+w,y,
 		static_cast<float>(to_underlying(PathCommand::Close))
 	};
-	detail::appendCommands(*ctx, vals);
+	detail::appendCommands(ctx, vals);
 }
 
-void roundedRect(Context* ctx, float x, float y, float w, float h, float r)
+void roundedRect(Context& ctx, float x, float y, float w, float h, float r)
 {
 	roundedRectVarying(ctx, x, y, w, h, r, r, r, r);
 }
 
-void roundedRectVarying(Context* ctx, float x, float y, float w, float h, float radTopLeft, float radTopRight, float radBottomRight, float radBottomLeft)
+void roundedRectVarying(Context& ctx, float x, float y, float w, float h, float radTopLeft, float radTopRight, float radBottomRight, float radBottomLeft)
 {
 	if(radTopLeft < 0.1f && radTopRight < 0.1f && radBottomRight < 0.1f && radBottomLeft < 0.1f) {
 		rect(ctx, x, y, w, h);
@@ -2318,11 +2318,11 @@ void roundedRectVarying(Context* ctx, float x, float y, float w, float h, float 
 			static_cast<float>(to_underlying(PathCommand::BezierTo)), x + rxTL*(1 - NVG_KAPPA90), y, x, y + ryTL*(1 - NVG_KAPPA90), x, y + ryTL,
 			static_cast<float>(to_underlying(PathCommand::Close))
 		};
-		detail::appendCommands(*ctx, vals);
+		detail::appendCommands(ctx, vals);
 	}
 }
 
-void ellipse(Context* ctx, float cx, float cy, float rx, float ry)
+void ellipse(Context& ctx, float cx, float cy, float rx, float ry)
 {
 	std::array<float, 32> vals = {
 		static_cast<float>(to_underlying(PathCommand::MoveTo)), cx-rx, cy,
@@ -2332,22 +2332,22 @@ void ellipse(Context* ctx, float cx, float cy, float rx, float ry)
 		static_cast<float>(to_underlying(PathCommand::BezierTo)), cx-rx*NVG_KAPPA90, cy-ry, cx-rx, cy-ry*NVG_KAPPA90, cx-rx, cy,
 		static_cast<float>(to_underlying(PathCommand::Close))
 	};
-	detail::appendCommands(*ctx, vals);
+	detail::appendCommands(ctx, vals);
 }
 
-void circle(Context* ctx, float cx, float cy, float r)
+void circle(Context& ctx, float cx, float cy, float r)
 {
 	ellipse(ctx, cx,cy, r,r);
 }
 
-void debugDumpPathCache(Context* ctx)
+void debugDumpPathCache(Context& ctx)
 {
 	const Path* path;
 	int i, j;
 
-	printf("Dumping %zu cached paths\n", ctx->cache->paths.size());
-	for (i = 0; i < static_cast<int>(ctx->cache->paths.size()); i++) {
-		path = &ctx->cache->paths[i];
+	printf("Dumping %zu cached paths\n", ctx.cache->paths.size());
+	for (i = 0; i < static_cast<int>(ctx.cache->paths.size()); i++) {
+		path = &ctx.cache->paths[i];
 		printf(" - Path %d\n", i);
 		if (path->nfill) {
 			printf("   - fill: %d\n", path->nfill);
@@ -2362,38 +2362,38 @@ void debugDumpPathCache(Context* ctx)
 	}
 }
 
-void fill(Context* ctx)
+void fill(Context& ctx)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(ctx);
 	const Path* path;
 	Paint fillPaint = state.fill;
 	int i;
 
-	detail::flattenPaths(*ctx);
-	if (ctx->params.edgeAntiAlias && state.shapeAntiAlias)
-		detail::expandFill(*ctx, ctx->fringeWidth, static_cast<int>(LineCap::Miter), 2.4f);
+	detail::flattenPaths(ctx);
+	if (ctx.params.edgeAntiAlias && state.shapeAntiAlias)
+		detail::expandFill(ctx, ctx.fringeWidth, static_cast<int>(LineCap::Miter), 2.4f);
 	else
-		detail::expandFill(*ctx, 0.0f, static_cast<int>(LineCap::Miter), 2.4f);
+		detail::expandFill(ctx, 0.0f, static_cast<int>(LineCap::Miter), 2.4f);
 
 	// Apply global alpha
 	fillPaint.innerColor.a *= state.alpha;
 	fillPaint.outerColor.a *= state.alpha;
 
-	ctx->params.renderFill(ctx->params.userPtr, &fillPaint, state.compositeOperation, &state.scissor, ctx->fringeWidth,
-						   ctx->cache->bounds.data(), ctx->cache->paths.data(), static_cast<int>(ctx->cache->paths.size()));
+	ctx.params.renderFill(ctx.params.userPtr, &fillPaint, state.compositeOperation, &state.scissor, ctx.fringeWidth,
+						   ctx.cache->bounds.data(), ctx.cache->paths.data(), static_cast<int>(ctx.cache->paths.size()));
 
 	// Count triangles
-	for (i = 0; i < static_cast<int>(ctx->cache->paths.size()); i++) {
-		path = &ctx->cache->paths[i];
-		ctx->fillTriCount += path->nfill-2;
-		ctx->fillTriCount += path->nstroke-2;
-		ctx->drawCallCount += 2;
+	for (i = 0; i < static_cast<int>(ctx.cache->paths.size()); i++) {
+		path = &ctx.cache->paths[i];
+		ctx.fillTriCount += path->nfill-2;
+		ctx.fillTriCount += path->nstroke-2;
+		ctx.drawCallCount += 2;
 	}
 }
 
-void stroke(Context* ctx)
+void stroke(Context& ctx)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(ctx);
 	const float scale = detail::getAverageScale(state.xform.data());
 	float strokeWidth = detail::clampf(state.strokeWidth * scale, 0.0f, 1000.0f);
 	Paint strokePaint = state.stroke;
@@ -2401,133 +2401,133 @@ void stroke(Context* ctx)
 	int i;
 
 
-	if (strokeWidth < ctx->fringeWidth) {
+	if (strokeWidth < ctx.fringeWidth) {
 		// If the stroke width is less than pixel size, use alpha to emulate coverage.
 		// Since coverage is area, scale by alpha*alpha.
-		float alpha = detail::clampf(strokeWidth / ctx->fringeWidth, 0.0f, 1.0f);
+		float alpha = detail::clampf(strokeWidth / ctx.fringeWidth, 0.0f, 1.0f);
 		strokePaint.innerColor.a *= alpha*alpha;
 		strokePaint.outerColor.a *= alpha*alpha;
-		strokeWidth = ctx->fringeWidth;
+		strokeWidth = ctx.fringeWidth;
 	}
 
 	// Apply global alpha
 	strokePaint.innerColor.a *= state.alpha;
 	strokePaint.outerColor.a *= state.alpha;
 
-	detail::flattenPaths(*ctx);
+	detail::flattenPaths(ctx);
 
-	if (ctx->params.edgeAntiAlias && state.shapeAntiAlias)
-		detail::expandStroke(*ctx, strokeWidth*0.5f, ctx->fringeWidth, state.lineCap, state.lineJoin, state.lineStyle, state.miterLimit);
+	if (ctx.params.edgeAntiAlias && state.shapeAntiAlias)
+		detail::expandStroke(ctx, strokeWidth*0.5f, ctx.fringeWidth, state.lineCap, state.lineJoin, state.lineStyle, state.miterLimit);
 	else
-		detail::expandStroke(*ctx, strokeWidth*0.5f, 0.0f, state.lineCap, state.lineJoin, state.lineStyle, state.miterLimit);
+		detail::expandStroke(ctx, strokeWidth*0.5f, 0.0f, state.lineCap, state.lineJoin, state.lineStyle, state.miterLimit);
 
-	ctx->params.renderStroke(ctx->params.userPtr, &strokePaint, state.compositeOperation, &state.scissor, ctx->fringeWidth,
-							 strokeWidth, state.lineStyle, ctx->cache->paths.data(), static_cast<int>(ctx->cache->paths.size()));
+	ctx.params.renderStroke(ctx.params.userPtr, &strokePaint, state.compositeOperation, &state.scissor, ctx.fringeWidth,
+							 strokeWidth, state.lineStyle, ctx.cache->paths.data(), static_cast<int>(ctx.cache->paths.size()));
 
 	// Count triangles
-	for (i = 0; i < static_cast<int>(ctx->cache->paths.size()); i++) {
-		path = &ctx->cache->paths[i];
-		ctx->strokeTriCount += path->nstroke-2;
-		ctx->drawCallCount++;
+	for (i = 0; i < static_cast<int>(ctx.cache->paths.size()); i++) {
+		path = &ctx.cache->paths[i];
+		ctx.strokeTriCount += path->nstroke-2;
+		ctx.drawCallCount++;
 	}
 }
 
 // Add fonts
-int createFont(Context* ctx, const char* name, const char* filename)
+int createFont(Context& ctx, const char* name, const char* filename)
 {
-	return fonsAddFont(ctx->fs, name, filename, 0);
+	return fonsAddFont(ctx.fs, name, filename, 0);
 }
 
-int createFontAtIndex(Context* ctx, const char* name, const char* filename, const int fontIndex)
+int createFontAtIndex(Context& ctx, const char* name, const char* filename, const int fontIndex)
 {
-	return fonsAddFont(ctx->fs, name, filename, fontIndex);
+	return fonsAddFont(ctx.fs, name, filename, fontIndex);
 }
 
-int createFontMem(Context* ctx, const char* name, unsigned char* data, int ndata, int freeData)
+int createFontMem(Context& ctx, const char* name, unsigned char* data, int ndata, int freeData)
 {
-	return fonsAddFontMem(ctx->fs, name, data, ndata, freeData, 0);
+	return fonsAddFontMem(ctx.fs, name, data, ndata, freeData, 0);
 }
 
-int createFontMemAtIndex(Context* ctx, const char* name, unsigned char* data, int ndata, int freeData, const int fontIndex)
+int createFontMemAtIndex(Context& ctx, const char* name, unsigned char* data, int ndata, int freeData, const int fontIndex)
 {
-	return fonsAddFontMem(ctx->fs, name, data, ndata, freeData, fontIndex);
+	return fonsAddFontMem(ctx.fs, name, data, ndata, freeData, fontIndex);
 }
 
-int findFont(Context* ctx, const char* name)
+int findFont(Context& ctx, const char* name)
 {
 	if (name == NULL) return -1;
-	return fonsGetFontByName(ctx->fs, name);
+	return fonsGetFontByName(ctx.fs, name);
 }
 
 
-int addFallbackFontId(Context* ctx, int baseFont, int fallbackFont)
+int addFallbackFontId(Context& ctx, int baseFont, int fallbackFont)
 {
 	if(baseFont == -1 || fallbackFont == -1) return 0;
-	return fonsAddFallbackFont(ctx->fs, baseFont, fallbackFont);
+	return fonsAddFallbackFont(ctx.fs, baseFont, fallbackFont);
 }
 
-int addFallbackFont(Context* ctx, const char* baseFont, const char* fallbackFont)
+int addFallbackFont(Context& ctx, const char* baseFont, const char* fallbackFont)
 {
 	return addFallbackFontId(ctx, findFont(ctx, baseFont), findFont(ctx, fallbackFont));
 }
 
-void resetFallbackFontsId(Context* ctx, int baseFont)
+void resetFallbackFontsId(Context& ctx, int baseFont)
 {
-	fonsResetFallbackFont(ctx->fs, baseFont);
+	fonsResetFallbackFont(ctx.fs, baseFont);
 }
 
-void resetFallbackFonts(Context* ctx, const char* baseFont)
+void resetFallbackFonts(Context& ctx, const char* baseFont)
 {
 	resetFallbackFontsId(ctx, findFont(ctx, baseFont));
 }
 
 // State setting
-void fontSize(Context* ctx, float size)
+void fontSize(Context& ctx, float size)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(ctx);
 	state.fontSize = size;
 }
 
-void fontBlur(Context* ctx, float blur)
+void fontBlur(Context& ctx, float blur)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(ctx);
 	state.fontBlur = blur;
 }
 
-void fontDilate(Context* ctx, float dilate)
+void fontDilate(Context& ctx, float dilate)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(ctx);
 	state.fontDilate = dilate;
 }
 
-void textLetterSpacing(Context* ctx, float spacing)
+void textLetterSpacing(Context& ctx, float spacing)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(ctx);
 	state.letterSpacing = spacing;
 }
 
-void textLineHeight(Context* ctx, float lineHeight)
+void textLineHeight(Context& ctx, float lineHeight)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(ctx);
 	state.lineHeight = lineHeight;
 }
 
-void textAlign(Context* ctx, int align)
+void textAlign(Context& ctx, int align)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(ctx);
 	state.textAlign = align;
 }
 
-void fontFaceId(Context* ctx, int font)
+void fontFaceId(Context& ctx, int font)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(ctx);
 	state.fontId = font;
 }
 
-void fontFace(Context* ctx, const char* font)
+void fontFace(Context& ctx, const char* font)
 {
-	State& state = detail::getState(*ctx);
-	state.fontId = fonsGetFontByName(ctx->fs, font);
+	State& state = detail::getState(ctx);
+	state.fontId = fonsGetFontByName(ctx.fs, font);
 }
 
 
@@ -2536,13 +2536,13 @@ void fontFace(Context* ctx, const char* font)
 
 
 
-float text(Context* ctx, float x, float y, const char* string, const char* end)
+float text(Context& ctx, float x, float y, const char* string, const char* end)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(ctx);
 	FONStextIter iter, prevIter;
 	FONSquad q;
-	std::vector<Vertex>& buf = ctx->cache->verts;
-	float scale = detail::getFontScale(&state) * ctx->devicePxRatio;
+	std::vector<Vertex>& buf = ctx.cache->verts;
+	float scale = detail::getFontScale(&state) * ctx.devicePxRatio;
 	float invscale = 1.0f / scale;
 	int cverts = 0;
 	int isFlipped = detail::isTransformFlipped(state.xform.data());
@@ -2552,19 +2552,19 @@ float text(Context* ctx, float x, float y, const char* string, const char* end)
 
 	if (state.fontId == FONS_INVALID) return x;
 
-	fonsSetSize(ctx->fs, state.fontSize*scale);
-	fonsSetSpacing(ctx->fs, state.letterSpacing*scale);
-	fonsSetBlur(ctx->fs, state.fontBlur*scale);
-	fonsSetDilate(ctx->fs, state.fontDilate*scale);
-	fonsSetAlign(ctx->fs, state.textAlign);
-	fonsSetFont(ctx->fs, state.fontId);
+	fonsSetSize(ctx.fs, state.fontSize*scale);
+	fonsSetSpacing(ctx.fs, state.letterSpacing*scale);
+	fonsSetBlur(ctx.fs, state.fontBlur*scale);
+	fonsSetDilate(ctx.fs, state.fontDilate*scale);
+	fonsSetAlign(ctx.fs, state.textAlign);
+	fonsSetFont(ctx.fs, state.fontId);
 
 	cverts = detail::maxi(2, (int)(end - string)) * 6; // conservative estimate.
-	detail::prepareTempVerts(*ctx, cverts);
+	detail::prepareTempVerts(ctx, cverts);
 
-	fonsTextIterInit(ctx->fs, &iter, 0, 0, string, end, FONS_GLYPH_BITMAP_REQUIRED);
+	fonsTextIterInit(ctx.fs, &iter, 0, 0, string, end, FONS_GLYPH_BITMAP_REQUIRED);
 	prevIter = iter;
-	while (fonsTextIterNext(ctx->fs, &iter, &q)) {
+	while (fonsTextIterNext(ctx.fs, &iter, &q)) {
 		std::array<float, 8> c{};
 		if (iter.prevGlyphIndex == -1) { // can not retrieve glyph?
 			if (!buf.empty()) {
@@ -2574,7 +2574,7 @@ float text(Context* ctx, float x, float y, const char* string, const char* end)
 			if (!detail::allocTextAtlas(ctx))
 				break; // no memory :(
 			iter = prevIter;
-			fonsTextIterNext(ctx->fs, &iter, &q); // try again
+			fonsTextIterNext(ctx.fs, &iter, &q); // try again
 			if (iter.prevGlyphIndex == -1) // still can not find glyph?
 				break;
 		}
@@ -2608,9 +2608,9 @@ float text(Context* ctx, float x, float y, const char* string, const char* end)
 	return iter.nextx * invscale + x;
 }
 
-void textBox(Context* ctx, float x, float y, float breakRowWidth, const char* string, const char* end)
+void textBox(Context& ctx, float x, float y, float breakRowWidth, const char* string, const char* end)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(ctx);
 	std::array<TextRow, 2> rows{};
 	int nrows = 0, i;
 	int oldAlign = state.textAlign;
@@ -2641,10 +2641,10 @@ void textBox(Context* ctx, float x, float y, float breakRowWidth, const char* st
 	state.textAlign = oldAlign;
 }
 
-int textGlyphPositions(Context* ctx, float x, float y, const char* string, const char* end, GlyphPosition* positions, int maxPositions)
+int textGlyphPositions(Context& ctx, float x, float y, const char* string, const char* end, GlyphPosition* positions, int maxPositions)
 {
-	State& state = detail::getState(*ctx);
-	float scale = detail::getFontScale(&state) * ctx->devicePxRatio;
+	State& state = detail::getState(ctx);
+	float scale = detail::getFontScale(&state) * ctx.devicePxRatio;
 	float invscale = 1.0f / scale;
 	FONStextIter iter, prevIter;
 	FONSquad q;
@@ -2658,18 +2658,18 @@ int textGlyphPositions(Context* ctx, float x, float y, const char* string, const
 	if (string == end)
 		return 0;
 
-	fonsSetSize(ctx->fs, state.fontSize*scale);
-	fonsSetSpacing(ctx->fs, state.letterSpacing*scale);
-	fonsSetBlur(ctx->fs, state.fontBlur*scale);
-	fonsSetAlign(ctx->fs, state.textAlign);
-	fonsSetFont(ctx->fs, state.fontId);
+	fonsSetSize(ctx.fs, state.fontSize*scale);
+	fonsSetSpacing(ctx.fs, state.letterSpacing*scale);
+	fonsSetBlur(ctx.fs, state.fontBlur*scale);
+	fonsSetAlign(ctx.fs, state.textAlign);
+	fonsSetFont(ctx.fs, state.fontId);
 
-	fonsTextIterInit(ctx->fs, &iter, 0, 0, string, end, FONS_GLYPH_BITMAP_OPTIONAL);
+	fonsTextIterInit(ctx.fs, &iter, 0, 0, string, end, FONS_GLYPH_BITMAP_OPTIONAL);
 	prevIter = iter;
-	while (fonsTextIterNext(ctx->fs, &iter, &q)) {
+	while (fonsTextIterNext(ctx.fs, &iter, &q)) {
 		if (iter.prevGlyphIndex < 0 && detail::allocTextAtlas(ctx)) { // can not retrieve glyph?
 			iter = prevIter;
-			fonsTextIterNext(ctx->fs, &iter, &q); // try again
+			fonsTextIterNext(ctx.fs, &iter, &q); // try again
 		}
 		prevIter = iter;
 		positions[npos].str = iter.str;
@@ -2691,10 +2691,10 @@ enum class CodepointType : int {
 	CjkChar,
 };
 
-int textBreakLines(Context* ctx, const char* string, const char* end, float breakRowWidth, TextRow* rows, int maxRows, int skipSpaces)
+int textBreakLines(Context& ctx, const char* string, const char* end, float breakRowWidth, TextRow* rows, int maxRows, int skipSpaces)
 {
-	State& state = detail::getState(*ctx);
-	float scale = detail::getFontScale(&state) * ctx->devicePxRatio;
+	State& state = detail::getState(ctx);
+	float scale = detail::getFontScale(&state) * ctx.devicePxRatio;
 	float invscale = 1.0f / scale;
 	FONStextIter iter, prevIter;
 	FONSquad q;
@@ -2722,21 +2722,21 @@ int textBreakLines(Context* ctx, const char* string, const char* end, float brea
 
 	if (string == end) return 0;
 
-	fonsSetSize(ctx->fs, state.fontSize*scale);
-	fonsSetSpacing(ctx->fs, state.letterSpacing*scale);
-	fonsSetBlur(ctx->fs, state.fontBlur*scale);
-	fonsSetDilate(ctx->fs, state.fontDilate*scale);
-	fonsSetAlign(ctx->fs, state.textAlign);
-	fonsSetFont(ctx->fs, state.fontId);
+	fonsSetSize(ctx.fs, state.fontSize*scale);
+	fonsSetSpacing(ctx.fs, state.letterSpacing*scale);
+	fonsSetBlur(ctx.fs, state.fontBlur*scale);
+	fonsSetDilate(ctx.fs, state.fontDilate*scale);
+	fonsSetAlign(ctx.fs, state.textAlign);
+	fonsSetFont(ctx.fs, state.fontId);
 
 	breakRowWidth *= scale;
 
-	fonsTextIterInit(ctx->fs, &iter, 0, 0, string, end, FONS_GLYPH_BITMAP_OPTIONAL);
+	fonsTextIterInit(ctx.fs, &iter, 0, 0, string, end, FONS_GLYPH_BITMAP_OPTIONAL);
 	prevIter = iter;
-	while (fonsTextIterNext(ctx->fs, &iter, &q)) {
+	while (fonsTextIterNext(ctx.fs, &iter, &q)) {
 		if (iter.prevGlyphIndex < 0 && detail::allocTextAtlas(ctx)) { // can not retrieve glyph?
 			iter = prevIter;
-			fonsTextIterNext(ctx->fs, &iter, &q); // try again
+			fonsTextIterNext(ctx.fs, &iter, &q); // try again
 		}
 		prevIter = iter;
 		switch (iter.codepoint) {
@@ -2906,26 +2906,26 @@ int textBreakLines(Context* ctx, const char* string, const char* end, float brea
 	return nrows;
 }
 
-float textBounds(Context* ctx, float x, float y, const char* string, const char* end, float* bounds)
+float textBounds(Context& ctx, float x, float y, const char* string, const char* end, float* bounds)
 {
-	State& state = detail::getState(*ctx);
-	float scale = detail::getFontScale(&state) * ctx->devicePxRatio;
+	State& state = detail::getState(ctx);
+	float scale = detail::getFontScale(&state) * ctx.devicePxRatio;
 	float invscale = 1.0f / scale;
 	float width;
 
 	if (state.fontId == FONS_INVALID) return 0;
 
-	fonsSetSize(ctx->fs, state.fontSize*scale);
-	fonsSetSpacing(ctx->fs, state.letterSpacing*scale);
-	fonsSetBlur(ctx->fs, state.fontBlur*scale);
-	fonsSetDilate(ctx->fs, state.fontDilate*scale);
-	fonsSetAlign(ctx->fs, state.textAlign);
-	fonsSetFont(ctx->fs, state.fontId);
+	fonsSetSize(ctx.fs, state.fontSize*scale);
+	fonsSetSpacing(ctx.fs, state.letterSpacing*scale);
+	fonsSetBlur(ctx.fs, state.fontBlur*scale);
+	fonsSetDilate(ctx.fs, state.fontDilate*scale);
+	fonsSetAlign(ctx.fs, state.textAlign);
+	fonsSetFont(ctx.fs, state.fontId);
 
-	width = fonsTextBounds(ctx->fs, 0, 0, string, end, bounds);
+	width = fonsTextBounds(ctx.fs, 0, 0, string, end, bounds);
 	if (bounds != NULL) {
 		// Use line bounds for height.
-		fonsLineBounds(ctx->fs, 0, &bounds[1], &bounds[3]);
+		fonsLineBounds(ctx.fs, 0, &bounds[1], &bounds[3]);
 		bounds[0] = bounds[0] * invscale + x;
 		bounds[1] = bounds[1] * invscale + y;
 		bounds[2] = bounds[2] * invscale + x;
@@ -2934,11 +2934,11 @@ float textBounds(Context* ctx, float x, float y, const char* string, const char*
 	return width * invscale;
 }
 
-void textBoxBounds(Context* ctx, float x, float y, float breakRowWidth, const char* string, const char* end, float* bounds)
+void textBoxBounds(Context& ctx, float x, float y, float breakRowWidth, const char* string, const char* end, float* bounds)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(ctx);
 	std::array<TextRow, 2> rows{};
-	float scale = detail::getFontScale(&state) * ctx->devicePxRatio;
+	float scale = detail::getFontScale(&state) * ctx.devicePxRatio;
 	float invscale = 1.0f / scale;
 	float yoff = 0;
 	int nrows = 0, i;
@@ -2961,13 +2961,13 @@ void textBoxBounds(Context* ctx, float x, float y, float breakRowWidth, const ch
 	minx = maxx = 0;
 	miny = maxy = 0;
 
-	fonsSetSize(ctx->fs, state.fontSize*scale);
-	fonsSetSpacing(ctx->fs, state.letterSpacing*scale);
-	fonsSetBlur(ctx->fs, state.fontBlur*scale);
-	fonsSetDilate(ctx->fs, state.fontDilate*scale);
-	fonsSetAlign(ctx->fs, state.textAlign);
-	fonsSetFont(ctx->fs, state.fontId);
-	fonsLineBounds(ctx->fs, 0, &rminy, &rmaxy);
+	fonsSetSize(ctx.fs, state.fontSize*scale);
+	fonsSetSpacing(ctx.fs, state.letterSpacing*scale);
+	fonsSetBlur(ctx.fs, state.fontBlur*scale);
+	fonsSetDilate(ctx.fs, state.fontDilate*scale);
+	fonsSetAlign(ctx.fs, state.textAlign);
+	fonsSetFont(ctx.fs, state.fontId);
+	fonsLineBounds(ctx.fs, 0, &rminy, &rmaxy);
 	rminy *= invscale;
 	rmaxy *= invscale;
 
@@ -3005,22 +3005,22 @@ void textBoxBounds(Context* ctx, float x, float y, float breakRowWidth, const ch
 	}
 }
 
-void textMetrics(Context* ctx, float* ascender, float* descender, float* lineh)
+void textMetrics(Context& ctx, float* ascender, float* descender, float* lineh)
 {
-	State& state = detail::getState(*ctx);
-	float scale = detail::getFontScale(&state) * ctx->devicePxRatio;
+	State& state = detail::getState(ctx);
+	float scale = detail::getFontScale(&state) * ctx.devicePxRatio;
 	float invscale = 1.0f / scale;
 
 	if (state.fontId == FONS_INVALID) return;
 
-	fonsSetSize(ctx->fs, state.fontSize*scale);
-	fonsSetSpacing(ctx->fs, state.letterSpacing*scale);
-	fonsSetBlur(ctx->fs, state.fontBlur*scale);
-	fonsSetDilate(ctx->fs, state.fontDilate*scale);
-	fonsSetAlign(ctx->fs, state.textAlign);
-	fonsSetFont(ctx->fs, state.fontId);
+	fonsSetSize(ctx.fs, state.fontSize*scale);
+	fonsSetSpacing(ctx.fs, state.letterSpacing*scale);
+	fonsSetBlur(ctx.fs, state.fontBlur*scale);
+	fonsSetDilate(ctx.fs, state.fontDilate*scale);
+	fonsSetAlign(ctx.fs, state.textAlign);
+	fonsSetFont(ctx.fs, state.fontId);
 
-	fonsVertMetrics(ctx->fs, ascender, descender, lineh);
+	fonsVertMetrics(ctx.fs, ascender, descender, lineh);
 	if (ascender != NULL)
 		*ascender *= invscale;
 	if (descender != NULL)

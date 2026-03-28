@@ -63,8 +63,8 @@ namespace nvg {
 std::shared_ptr<Context> createGL2(int flags);
 void deleteGL2(std::shared_ptr<Context> ctx);
 
-int nvglCreateImageFromHandleGL2(Context* ctx, GLuint textureId, int w, int h, int flags);
-GLuint nvglImageHandleGL2(Context* ctx, int image);
+int nvglCreateImageFromHandleGL2(Context& ctx, GLuint textureId, int w, int h, int flags);
+GLuint nvglImageHandleGL2(Context& ctx, int image);
 
 #endif
 
@@ -73,8 +73,8 @@ GLuint nvglImageHandleGL2(Context* ctx, int image);
 std::shared_ptr<Context> createGL3(int flags);
 void deleteGL3(std::shared_ptr<Context> ctx);
 
-int nvglCreateImageFromHandleGL3(Context* ctx, GLuint textureId, int w, int h, int flags);
-GLuint nvglImageHandleGL3(Context* ctx, int image);
+int nvglCreateImageFromHandleGL3(Context& ctx, GLuint textureId, int w, int h, int flags);
+GLuint nvglImageHandleGL3(Context& ctx, int image);
 
 #endif
 
@@ -83,8 +83,8 @@ GLuint nvglImageHandleGL3(Context* ctx, int image);
 std::shared_ptr<Context> createGLES2(int flags);
 void deleteGLES2(std::shared_ptr<Context> ctx);
 
-int nvglCreateImageFromHandleGLES2(Context* ctx, GLuint textureId, int w, int h, int flags);
-GLuint nvglImageHandleGLES2(Context* ctx, int image);
+int nvglCreateImageFromHandleGLES2(Context& ctx, GLuint textureId, int w, int h, int flags);
+GLuint nvglImageHandleGLES2(Context& ctx, int image);
 
 #endif
 
@@ -93,8 +93,8 @@ GLuint nvglImageHandleGLES2(Context* ctx, int image);
 std::shared_ptr<Context> createGLES3(int flags);
 void deleteGLES3(std::shared_ptr<Context> ctx);
 
-int nvglCreateImageFromHandleGLES3(Context* ctx, GLuint textureId, int w, int h, int flags);
-GLuint nvglImageHandleGLES3(Context* ctx, int image);
+int nvglCreateImageFromHandleGLES3(Context& ctx, GLuint textureId, int w, int h, int flags);
+GLuint nvglImageHandleGLES3(Context& ctx, int image);
 
 #endif
 
@@ -1691,13 +1691,13 @@ void deleteGLES3(std::shared_ptr<Context> ctx)
 }
 
 #if defined NANOVG_GL2
-int nvglCreateImageFromHandleGL2(Context* ctx, GLuint textureId, int w, int h, int imageFlags)
+int nvglCreateImageFromHandleGL2(Context& ctx, GLuint textureId, int w, int h, int imageFlags)
 #elif defined NANOVG_GL3
-int nvglCreateImageFromHandleGL3(Context* ctx, GLuint textureId, int w, int h, int imageFlags)
+int nvglCreateImageFromHandleGL3(Context& ctx, GLuint textureId, int w, int h, int imageFlags)
 #elif defined NANOVG_GLES2
-int nvglCreateImageFromHandleGLES2(Context* ctx, GLuint textureId, int w, int h, int imageFlags)
+int nvglCreateImageFromHandleGLES2(Context& ctx, GLuint textureId, int w, int h, int imageFlags)
 #elif defined NANOVG_GLES3
-int nvglCreateImageFromHandleGLES3(Context* ctx, GLuint textureId, int w, int h, int imageFlags)
+int nvglCreateImageFromHandleGLES3(Context& ctx, GLuint textureId, int w, int h, int imageFlags)
 #endif
 {
 	GLContext* gl = (GLContext*)internalParams(ctx)->userPtr;
@@ -1715,13 +1715,13 @@ int nvglCreateImageFromHandleGLES3(Context* ctx, GLuint textureId, int w, int h,
 }
 
 #if defined NANOVG_GL2
-GLuint nvglImageHandleGL2(Context* ctx, int image)
+GLuint nvglImageHandleGL2(Context& ctx, int image)
 #elif defined NANOVG_GL3
-GLuint nvglImageHandleGL3(Context* ctx, int image)
+GLuint nvglImageHandleGL3(Context& ctx, int image)
 #elif defined NANOVG_GLES2
-GLuint nvglImageHandleGLES2(Context* ctx, int image)
+GLuint nvglImageHandleGLES2(Context& ctx, int image)
 #elif defined NANOVG_GLES3
-GLuint nvglImageHandleGLES3(Context* ctx, int image)
+GLuint nvglImageHandleGLES3(Context& ctx, int image)
 #endif
 {
 	GLContext* gl = (GLContext*)internalParams(ctx)->userPtr;

@@ -103,7 +103,7 @@ float getGraphAverage(PerfGraph* fps)
 	return avg / (float)GRAPH_HISTORY_COUNT;
 }
 
-void renderGraph(nvg::Context* vg, float x, float y, PerfGraph* fps)
+void renderGraph(nvg::Context& vg, float x, float y, PerfGraph* fps)
 {
 	int i;
 	float avg, w, h;

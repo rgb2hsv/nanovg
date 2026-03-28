@@ -76,7 +76,7 @@ static char* cpToUTF8(int cp, char* str)
 }
 
 
-void drawWindow(nvg::Context* vg, const char* title, float x, float y, float w, float h)
+void drawWindow(nvg::Context& vg, const char* title, float x, float y, float w, float h)
 {
 	float cornerRadius = 3.0f;
 	nvg::Paint shadowPaint;
@@ -128,7 +128,7 @@ void drawWindow(nvg::Context* vg, const char* title, float x, float y, float w, 
 	nvg::restore(vg);
 }
 
-void drawSearchBox(nvg::Context* vg, const char* text, float x, float y, float w, float h)
+void drawSearchBox(nvg::Context& vg, const char* text, float x, float y, float w, float h)
 {
 	nvg::Paint bg;
 	std::array<char, 8> icon{};
@@ -166,7 +166,7 @@ void drawSearchBox(nvg::Context* vg, const char* text, float x, float y, float w
 	nvg::text(vg, x+w-h*0.55f, y+h*0.55f, cpToUTF8(ICON_CIRCLED_CROSS, icon.data()), NULL);
 }
 
-void drawDropDown(nvg::Context* vg, const char* text, float x, float y, float w, float h)
+void drawDropDown(nvg::Context& vg, const char* text, float x, float y, float w, float h)
 {
 	nvg::Paint bg;
 	std::array<char, 8> icon{};
@@ -196,7 +196,7 @@ void drawDropDown(nvg::Context* vg, const char* text, float x, float y, float w,
 	nvg::text(vg, x+w-h*0.5f, y+h*0.5f, cpToUTF8(ICON_CHEVRON_RIGHT, icon.data()), NULL);
 }
 
-void drawLabel(nvg::Context* vg, const char* text, float x, float y, float w, float h)
+void drawLabel(nvg::Context& vg, const char* text, float x, float y, float w, float h)
 {
 	UNUSED(w);
 
@@ -208,7 +208,7 @@ void drawLabel(nvg::Context* vg, const char* text, float x, float y, float w, fl
 	nvg::text(vg, x,y+h*0.5f,text, NULL);
 }
 
-void drawEditBoxBase(nvg::Context* vg, float x, float y, float w, float h)
+void drawEditBoxBase(nvg::Context& vg, float x, float y, float w, float h)
 {
 	nvg::Paint bg;
 	// Edit
@@ -224,7 +224,7 @@ void drawEditBoxBase(nvg::Context* vg, float x, float y, float w, float h)
 	nvg::stroke(vg);
 }
 
-void drawEditBox(nvg::Context* vg, const char* text, float x, float y, float w, float h)
+void drawEditBox(nvg::Context& vg, const char* text, float x, float y, float w, float h)
 {
 
 	drawEditBoxBase(vg, x,y, w,h);
@@ -236,7 +236,7 @@ void drawEditBox(nvg::Context* vg, const char* text, float x, float y, float w, 
 	nvg::text(vg, x+h*0.3f,y+h*0.5f,text, NULL);
 }
 
-void drawEditBoxNum(nvg::Context* vg,
+void drawEditBoxNum(nvg::Context& vg,
 					const char* text, const char* units, float x, float y, float w, float h)
 {
 	float uw;
@@ -258,7 +258,7 @@ void drawEditBoxNum(nvg::Context* vg,
 	nvg::text(vg, x+w-uw-h*0.5f,y+h*0.5f,text, NULL);
 }
 
-void drawCheckBox(nvg::Context* vg, const char* text, float x, float y, float w, float h)
+void drawCheckBox(nvg::Context& vg, const char* text, float x, float y, float w, float h)
 {
 	nvg::Paint bg;
 	std::array<char, 8> icon{};
@@ -284,7 +284,7 @@ void drawCheckBox(nvg::Context* vg, const char* text, float x, float y, float w,
 	nvg::text(vg, x+9+2, y+h*0.5f, cpToUTF8(ICON_CHECK, icon.data()), NULL);
 }
 
-void drawButton(nvg::Context* vg, int preicon, const char* text, float x, float y, float w, float h, nvg::Color col)
+void drawButton(nvg::Context& vg, int preicon, const char* text, float x, float y, float w, float h, nvg::Color col)
 {
 	nvg::Paint bg;
 	std::array<char, 8> icon{};
@@ -333,7 +333,7 @@ void drawButton(nvg::Context* vg, int preicon, const char* text, float x, float 
 	nvg::text(vg, x+w*0.5f-tw*0.5f+iw*0.25f,y+h*0.5f,text, NULL);
 }
 
-void drawSlider(nvg::Context* vg, float pos, float x, float y, float w, float h)
+void drawSlider(nvg::Context& vg, float pos, float x, float y, float w, float h)
 {
 	nvg::Paint bg, knob;
 	float cy = y + h*0.5f;
@@ -375,7 +375,7 @@ void drawSlider(nvg::Context* vg, float pos, float x, float y, float w, float h)
 	nvg::restore(vg);
 }
 
-void drawFancyText(nvg::Context* vg, float x, float y){
+void drawFancyText(nvg::Context& vg, float x, float y){
 	nvg::fontSize(vg, 30.0f);
 	nvg::fontFace(vg, "sans-bold");
 	nvg::textAlign(vg,static_cast<int>(nvg::Align::Center | nvg::Align::Middle));
@@ -404,7 +404,7 @@ void drawFancyText(nvg::Context* vg, float x, float y){
 	nvg::text(vg, x, y+80, "Font Blur Outline", NULL);
 }
 
-void drawEyes(nvg::Context* vg, float x, float y, float w, float h, float mx, float my, float t)
+void drawEyes(nvg::Context& vg, float x, float y, float w, float h, float mx, float my, float t)
 {
 	nvg::Paint gloss, bg;
 	float ex = w *0.23f;
@@ -470,7 +470,7 @@ void drawEyes(nvg::Context* vg, float x, float y, float w, float h, float mx, fl
 	nvg::fill(vg);
 }
 
-void drawGraph(nvg::Context* vg, float x, float y, float w, float h, float t)
+void drawGraph(nvg::Context& vg, float x, float y, float w, float h, float t)
 {
 	nvg::Paint bg;
 	std::array<float, 6> samples{};
@@ -541,7 +541,7 @@ void drawGraph(nvg::Context* vg, float x, float y, float w, float h, float t)
 	nvg::strokeWidth(vg, 1.0f);
 }
 
-void drawSpinner(nvg::Context* vg, float cx, float cy, float r, float t)
+void drawSpinner(nvg::Context& vg, float cx, float cy, float r, float t)
 {
 	float a0 = 0.0f + t*6;
 	float a1 = (float)M_PI + t*6;
@@ -567,7 +567,7 @@ void drawSpinner(nvg::Context* vg, float cx, float cy, float r, float t)
 	nvg::restore(vg);
 }
 
-void drawThumbnails(nvg::Context* vg, float x, float y, float w, float h, const int* images, int nimages, float t)
+void drawThumbnails(nvg::Context& vg, float x, float y, float w, float h, const int* images, int nimages, float t)
 {
 	float cornerRadius = 3.0f;
 	nvg::Paint shadowPaint, imgPaint, fadePaint;
@@ -687,7 +687,7 @@ void drawThumbnails(nvg::Context* vg, float x, float y, float w, float h, const 
 	nvg::restore(vg);
 }
 
-void drawColorwheel(nvg::Context* vg, float x, float y, float w, float h, float t)
+void drawColorwheel(nvg::Context& vg, float x, float y, float w, float h, float t)
 {
 	int i;
 	float r0, r1, ax,ay, bx,by, cx,cy, aeps, r;
@@ -819,7 +819,7 @@ void drawColorwheel(nvg::Context* vg, float x, float y, float w, float h, float 
 	nvg::restore(vg);
 }
 
-void drawStylizedLines(nvg::Context* vg, float x, float y, float w, float h){
+void drawStylizedLines(nvg::Context& vg, float x, float y, float w, float h){
 	nvg::lineJoin(vg, static_cast<int>(nvg::LineCap::Round));
 	nvg::lineStyle(vg, static_cast<int>(nvg::LineStyle::Dashed));
 	nvg::strokeColor(vg,nvg::rgbaf(0.6f,0.6f,1.0f,1.0f));
@@ -830,7 +830,7 @@ void drawStylizedLines(nvg::Context* vg, float x, float y, float w, float h){
 	nvg::lineStyle(vg, static_cast<int>(nvg::LineStyle::Solid));
 }
 
-void drawLines(nvg::Context* vg, float x, float y, float w, float h, float lineWidth, nvg::Color color, float t)
+void drawLines(nvg::Context& vg, float x, float y, float w, float h, float lineWidth, nvg::Color color, float t)
 {
 	int i, j;
 	float pad = 5.0f, s = w/9.0f - pad*2;
@@ -884,12 +884,9 @@ void drawLines(nvg::Context* vg, float x, float y, float w, float h, float lineW
 	nvg::restore(vg);
 }
 
-int loadDemoData(nvg::Context* vg, DemoData* data)
+int loadDemoData(nvg::Context& vg, DemoData* data)
 {
 	int i;
-
-	if (vg == NULL)
-		return -1;
 
 	for (i = 0; i < 12; i++) {
 		std::array<char, 128> file{};
@@ -927,18 +924,15 @@ int loadDemoData(nvg::Context* vg, DemoData* data)
 	return 0;
 }
 
-void freeDemoData(nvg::Context* vg, DemoData* data)
+void freeDemoData(nvg::Context& vg, DemoData* data)
 {
 	int i;
-
-	if (vg == NULL)
-		return;
 
 	for (i = 0; i < 12; i++)
 		nvg::deleteImage(vg, data->images[i]);
 }
 
-void drawParagraph(nvg::Context* vg, float x, float y, float width, float height, float mx, float my)
+void drawParagraph(nvg::Context& vg, float x, float y, float width, float height, float mx, float my)
 {
 	std::array<nvg::TextRow, 3> rows{};
 	std::array<nvg::GlyphPosition, 100> glyphs{};
@@ -1060,7 +1054,7 @@ void drawParagraph(nvg::Context* vg, float x, float y, float width, float height
 	nvg::restore(vg);
 }
 
-void drawWidths(nvg::Context* vg, float x, float y, float width)
+void drawWidths(nvg::Context& vg, float x, float y, float width)
 {
 	int i;
 
@@ -1081,7 +1075,7 @@ void drawWidths(nvg::Context* vg, float x, float y, float width)
 	nvg::restore(vg);
 }
 
-void drawCaps(nvg::Context* vg, float x, float y, float width)
+void drawCaps(nvg::Context& vg, float x, float y, float width)
 {
 	int i;
 	const std::array<int, 3> caps = {static_cast<int>(nvg::LineCap::Butt), static_cast<int>(nvg::LineCap::Round), static_cast<int>(nvg::LineCap::Square)};
@@ -1112,7 +1106,7 @@ void drawCaps(nvg::Context* vg, float x, float y, float width)
 	nvg::restore(vg);
 }
 
-void drawScissor(nvg::Context* vg, float x, float y, float t)
+void drawScissor(nvg::Context& vg, float x, float y, float t)
 {
 	nvg::save(vg);
 
@@ -1148,7 +1142,7 @@ void drawScissor(nvg::Context* vg, float x, float y, float t)
 	nvg::restore(vg);
 }
 
-void drawBezierCurve(nvg::Context* vg, float x0, float y0, float radius, float t){
+void drawBezierCurve(nvg::Context& vg, float x0, float y0, float radius, float t){
 
 	const float pi = (float)M_PI;
 	float x1 = x0 + radius*cosf(2.0f*pi*t/5.0f);
@@ -1193,7 +1187,7 @@ void drawBezierCurve(nvg::Context* vg, float x0, float y0, float radius, float t
 	nvg::fill(vg);
 }
 
-void drawScaledText(nvg::Context* vg, float x0, float y0, float t){
+void drawScaledText(nvg::Context& vg, float x0, float y0, float t){
 	nvg::save(vg);
 	const float textScale = (cosf(2.0f * (float)M_PI * t * 0.25f) + 1.0f) + 0.1f;
 	nvg::translate(vg, x0, y0);
@@ -1208,7 +1202,7 @@ void drawScaledText(nvg::Context* vg, float x0, float y0, float t){
 	nvg::restore(vg);
 }
 
-void renderDemo(nvg::Context* vg, float mx, float my, float width, float height,
+void renderDemo(nvg::Context& vg, float mx, float my, float width, float height,
 				float t, int blowup, DemoData* data)
 {
 	float x,y,popy;

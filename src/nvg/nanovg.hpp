@@ -247,7 +247,7 @@ typedef struct Params Params;
 void beginFrame(Context& ctx, float windowWidth, float windowHeight, float devicePixelRatio);
 
 // Cancels drawing the current frame.
-void cancelFrame(Context* ctx);
+void cancelFrame(Context& ctx);
 
 // Ends drawing flushing remaining render state.
 void endFrame(Context& ctx);
@@ -260,13 +260,13 @@ void endFrame(Context& ctx);
 // The colors in the blending state have premultiplied alpha.
 
 // Sets the composite operation. The op parameter should be one of CompositeOperation.
-void globalCompositeOperation(Context* ctx, int op);
+void globalCompositeOperation(Context& ctx, int op);
 
 // Sets the composite operation with custom pixel arithmetic. The parameters should be one of BlendFactor.
-void globalCompositeBlendFunc(Context* ctx, int sfactor, int dfactor);
+void globalCompositeBlendFunc(Context& ctx, int sfactor, int dfactor);
 
 // Sets the composite operation with custom pixel arithmetic for RGB and alpha components separately. The parameters should be one of BlendFactor.
-void globalCompositeBlendFuncSeparate(Context* ctx, int srcRGB, int dstRGB, int srcAlpha, int dstAlpha);
+void globalCompositeBlendFuncSeparate(Context& ctx, int srcRGB, int dstRGB, int srcAlpha, int dstAlpha);
 
 //
 // Color utils
@@ -322,7 +322,7 @@ void restore(Context& ctx);
 void reset(Context& ctx);
 
 // Gets the current scissor bounds
-ScissorBounds currentScissor(Context* ctx);
+ScissorBounds currentScissor(Context& ctx);
 
 //
 // Render styles
@@ -334,42 +334,42 @@ ScissorBounds currentScissor(Context* ctx);
 // Current render style can be saved and restored using save() and restore().
 
 // Sets whether to draw antialias for stroke() and fill(). It's enabled by default.
-void shapeAntiAlias(Context* ctx, int enabled);
+void shapeAntiAlias(Context& ctx, int enabled);
 
 // Sets current stroke style to a solid color.
-void strokeColor(Context* ctx, Color color);
+void strokeColor(Context& ctx, Color color);
 
 // Sets current stroke style to a paint, which can be a one of the gradients or a pattern.
-void strokePaint(Context* ctx, Paint paint);
+void strokePaint(Context& ctx, Paint paint);
 
 // Sets current fill style to a solid color.
-void fillColor(Context* ctx, Color color);
+void fillColor(Context& ctx, Color color);
 
 // Sets current fill style to a paint, which can be a one of the gradients or a pattern.
-void fillPaint(Context* ctx, Paint paint);
+void fillPaint(Context& ctx, Paint paint);
 
 // Sets the miter limit of the stroke style.
 // Miter limit controls when a sharp corner is beveled.
-void miterLimit(Context* ctx, float limit);
+void miterLimit(Context& ctx, float limit);
 
 // Sets the stroke width of the stroke style.
-void strokeWidth(Context* ctx, float size);
+void strokeWidth(Context& ctx, float size);
 
 // Sets how line is drawn.
 // Can be one of LineStyle::Solid (default), LineStyle::Glow, LineStyle::Dashed, LineStyle::Dotted
-void lineStyle(Context* ctx, int lineStyle);
+void lineStyle(Context& ctx, int lineStyle);
 
 // Sets how the end of the line (cap) is drawn,
 // Can be one of: LineCap::Butt (default), LineCap::Round, LineCap::Square.
-void lineCap(Context* ctx, int cap);
+void lineCap(Context& ctx, int cap);
 
 // Sets how sharp path corners are drawn.
 // Can be one of LineCap::Miter (default), LineCap::Round, LineCap::Bevel.
-void lineJoin(Context* ctx, int join);
+void lineJoin(Context& ctx, int join);
 
 // Sets the transparency applied to all rendered shapes.
 // Already transparent paths will get proportionally more transparent as well.
-void globalAlpha(Context* ctx, float alpha);
+void globalAlpha(Context& ctx, float alpha);
 
 //
 // Transforms
@@ -389,36 +389,36 @@ void globalAlpha(Context* ctx, float alpha);
 // Current coordinate system (transformation) can be saved and restored using save() and restore().
 
 // Resets current transform to a identity matrix.
-void resetTransform(Context* ctx);
+void resetTransform(Context& ctx);
 
 // Premultiplies current coordinate system by specified matrix.
 // The parameters are interpreted as matrix as follows:
 //   [a c e]
 //   [b d f]
 //   [0 0 1]
-void transform(Context* ctx, float a, float b, float c, float d, float e, float f);
+void transform(Context& ctx, float a, float b, float c, float d, float e, float f);
 
 // Translates current coordinate system.
-void translate(Context* ctx, float x, float y);
+void translate(Context& ctx, float x, float y);
 
 // Rotates current coordinate system. Angle is specified in radians.
-void rotate(Context* ctx, float angle);
+void rotate(Context& ctx, float angle);
 
 // Skews the current coordinate system along X axis. Angle is specified in radians.
-void skewX(Context* ctx, float angle);
+void skewX(Context& ctx, float angle);
 
 // Skews the current coordinate system along Y axis. Angle is specified in radians.
-void skewY(Context* ctx, float angle);
+void skewY(Context& ctx, float angle);
 
 // Scales the current coordinate system.
-void scale(Context* ctx, float x, float y);
+void scale(Context& ctx, float x, float y);
 
 // Stores the top part (a-f) of the current transformation matrix in to the specified buffer.
 //   [a c e]
 //   [b d f]
 //   [0 0 1]
 // There should be space for 6 floats in the return buffer for the values a-f.
-void currentTransform(Context* ctx, float* xform);
+void currentTransform(Context& ctx, float* xform);
 
 
 // The following functions can be used to make calculations on 2x3 transformation matrices.
@@ -468,18 +468,18 @@ float radToDeg(float rad);
 
 // Creates image by loading it from the disk from specified file name.
 // Returns handle to the image.
-int createImage(Context* ctx, const char* filename, int imageFlags);
+int createImage(Context& ctx, const char* filename, int imageFlags);
 
 // Creates image by loading it from the specified chunk of memory.
 // Returns handle to the image.
-int createImageMem(Context* ctx, int imageFlags, unsigned char* data, int ndata);
+int createImageMem(Context& ctx, int imageFlags, unsigned char* data, int ndata);
 
 // Creates image from specified image data.
 // Returns handle to the image.
-int createImageRGBA(Context* ctx, int w, int h, int imageFlags, const unsigned char* data);
+int createImageRGBA(Context& ctx, int w, int h, int imageFlags, const unsigned char* data);
 
 // Updates image data specified by image handle.
-void updateImage(Context* ctx, int image, const unsigned char* data);
+void updateImage(Context& ctx, int image, const unsigned char* data);
 
 // Returns the dimensions of a created image.
 void imageSize(Context& ctx, int image, int& w, int& h);
@@ -496,7 +496,7 @@ void deleteImage(Context& ctx, int image);
 // Creates and returns a linear gradient. Parameters (sx,sy)-(ex,ey) specify the start and end coordinates
 // of the linear gradient, icol specifies the start color and ocol the end color.
 // The gradient is transformed by the current transform when it is passed to fillPaint() or strokePaint().
-Paint linearGradient(Context* ctx, float sx, float sy, float ex, float ey,
+Paint linearGradient(Context& ctx, float sx, float sy, float ex, float ey,
 						   Color icol, Color ocol);
 
 // Creates and returns a box gradient. Box gradient is a feathered rounded rectangle, it is useful for rendering
@@ -504,19 +504,19 @@ Paint linearGradient(Context* ctx, float sx, float sy, float ex, float ey,
 // (w,h) define the size of the rectangle, r defines the corner radius, and f feather. Feather defines how blurry
 // the border of the rectangle is. Parameter icol specifies the inner color and ocol the outer color of the gradient.
 // The gradient is transformed by the current transform when it is passed to fillPaint() or strokePaint().
-Paint boxGradient(Context* ctx, float x, float y, float w, float h,
+Paint boxGradient(Context& ctx, float x, float y, float w, float h,
 						float r, float f, Color icol, Color ocol);
 
 // Creates and returns a radial gradient. Parameters (cx,cy) specify the center, inr and outr specify
 // the inner and outer radius of the gradient, icol specifies the start color and ocol the end color.
 // The gradient is transformed by the current transform when it is passed to fillPaint() or strokePaint().
-Paint radialGradient(Context* ctx, float cx, float cy, float inr, float outr,
+Paint radialGradient(Context& ctx, float cx, float cy, float inr, float outr,
 						   Color icol, Color ocol);
 
 // Creates and returns an image pattern. Parameters (ox,oy) specify the left-top location of the image pattern,
 // (ex,ey) the size of one image, angle rotation around the top-left corner, image is handle to the image to render.
 // The gradient is transformed by the current transform when it is passed to fillPaint() or strokePaint().
-Paint imagePattern(Context* ctx, float ox, float oy, float ex, float ey,
+Paint imagePattern(Context& ctx, float ox, float oy, float ex, float ey,
 						 float angle, int image, float alpha);
 
 //
@@ -527,7 +527,7 @@ Paint imagePattern(Context* ctx, float ox, float oy, float ex, float ey,
 
 // Sets the current scissor rectangle.
 // The scissor rectangle is transformed by the current transform.
-void scissor(Context* ctx, float x, float y, float w, float h);
+void scissor(Context& ctx, float x, float y, float w, float h);
 
 // Intersects current scissor rectangle with the specified rectangle.
 // The scissor rectangle is transformed by the current transform.
@@ -535,10 +535,10 @@ void scissor(Context* ctx, float x, float y, float w, float h);
 // the current one, the intersection will be done between the specified
 // rectangle and the previous scissor rectangle transformed in the current
 // transform space. The resulting shape is always rectangle.
-void intersectScissor(Context* ctx, float x, float y, float w, float h);
+void intersectScissor(Context& ctx, float x, float y, float w, float h);
 
 // Reset and disables scissoring.
-void resetScissor(Context* ctx);
+void resetScissor(Context& ctx);
 
 //
 // Paths
@@ -558,54 +558,54 @@ void resetScissor(Context* ctx);
 // The curve segments and sub-paths are transformed by the current transform.
 
 // Clears the current path and sub-paths.
-void beginPath(Context* ctx);
+void beginPath(Context& ctx);
 
 // Starts new sub-path with specified point as first point.
-void moveTo(Context* ctx, float x, float y);
+void moveTo(Context& ctx, float x, float y);
 
 // Adds line segment from the last point in the path to the specified point.
-void lineTo(Context* ctx, float x, float y);
+void lineTo(Context& ctx, float x, float y);
 
 // Adds cubic bezier segment from last point in the path via two control points to the specified point.
-void bezierTo(Context* ctx, float c1x, float c1y, float c2x, float c2y, float x, float y);
+void bezierTo(Context& ctx, float c1x, float c1y, float c2x, float c2y, float x, float y);
 
 // Adds quadratic bezier segment from last point in the path via a control point to the specified point.
-void quadTo(Context* ctx, float cx, float cy, float x, float y);
+void quadTo(Context& ctx, float cx, float cy, float x, float y);
 
 // Adds an arc segment at the corner defined by the last path point, and two specified points.
-void arcTo(Context* ctx, float x1, float y1, float x2, float y2, float radius);
+void arcTo(Context& ctx, float x1, float y1, float x2, float y2, float radius);
 
 // Closes current sub-path with a line segment.
-void closePath(Context* ctx);
+void closePath(Context& ctx);
 
 // Sets the current sub-path winding, see Winding and Solidity.
-void pathWinding(Context* ctx, int dir);
+void pathWinding(Context& ctx, int dir);
 
 // Creates new circle arc shaped sub-path. The arc center is at cx,cy, the arc radius is r,
 // and the arc is drawn from angle a0 to a1, and swept in direction dir (Winding::CCW, or Winding::CW).
 // Angles are specified in radians.
-void arc(Context* ctx, float cx, float cy, float r, float a0, float a1, int dir);
+void arc(Context& ctx, float cx, float cy, float r, float a0, float a1, int dir);
 
 // Creates new rectangle shaped sub-path.
-void rect(Context* ctx, float x, float y, float w, float h);
+void rect(Context& ctx, float x, float y, float w, float h);
 
 // Creates new rounded rectangle shaped sub-path.
-void roundedRect(Context* ctx, float x, float y, float w, float h, float r);
+void roundedRect(Context& ctx, float x, float y, float w, float h, float r);
 
 // Creates new rounded rectangle shaped sub-path with varying radii for each corner.
-void roundedRectVarying(Context* ctx, float x, float y, float w, float h, float radTopLeft, float radTopRight, float radBottomRight, float radBottomLeft);
+void roundedRectVarying(Context& ctx, float x, float y, float w, float h, float radTopLeft, float radTopRight, float radBottomRight, float radBottomLeft);
 
 // Creates new ellipse shaped sub-path.
-void ellipse(Context* ctx, float cx, float cy, float rx, float ry);
+void ellipse(Context& ctx, float cx, float cy, float rx, float ry);
 
 // Creates new circle shaped sub-path.
-void circle(Context* ctx, float cx, float cy, float r);
+void circle(Context& ctx, float cx, float cy, float r);
 
 // Fills the current path with current fill style.
-void fill(Context* ctx);
+void fill(Context& ctx);
 
 // Fills the current path with current stroke style.
-void stroke(Context* ctx);
+void stroke(Context& ctx);
 
 
 //
@@ -643,124 +643,112 @@ void stroke(Context* ctx);
 
 // Creates font by loading it from the disk from specified file name.
 // Returns handle to the font.
-int createFont(Context* ctx, const char* name, const char* filename);
+int createFont(Context& ctx, const char* name, const char* filename);
 
 // fontIndex specifies which font face to load from a .ttf/.ttc file.
-int createFontAtIndex(Context* ctx, const char* name, const char* filename, const int fontIndex);
+int createFontAtIndex(Context& ctx, const char* name, const char* filename, const int fontIndex);
 
 // Creates font by loading it from the specified memory chunk.
 // Returns handle to the font.
-int createFontMem(Context* ctx, const char* name, unsigned char* data, int ndata, int freeData);
+int createFontMem(Context& ctx, const char* name, unsigned char* data, int ndata, int freeData);
 
 // fontIndex specifies which font face to load from a .ttf/.ttc file.
-int createFontMemAtIndex(Context* ctx, const char* name, unsigned char* data, int ndata, int freeData, const int fontIndex);
+int createFontMemAtIndex(Context& ctx, const char* name, unsigned char* data, int ndata, int freeData, const int fontIndex);
 
 // Finds a loaded font of specified name, and returns handle to it, or -1 if the font is not found.
-int findFont(Context* ctx, const char* name);
+int findFont(Context& ctx, const char* name);
 
 // Adds a fallback font by handle.
-int addFallbackFontId(Context* ctx, int baseFont, int fallbackFont);
+int addFallbackFontId(Context& ctx, int baseFont, int fallbackFont);
 
 // Adds a fallback font by name.
-int addFallbackFont(Context* ctx, const char* baseFont, const char* fallbackFont);
+int addFallbackFont(Context& ctx, const char* baseFont, const char* fallbackFont);
 
 // Resets fallback fonts by handle.
-void resetFallbackFontsId(Context* ctx, int baseFont);
+void resetFallbackFontsId(Context& ctx, int baseFont);
 
 // Resets fallback fonts by name.
-void resetFallbackFonts(Context* ctx, const char* baseFont);
+void resetFallbackFonts(Context& ctx, const char* baseFont);
 
 // Sets the font size of current text style.
-void fontSize(Context* ctx, float size);
+void fontSize(Context& ctx, float size);
 
 // Sets the blur of current text style.
-void fontBlur(Context* ctx, float blur);
+void fontBlur(Context& ctx, float blur);
 
 // Sets the dilation of current text style.
-void fontDilate(Context* ctx, float dilate);
+void fontDilate(Context& ctx, float dilate);
 
 // Sets the letter spacing of current text style.
-void textLetterSpacing(Context* ctx, float spacing);
+void textLetterSpacing(Context& ctx, float spacing);
 
 // Sets the proportional line height of current text style. The line height is specified as multiple of font size.
-void textLineHeight(Context* ctx, float lineHeight);
+void textLineHeight(Context& ctx, float lineHeight);
 
 // Sets the text align of current text style, see Align for options.
-void textAlign(Context* ctx, int align);
+void textAlign(Context& ctx, int align);
 
 // Sets the font face based on specified id of current text style.
-void fontFaceId(Context* ctx, int font);
+void fontFaceId(Context& ctx, int font);
 
 // Sets the font face based on specified name of current text style.
-void fontFace(Context* ctx, const char* font);
+void fontFace(Context& ctx, const char* font);
 
 // Gets the font size of current text style.
-int getFontFaceId(Context* ctx);
+int getFontFaceId(Context& ctx);
 
 // Get the font size
-float getFontSize(Context* ctx);
+float getFontSize(Context& ctx);
 
 //Get Stroke width
-float getStrokeWidth(Context* ctx);
+float getStrokeWidth(Context& ctx);
 
 // Get text alignment
-int getTextAlign(Context* ctx);
+int getTextAlign(Context& ctx);
 
 // Draws text string at specified location. If end is specified only the sub-string up to the end is drawn.
-float text(Context* ctx, float x, float y, const char* string, const char* end);
+float text(Context& ctx, float x, float y, const char* string, const char* end);
 
 // Draws multi-line text string at specified location wrapped at the specified width. If end is specified only the sub-string up to the end is drawn.
 // White space is stripped at the beginning of the rows, the text is split at word boundaries or when new-line characters are encountered.
 // Words longer than the max width are slit at nearest character (i.e. no hyphenation).
-void textBox(Context* ctx, float x, float y, float breakRowWidth, const char* string, const char* end);
+void textBox(Context& ctx, float x, float y, float breakRowWidth, const char* string, const char* end);
 
 // Measures the specified text string. Parameter bounds should be a pointer to float[4],
 // if the bounding box of the text should be returned. The bounds value are [xmin,ymin, xmax,ymax]
 // Returns the horizontal advance of the measured text (i.e. where the next character should drawn).
 // Measured values are returned in local coordinate space.
-float textBounds(Context* ctx, float x, float y, const char* string, const char* end, float* bounds);
+float textBounds(Context& ctx, float x, float y, const char* string, const char* end, float* bounds);
 
 // Measures the specified multi-text string. Parameter bounds should be a pointer to float[4],
 // if the bounding box of the text should be returned. The bounds value are [xmin,ymin, xmax,ymax]
 // Measured values are returned in local coordinate space.
-void textBoxBounds(Context* ctx, float x, float y, float breakRowWidth, const char* string, const char* end, float* bounds);
+void textBoxBounds(Context& ctx, float x, float y, float breakRowWidth, const char* string, const char* end, float* bounds);
 
 // Calculates the glyph x positions of the specified text. If end is specified only the sub-string will be used.
 // Measured values are returned in local coordinate space.
-int textGlyphPositions(Context* ctx, float x, float y, const char* string, const char* end, GlyphPosition* positions, int maxPositions);
+int textGlyphPositions(Context& ctx, float x, float y, const char* string, const char* end, GlyphPosition* positions, int maxPositions);
 
 // Returns the vertical metrics based on the current text style.
 // Measured values are returned in local coordinate space.
-void textMetrics(Context* ctx, float* ascender, float* descender, float* lineh);
+void textMetrics(Context& ctx, float* ascender, float* descender, float* lineh);
 
 // Breaks the specified text into lines. If end is specified only the sub-string will be used.
 // White space is stripped at the beginning of the rows, the text is split at word boundaries or when new-line characters are encountered.
 // Words longer than the max width are slit at nearest character (i.e. no hyphenation).
-int textBreakLines(Context* ctx, const char* string, const char* end, float breakRowWidth, TextRow* rows, int maxRows, int skipSpaces);
+int textBreakLines(Context& ctx, const char* string, const char* end, float breakRowWidth, TextRow* rows, int maxRows, int skipSpaces);
 
 // Get image texture Id
-int getImageTextureId(Context* ctx, int handle);
+int getImageTextureId(Context& ctx, int handle);
 
 //
 // Constructor and destructor, called by the render back-end.
 std::shared_ptr<Context> createInternal(Params* params);
 void deleteInternal(const std::shared_ptr<Context>& ctx);
 
-Params* internalParams(Context* ctx);
+Params* internalParams(Context& ctx);
 
 // Debug function to dump cached path data.
-void debugDumpPathCache(Context* ctx);
-
-inline void beginFrame(Context* ctx, float windowWidth, float windowHeight, float devicePixelRatio)
-{
-	beginFrame(*ctx, windowWidth, windowHeight, devicePixelRatio);
-}
-inline void endFrame(Context* ctx) { endFrame(*ctx); }
-
-inline void save(Context* ctx) { save(*ctx); }
-inline void restore(Context* ctx) { restore(*ctx); }
-inline void reset(Context* ctx) { reset(*ctx); }
-inline void imageSize(Context* ctx, int image, int& w, int& h) { imageSize(*ctx, image, w, h); }
-inline void deleteImage(Context* ctx, int image) { deleteImage(*ctx, image); }
+void debugDumpPathCache(Context& ctx);
 
 } // namespace nvg
