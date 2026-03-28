@@ -29,16 +29,21 @@ endif()
 
 set(SRC_DIR "./src")
 set(NVG_SRC_DIR "${SRC_DIR}/nvg")
+set(NVG_LEGACY_DIR "${NVG_SRC_DIR}/legacy")
 set(NVG_THIRD_PARTY_DIR "${SRC_DIR}/thirdParty")
 file(GLOB SRCS ${NVG_SRC_DIR}/*.cpp)
 file(GLOB HDRS ${NVG_SRC_DIR}/*.h ${NVG_SRC_DIR}/*.hpp ${NVG_THIRD_PARTY_DIR}/*.h ${NVG_THIRD_PARTY_DIR}/*.hpp)
-list(APPEND HDRS "${SRC_DIR}/nanovg.h")
+list(APPEND HDRS
+	"${NVG_LEGACY_DIR}/nanovg.h"
+	"${NVG_LEGACY_DIR}/nanovg_gl.h"
+	"${NVG_LEGACY_DIR}/nanovg_gl_utils.h"
+)
 
 install(FILES ${HDRS} DESTINATION include/${PROJECT_NAME}/)
 
 add_library(${PROJECT_NAME} ${SRCS})
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
-target_include_directories(${PROJECT_NAME} PUBLIC ${SRC_DIR} ${NVG_SRC_DIR} ${NVG_THIRD_PARTY_DIR})
+target_include_directories(${PROJECT_NAME} PUBLIC ${SRC_DIR} ${NVG_LEGACY_DIR} ${NVG_SRC_DIR} ${NVG_THIRD_PARTY_DIR})
 if(MSVC)
 	target_compile_options(${PROJECT_NAME} PRIVATE /W4)
 endif()
@@ -118,8 +123,10 @@ elseif(WIN32)
 else()
         set(LIBS ${GLFW_TARGET} ${GLEW_TARGET} GLU GL Xext Xi Xrandr X11 Xxf86vm Xinerama Xcursor Xdamage dl z m)
 endif()
+set(EXAMPLE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/example")
+set(EXAMPLE_LEGACY_DIR "${EXAMPLE_DIR}/legacy")
 set(COMMON_CXX_FILES "example/demo.cpp" "example/perf.cpp")
-set(COMMON_LEGACY_FILES "example/demo.c" "example/perf.c")
+set(COMMON_LEGACY_FILES "example/legacy/demo.c" "example/legacy/perf.c")
 
 set(TARGETS ${PROJECT_NAME})
 # OpenGL ES examples need GLES headers; typical Windows SDK + GLFW do not provide them.
@@ -135,7 +142,7 @@ foreach(EXAMPLE_PROJ IN ITEMS ${NANOVG_EXAMPLE_PROJECTS})
         list(APPEND TARGETS example_${EXAMPLE_PROJ})
         target_compile_definitions(example_${EXAMPLE_PROJ} PUBLIC ${DEFS})
         target_link_libraries(example_${EXAMPLE_PROJ} ${PROJECT_NAME} ${LIBS})
-        target_include_directories(example_${EXAMPLE_PROJ} PUBLIC ${SRC_DIR} ${NVG_SRC_DIR} ${NVG_THIRD_PARTY_DIR})
+        target_include_directories(example_${EXAMPLE_PROJ} PUBLIC ${EXAMPLE_LEGACY_DIR} ${EXAMPLE_DIR} ${SRC_DIR} ${NVG_SRC_DIR} ${NVG_THIRD_PARTY_DIR})
         target_compile_features(example_${EXAMPLE_PROJ} PRIVATE cxx_std_20)
         if(MSVC)
                 target_compile_options(example_${EXAMPLE_PROJ} PRIVATE /W4)
@@ -144,11 +151,11 @@ endforeach()
 
 # Legacy C examples
 foreach(EXAMPLE_PROJ IN ITEMS ${NANOVG_EXAMPLE_PROJECTS})
-        add_executable(example_legacy_${EXAMPLE_PROJ} "example/example_${EXAMPLE_PROJ}.c" ${COMMON_LEGACY_FILES})
+        add_executable(example_legacy_${EXAMPLE_PROJ} "example/legacy/example_${EXAMPLE_PROJ}.c" ${COMMON_LEGACY_FILES})
         list(APPEND TARGETS example_legacy_${EXAMPLE_PROJ})
         target_compile_definitions(example_legacy_${EXAMPLE_PROJ} PUBLIC ${DEFS})
         target_link_libraries(example_legacy_${EXAMPLE_PROJ} ${PROJECT_NAME} ${LIBS})
-        target_include_directories(example_legacy_${EXAMPLE_PROJ} PUBLIC ${SRC_DIR} ${NVG_SRC_DIR} ${NVG_THIRD_PARTY_DIR})
+        target_include_directories(example_legacy_${EXAMPLE_PROJ} PUBLIC ${EXAMPLE_LEGACY_DIR} ${SRC_DIR} ${NVG_SRC_DIR} ${NVG_THIRD_PARTY_DIR})
         if(MSVC)
                 target_compile_options(example_legacy_${EXAMPLE_PROJ} PRIVATE /W4)
         endif()
