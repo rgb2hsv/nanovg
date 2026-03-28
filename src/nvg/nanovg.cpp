@@ -325,6 +325,10 @@ static State& getState(ContextImpl& ctx)
 {
 	return ctx.states.back();
 }
+static const State& getState(const ContextImpl& ctx)
+{
+	return ctx.states.back();
+}
 static float hue(float h, float m1, float m2)
 {
 	if (h < 0) h += 1;
@@ -337,7 +341,7 @@ static float hue(float h, float m1, float m2)
 		return m1 + (m2 - m1) * (2.0f/3.0f - h) * 6.0f;
 	return m1;
 }
-static void setPaintColor(Paint& p, Color color)
+static void setPaintColor(Paint& p, const Color& color)
 {
 	p = Paint{};
 	transformIdentity(p.xform);
@@ -1270,7 +1274,7 @@ static float quantize(float a, float d)
 {
 	return ((int)(a / d + 0.5f)) * d;
 }
-static float getFontScale(State* state)
+static float getFontScale(const State* state)
 {
 	return minf(quantize(getAverageScale(state->xform.data()), 0.01f), 4.0f);
 }
@@ -1671,9 +1675,9 @@ void Context::reset()
 }
 
 // State setting
-ScissorBounds Context::currentScissor()
+ScissorBounds Context::currentScissor() const
 {
-	return mImpl->scissor;
+	return (*this)->scissor;
 }
 
 void Context::shapeAntiAlias(int enabled)
@@ -1688,22 +1692,26 @@ void Context::strokeWidth(float width)
 	state.strokeWidth = width;
 }
 
-float Context::getStrokeWidth() {
-	State& state = detail::getState(**this);
+float Context::getStrokeWidth() const
+{
+	const State& state = detail::getState(*(*this));
 	return state.strokeWidth;
 }
 
-int Context::getTextAlign() {
-	State& state = detail::getState(**this);
+int Context::getTextAlign() const
+{
+	const State& state = detail::getState(*(*this));
 	return state.textAlign;
 }
 
-float Context::getFontSize() {
-	State& state = detail::getState(**this);
+float Context::getFontSize() const
+{
+	const State& state = detail::getState(*(*this));
 	return state.fontSize;
 }
-int Context::getFontFaceId() {
-	State& state = detail::getState(**this);
+int Context::getFontFaceId() const
+{
+	const State& state = detail::getState(*(*this));
 	return state.fontId;
 }
 
@@ -1789,33 +1797,33 @@ void Context::scale(float x, float y)
 	transformPremultiply(state.xform.data(), t.data());
 }
 
-void Context::currentTransform(float* xform)
+void Context::currentTransform(float* xform) const
 {
-	State& state = detail::getState(**this);
+	const State& state = detail::getState(*(*this));
 	if (xform == NULL) return;
 	memcpy(xform, state.xform.data(), sizeof(float)*6);
 }
 
-void Context::strokeColor(Color color)
+void Context::strokeColor(const Color& color)
 {
 	State& state = detail::getState(**this);
 	detail::setPaintColor(state.stroke, color);
 }
 
-void Context::strokePaint(Paint paint)
+void Context::strokePaint(const Paint& paint)
 {
 	State& state = detail::getState(**this);
 	state.stroke = paint;
 	transformMultiply(state.stroke.xform, state.xform.data());
 }
 
-void Context::fillColor(Color color)
+void Context::fillColor(const Color& color)
 {
 	State& state = detail::getState(**this);
 	detail::setPaintColor(state.fill, color);
 }
 
-void Context::fillPaint(Paint paint)
+void Context::fillPaint(const Paint& paint)
 {
 	State& state = detail::getState(**this);
 	state.fill = paint;
@@ -1867,9 +1875,9 @@ void Context::updateImage(int image, const unsigned char* data)
 	mImpl->params.renderUpdateTexture(mImpl->params.userPtr, image, 0,0, w,h, data);
 }
 
-void Context::imageSize(int image, int& w, int& h)
+void Context::imageSize(int image, int& w, int& h) const
 {
-	mImpl->params.renderGetTextureSize(mImpl->params.userPtr, image, &w, &h);
+	(*this)->params.renderGetTextureSize((*this)->params.userPtr, image, &w, &h);
 }
 
 void Context::deleteImage(int image)
@@ -1879,7 +1887,7 @@ void Context::deleteImage(int image)
 
 Paint Context::linearGradient(
 								  float sx, float sy, float ex, float ey,
-								  Color icol, Color ocol)
+								  const Color& icol, const Color& ocol) const
 {
 	Paint p{};
 	float dx, dy, d;
@@ -1916,7 +1924,7 @@ Paint Context::linearGradient(
 
 Paint Context::radialGradient(
 								  float cx, float cy, float inr, float outr,
-								  Color icol, Color ocol)
+								  const Color& icol, const Color& ocol) const
 {
 	Paint p{};
 	float r = (inr+outr)*0.5f;
@@ -1941,7 +1949,7 @@ Paint Context::radialGradient(
 
 Paint Context::boxGradient(
 							   float x, float y, float w, float h, float r, float f,
-							   Color icol, Color ocol)
+							   const Color& icol, const Color& ocol) const
 {
 	Paint p{};
 
@@ -1965,7 +1973,7 @@ Paint Context::boxGradient(
 
 Paint Context::imagePattern(
 								float cx, float cy, float w, float h, float angle,
-								int image, float alpha)
+								int image, float alpha) const
 {
 	Paint p{};
 
@@ -2335,14 +2343,14 @@ void Context::circle(float cx, float cy, float r)
 	ellipse(cx,cy, r,r);
 }
 
-void Context::debugDumpPathCache()
+void Context::debugDumpPathCache() const
 {
 	const Path* path;
 	int i, j;
 
-	printf("Dumping %zu cached paths\n", mImpl->cache->paths.size());
-	for (i = 0; i < static_cast<int>(mImpl->cache->paths.size()); i++) {
-		path = &mImpl->cache->paths[i];
+	printf("Dumping %zu cached paths\n", (*this)->cache->paths.size());
+	for (i = 0; i < static_cast<int>((*this)->cache->paths.size()); i++) {
+		path = &(*this)->cache->paths[i];
 		printf(" - Path %d\n", i);
 		if (path->nfill) {
 			printf("   - fill: %d\n", path->nfill);
@@ -2448,10 +2456,10 @@ int Context::createFontMemAtIndex(const char* name, unsigned char* data, int nda
 	return fonsAddFontMem(mImpl->fs.get(), name, data, ndata, freeData, fontIndex);
 }
 
-int Context::findFont(const char* name)
+int Context::findFont(const char* name) const
 {
 	if (name == NULL) return -1;
-	return fonsGetFontByName(mImpl->fs.get(), name);
+	return fonsGetFontByName((*this)->fs.get(), name);
 }
 
 
@@ -3023,6 +3031,6 @@ void Context::textMetrics(float* ascender, float* descender, float* lineh)
 	if (lineh != NULL)
 		*lineh *= invscale;
 }
-const Params& Context::internalParams() { return (*this)->params; }
+const Params& Context::internalParams() const { return (*this)->params; }
 
 }

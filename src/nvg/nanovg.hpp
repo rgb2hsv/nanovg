@@ -250,12 +250,12 @@ public:
 	void save();
 	void restore();
 	void reset();
-	ScissorBounds currentScissor();
+	ScissorBounds currentScissor() const;
 	void shapeAntiAlias(int enabled);
-	void strokeColor(Color color);
-	void strokePaint(Paint paint);
-	void fillColor(Color color);
-	void fillPaint(Paint paint);
+	void strokeColor(const Color& color);
+	void strokePaint(const Paint& paint);
+	void fillColor(const Color& color);
+	void fillPaint(const Paint& paint);
 	void miterLimit(float limit);
 	void strokeWidth(float size);
 	void lineStyle(int lineStyle);
@@ -269,17 +269,17 @@ public:
 	void skewX(float angle);
 	void skewY(float angle);
 	void scale(float x, float y);
-	void currentTransform(float* xform);
+	void currentTransform(float* xform) const;
 	int createImage(const char* filename, int imageFlags);
 	int createImageMem(int imageFlags, unsigned char* data, int ndata);
 	int createImageRGBA(int w, int h, int imageFlags, const unsigned char* data);
 	void updateImage(int image, const unsigned char* data);
-	void imageSize(int image, int& w, int& h);
+	void imageSize(int image, int& w, int& h) const;
 	void deleteImage(int image);
-	Paint linearGradient(float sx, float sy, float ex, float ey, Color icol, Color ocol);
-	Paint boxGradient(float x, float y, float w, float h, float r, float f, Color icol, Color ocol);
-	Paint radialGradient(float cx, float cy, float inr, float outr, Color icol, Color ocol);
-	Paint imagePattern(float ox, float oy, float ex, float ey, float angle, int image, float alpha);
+	Paint linearGradient(float sx, float sy, float ex, float ey, const Color& icol, const Color& ocol) const;
+	Paint boxGradient(float x, float y, float w, float h, float r, float f, const Color& icol, const Color& ocol) const;
+	Paint radialGradient(float cx, float cy, float inr, float outr, const Color& icol, const Color& ocol) const;
+	Paint imagePattern(float ox, float oy, float ex, float ey, float angle, int image, float alpha) const;
 	void scissor(float x, float y, float w, float h);
 	void intersectScissor(float x, float y, float w, float h);
 	void resetScissor();
@@ -303,7 +303,7 @@ public:
 	int createFontAtIndex(const char* name, const char* filename, const int fontIndex);
 	int createFontMem(const char* name, unsigned char* data, int ndata, int freeData);
 	int createFontMemAtIndex(const char* name, unsigned char* data, int ndata, int freeData, const int fontIndex);
-	int findFont(const char* name);
+	int findFont(const char* name) const;
 	int addFallbackFontId(int baseFont, int fallbackFont);
 	int addFallbackFont(const char* baseFont, const char* fallbackFont);
 	void resetFallbackFontsId(int baseFont);
@@ -316,10 +316,10 @@ public:
 	void textAlign(int align);
 	void fontFaceId(int font);
 	void fontFace(const char* font);
-	int getFontFaceId();
-	float getFontSize();
-	float getStrokeWidth();
-	int getTextAlign();
+	int getFontFaceId() const;
+	float getFontSize() const;
+	float getStrokeWidth() const;
+	int getTextAlign() const;
 	float text(float x, float y, const char* string, const char* end);
 	void textBox(float x, float y, float breakRowWidth, const char* string, const char* end);
 	float textBounds(float x, float y, const char* string, const char* end, float* bounds);
@@ -327,8 +327,8 @@ public:
 	int textGlyphPositions(float x, float y, const char* string, const char* end, GlyphPosition* positions, int maxPositions);
 	void textMetrics(float* ascender, float* descender, float* lineh);
 	int textBreakLines(const char* string, const char* end, float breakRowWidth, TextRow* rows, int maxRows, int skipSpaces);
-	const Params& internalParams();
-	void debugDumpPathCache();
+	const Params& internalParams() const;
+	void debugDumpPathCache() const;
 
 protected:
 	std::shared_ptr<ContextImpl> mImpl;
