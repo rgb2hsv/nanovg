@@ -141,15 +141,9 @@ struct Point {
 };
 
 struct PathCache {
-	Point* points;
-	int npoints;
-	int cpoints;
-	Path* paths;
-	int npaths;
-	int cpaths;
-	Vertex* verts;
-	int nverts;
-	int cverts;
+	std::vector<Point> points;
+	std::vector<Path> paths;
+	std::vector<Vertex> verts;
 	std::array<float, 4> bounds;
 };
 
@@ -162,7 +156,7 @@ struct Context {
 	float fringeWidth;
 	float devicePxRatio;
 	struct FONScontext* fs;
-	std::array<int, NVG_MAX_FONTIMAGES> fontImages{};
+	std::array<int, NVG_MAX_FONTIMAGES> fontImages;
 	size_t fontImageIdx;
 	size_t drawCallCount;
 	size_t fillTriCount;
@@ -204,26 +198,17 @@ static float normalize(float& x, float& y)
 static void deletePathCache(std::shared_ptr<PathCache>& c)
 {
 	if (c == nullptr) return;
-	if (c->points != nullptr) std::free(c->points);
-	if (c->paths != nullptr) std::free(c->paths);
-	if (c->verts != nullptr) std::free(c->verts);
 	c.reset();
 }
 static std::shared_ptr<PathCache> allocPathCache(void)
 {
 	auto c = std::make_shared<PathCache>();
 
-	c->points = static_cast<Point*>(std::malloc(sizeof(Point)*NVG_INIT_POINTS_SIZE));
-	c->npoints = 0;
-	c->cpoints = NVG_INIT_POINTS_SIZE;
+	c->points.reserve(static_cast<size_t>(NVG_INIT_POINTS_SIZE));
 
-	c->paths = static_cast<Path*>(std::malloc(sizeof(Path)*NVG_INIT_PATHS_SIZE));
-	c->npaths = 0;
-	c->cpaths = NVG_INIT_PATHS_SIZE;
+	c->paths.reserve(static_cast<size_t>(NVG_INIT_PATHS_SIZE));
 
-	c->verts = static_cast<Vertex*>(std::malloc(sizeof(Vertex)*NVG_INIT_VERTS_SIZE));
-	c->nverts = 0;
-	c->cverts = NVG_INIT_VERTS_SIZE;
+	c->verts.reserve(static_cast<size_t>(NVG_INIT_VERTS_SIZE));
 
 	return c;
 }
@@ -413,69 +398,65 @@ static void appendCommands(Context& ctx, C& vals)
 
 static void clearPathCache(Context& ctx)
 {
-	ctx.cache->npoints = 0;
-	ctx.cache->npaths = 0;
+	ctx.cache->points.clear();
+	ctx.cache->paths.clear();
 }
 static Path* lastPath(Context& ctx)
 {
-	if (ctx.cache->npaths > 0)
-		return &ctx.cache->paths[ctx.cache->npaths-1];
+	std::vector<Path>& paths = ctx.cache->paths;
+	if (!paths.empty())
+		return &paths.back();
 	return nullptr;
 }
 static void addPath(Context& ctx)
 {
-	Path* path;
-	if (ctx.cache->npaths+1 > ctx.cache->cpaths) {
-		Path* paths;
-		int cpaths = ctx.cache->npaths+1 + ctx.cache->cpaths/2;
-		paths = static_cast<Path*>(std::realloc(ctx.cache->paths, sizeof(Path)*cpaths));
-		if (paths == nullptr) return;
-		ctx.cache->paths = paths;
-		ctx.cache->cpaths = cpaths;
+	std::vector<Path>& paths = ctx.cache->paths;
+	const int nextCount = static_cast<int>(paths.size()) + 1;
+	if (static_cast<size_t>(nextCount) > paths.capacity()) {
+		const int newCap = nextCount + static_cast<int>(paths.capacity() / 2);
+		paths.reserve(static_cast<size_t>(newCap));
 	}
-	path = &ctx.cache->paths[ctx.cache->npaths];
-	memset(path, 0, sizeof(*path));
-	path->first = ctx.cache->npoints;
+	paths.emplace_back();
+	Path* path = &paths.back();
+	std::memset(path, 0, sizeof(*path));
+	path->first = static_cast<int>(ctx.cache->points.size());
 	path->winding = static_cast<int>(Winding::CCW);
-
-	ctx.cache->npaths++;
 }
 static Point* lastPoint(Context& ctx)
 {
-	if (ctx.cache->npoints > 0)
-		return &ctx.cache->points[ctx.cache->npoints-1];
+	std::vector<Point>& points = ctx.cache->points;
+	if (!points.empty())
+		return &points.back();
 	return nullptr;
 }
 static void addPoint(Context& ctx, float x, float y, int flags)
 {
 	Path* path = lastPath(ctx);
-	Point* pt;
 	if (path == nullptr) return;
 
-	if (path->count > 0 && ctx.cache->npoints > 0) {
-		pt = lastPoint(ctx);
+	std::vector<Point>& points = ctx.cache->points;
+
+	if (path->count > 0 && !points.empty()) {
+		Point* pt = lastPoint(ctx);
 		if (ptEquals(pt->x,pt->y, x,y, ctx.distTol)) {
-			pt->flags |= flags;
+			pt->flags |= static_cast<unsigned char>(flags);
 			return;
 		}
 	}
 
-	if (ctx.cache->npoints+1 > ctx.cache->cpoints) {
-		Point* points;
-		int cpoints = ctx.cache->npoints+1 + ctx.cache->cpoints/2;
-		points = static_cast<Point*>(std::realloc(ctx.cache->points, sizeof(Point)*cpoints));
-		if (points == nullptr) return;
-		ctx.cache->points = points;
-		ctx.cache->cpoints = cpoints;
+	const int nextCount = static_cast<int>(points.size()) + 1;
+	if (static_cast<size_t>(nextCount) > points.capacity()) {
+		const int newCap = nextCount + static_cast<int>(points.capacity() / 2);
+		points.reserve(static_cast<size_t>(newCap));
 	}
 
-	pt = &ctx.cache->points[ctx.cache->npoints];
-	memset(pt, 0, sizeof(*pt));
+	points.emplace_back();
+	Point* pt = &points.back();
+	std::memset(pt, 0, sizeof(*pt));
 	pt->x = x;
 	pt->y = y;
-	pt->flags = (unsigned char)flags;
+	pt->flags = static_cast<unsigned char>(flags);
 
-	ctx.cache->npoints++;
 	path->count++;
 }
 
@@ -499,16 +480,13 @@ static float getAverageScale(const float *t)
 }
 static Vertex* allocTempVerts(Context& ctx, int nverts)
 {
-	if (nverts > ctx.cache->cverts) {
-		Vertex* verts;
-		int cverts = (nverts + 0xff) & ~0xff; // Round up to prevent allocations when things change just slightly.
-		verts = static_cast<Vertex*>(std::realloc(ctx.cache->verts, sizeof(Vertex)*cverts));
-		if (verts == nullptr) return nullptr;
-		ctx.cache->verts = verts;
-		ctx.cache->cverts = cverts;
+	std::vector<Vertex>& verts = ctx.cache->verts;
+	if (static_cast<size_t>(nverts) > verts.capacity()) {
+		const int cverts = (nverts + 0xff) & ~0xff; // Round up to prevent allocations when things change just slightly.
+		verts.reserve(static_cast<size_t>(cverts));
 	}
 
-	return ctx.cache->verts;
+	return verts.data();
 }
 static float triarea2(float ax, float ay, float bx, float by, float cx, float cy)
 {
@@ -608,7 +586,7 @@ static void flattenPaths(Context& ctx)
 	float* p;
 	float area;
 
-	if (cache->npaths > 0)
+	if (!cache->paths.empty())
 		return;
 
 	// Flatten
@@ -654,7 +632,7 @@ static void flattenPaths(Context& ctx)
 	cache->bounds[2] = cache->bounds[3] = -1e6f;
 
 	// Calculate the direction and length of line segments.
-	for (j = 0; j < cache->npaths; j++) {
+	for (j = 0; j < static_cast<int>(cache->paths.size()); j++) {
 		path = &cache->paths[j];
 		pts = &cache->points[path->first];
 
@@ -934,7 +912,7 @@ static void calculateJoins(Context& ctx, float w, int lineJoin, float miterLimit
 	if (w > 0.0f) iw = 1.0f / w;
 
 	// Calculate which joins needs extra vertices to append, and gather vertex count.
-	for (i = 0; i < cache->npaths; i++) {
+	for (i = 0; i < static_cast<int>(cache->paths.size()); i++) {
 		Path* path = &cache->paths[i];
 		Point* pts = &cache->points[path->first];
 		Point* p0 = &pts[path->count-1];
@@ -1018,7 +996,7 @@ static int expandStroke(Context& ctx, float w, float fringe, int lineCap, int li
 	calculateJoins(ctx, w, lineJoin, miterLimit);
 	// Calculate max vertex usage.
 	cverts = 0;
-	for (i = 0; i < cache->npaths; i++) {
+	for (i = 0; i < static_cast<int>(cache->paths.size()); i++) {
 		Path* path = &cache->paths[i];
 		int loop = (path->closed == 0) ? 0 : 1;
 		if (lineJoin == static_cast<int>(LineCap::Round)) {
@@ -1040,7 +1018,7 @@ static int expandStroke(Context& ctx, float w, float fringe, int lineCap, int li
 	verts = allocTempVerts(ctx, cverts);
 	if (verts == NULL) return 0;
 
-	for (i = 0; i < cache->npaths; i++) {
+	for (i = 0; i < static_cast<int>(cache->paths.size()); i++) {
 		Path* path = &cache->paths[i];
 		Point* pts = &cache->points[path->first];
 		Point* p0;
@@ -1166,7 +1144,7 @@ static int expandFill(Context& ctx, float w, int lineJoin, float miterLimit)
 
 	// Calculate max vertex usage.
 	cverts = 0;
-	for (i = 0; i < cache->npaths; i++) {
+	for (i = 0; i < static_cast<int>(cache->paths.size()); i++) {
 		Path* path = &cache->paths[i];
 		cverts += path->count + path->nbevel + 1;
 		if (fringe)
@@ -1176,9 +1154,9 @@ static int expandFill(Context& ctx, float w, int lineJoin, float miterLimit)
 	verts = allocTempVerts(ctx, cverts);
 	if (verts == NULL) return 0;
 
-	convex = cache->npaths == 1 && cache->paths[0].convex;
+	convex = cache->paths.size() == 1 && cache->paths[0].convex;
 
-	for (i = 0; i < cache->npaths; i++) {
+	for (i = 0; i < static_cast<int>(cache->paths.size()); i++) {
 		Path* path = &cache->paths[i];
 		Point* pts = &cache->points[path->first];
 		Point* p0;
@@ -1665,7 +1643,10 @@ float radToDeg(float rad)
 // State handling
 void save(Context& ctx)
 {
-	ctx.states.push_back({});
+	if (!ctx.states.empty())
+		ctx.states.push_back(ctx.states.back());
+	else
+		ctx.states.push_back({});
 }
 
 void restore(Context& ctx)
@@ -2378,8 +2359,8 @@ void debugDumpPathCache(Context* ctx)
 	const Path* path;
 	int i, j;
 
-	printf("Dumping %d cached paths\n", ctx->cache->npaths);
-	for (i = 0; i < ctx->cache->npaths; i++) {
+	printf("Dumping %zu cached paths\n", ctx->cache->paths.size());
+	for (i = 0; i < static_cast<int>(ctx->cache->paths.size()); i++) {
 		path = &ctx->cache->paths[i];
 		printf(" - Path %d\n", i);
 		if (path->nfill) {
@@ -2413,10 +2394,10 @@ void fill(Context* ctx)
 	fillPaint.outerColor.a *= state.alpha;
 
 	ctx->params.renderFill(ctx->params.userPtr, &fillPaint, state.compositeOperation, &state.scissor, ctx->fringeWidth,
-						   ctx->cache->bounds.data(), ctx->cache->paths, ctx->cache->npaths);
+						   ctx->cache->bounds.data(), ctx->cache->paths.data(), static_cast<int>(ctx->cache->paths.size()));
 
 	// Count triangles
-	for (i = 0; i < ctx->cache->npaths; i++) {
+	for (i = 0; i < static_cast<int>(ctx->cache->paths.size()); i++) {
 		path = &ctx->cache->paths[i];
 		ctx->fillTriCount += path->nfill-2;
 		ctx->fillTriCount += path->nstroke-2;
@@ -2455,10 +2436,10 @@ void stroke(Context* ctx)
 		detail::expandStroke(*ctx, strokeWidth*0.5f, 0.0f, state.lineCap, state.lineJoin, state.lineStyle, state.miterLimit);
 
 	ctx->params.renderStroke(ctx->params.userPtr, &strokePaint, state.compositeOperation, &state.scissor, ctx->fringeWidth,
-							 strokeWidth, state.lineStyle, ctx->cache->paths, ctx->cache->npaths);
+							 strokeWidth, state.lineStyle, ctx->cache->paths.data(), static_cast<int>(ctx->cache->paths.size()));
 
 	// Count triangles
-	for (i = 0; i < ctx->cache->npaths; i++) {
+	for (i = 0; i < static_cast<int>(ctx->cache->paths.size()); i++) {
 		path = &ctx->cache->paths[i];
 		ctx->strokeTriCount += path->nstroke-2;
 		ctx->drawCallCount++;
