@@ -1340,7 +1340,8 @@ static int isTransformFlipped(const float *xform)
 
 } // namespace detail
 
-Context::Context(std::shared_ptr<ContextImpl> impl) : mImpl(std::move(impl)) {}
+Context::Context(const Params& params) : mImpl(
+	std::shared_ptr<ContextImpl>(createInternal(params),deleteInternal)) {}
 
 Context::~Context() = default;
 
