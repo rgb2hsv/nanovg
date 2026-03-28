@@ -20,8 +20,7 @@ This repository’s **`modernize-cpp`** branch extends upstream NanoVG with a C+
 The `example_gl3` binary accepts `--test N` (and `--test=N`) to run a fixed-frame capture path useful for CI (see `.cursor/skills/verify` in this repo).
 
 ## Screenshot
-
-The sample PNGs that shipped with upstream are not present in this branch; run the `example_gl3` (or other) demo locally to view output.
+<img width="1000" height="600" alt="screenshot003" src="https://github.com/user-attachments/assets/44fb1758-7fe5-46d1-82b4-6cb4755fa6f7" />
 
 Usage
 =====
