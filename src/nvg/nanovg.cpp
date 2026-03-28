@@ -1395,162 +1395,6 @@ ContextImpl::ContextImpl(const Params& params):params(params){
 	scissor = ScissorBounds{0.0f, 0.0f, -1.0f, -1.0f};
 }
 
-namespace draw {
-
-// Forward declarations for mutual references within this namespace.
-void beginFrame(Context& ctx, float windowWidth, float windowHeight, float devicePixelRatio);
-void cancelFrame(Context& ctx);
-void endFrame(Context& ctx);
-void globalCompositeOperation(Context& ctx, int op);
-void globalCompositeBlendFunc(Context& ctx, int sfactor, int dfactor);
-void globalCompositeBlendFuncSeparate(Context& ctx, int srcRGB, int dstRGB, int srcAlpha, int dstAlpha);
-void save(Context& ctx);
-void restore(Context& ctx);
-void reset(Context& ctx);
-ScissorBounds currentScissor(Context& ctx);
-void shapeAntiAlias(Context& ctx, int enabled);
-void strokeColor(Context& ctx, Color color);
-void strokePaint(Context& ctx, Paint paint);
-void fillColor(Context& ctx, Color color);
-void fillPaint(Context& ctx, Paint paint);
-void miterLimit(Context& ctx, float limit);
-void strokeWidth(Context& ctx, float size);
-void lineStyle(Context& ctx, int lineStyle);
-void lineCap(Context& ctx, int cap);
-void lineJoin(Context& ctx, int join);
-void globalAlpha(Context& ctx, float alpha);
-void resetTransform(Context& ctx);
-void transform(Context& ctx, float a, float b, float c, float d, float e, float f);
-void translate(Context& ctx, float x, float y);
-void rotate(Context& ctx, float angle);
-void skewX(Context& ctx, float angle);
-void skewY(Context& ctx, float angle);
-void scale(Context& ctx, float x, float y);
-void currentTransform(Context& ctx, float* xform);
-int createImage(Context& ctx, const char* filename, int imageFlags);
-int createImageMem(Context& ctx, int imageFlags, unsigned char* data, int ndata);
-int createImageRGBA(Context& ctx, int w, int h, int imageFlags, const unsigned char* data);
-void updateImage(Context& ctx, int image, const unsigned char* data);
-void imageSize(Context& ctx, int image, int& w, int& h);
-void deleteImage(Context& ctx, int image);
-Paint linearGradient(Context& ctx, float sx, float sy, float ex, float ey, Color icol, Color ocol);
-Paint boxGradient(Context& ctx, float x, float y, float w, float h, float r, float f, Color icol, Color ocol);
-Paint radialGradient(Context& ctx, float cx, float cy, float inr, float outr, Color icol, Color ocol);
-Paint imagePattern(Context& ctx, float ox, float oy, float ex, float ey, float angle, int image, float alpha);
-void scissor(Context& ctx, float x, float y, float w, float h);
-void intersectScissor(Context& ctx, float x, float y, float w, float h);
-void resetScissor(Context& ctx);
-void beginPath(Context& ctx);
-void moveTo(Context& ctx, float x, float y);
-void lineTo(Context& ctx, float x, float y);
-void bezierTo(Context& ctx, float c1x, float c1y, float c2x, float c2y, float x, float y);
-void quadTo(Context& ctx, float cx, float cy, float x, float y);
-void arcTo(Context& ctx, float x1, float y1, float x2, float y2, float radius);
-void closePath(Context& ctx);
-void pathWinding(Context& ctx, int dir);
-void arc(Context& ctx, float cx, float cy, float r, float a0, float a1, int dir);
-void rect(Context& ctx, float x, float y, float w, float h);
-void roundedRect(Context& ctx, float x, float y, float w, float h, float r);
-void roundedRectVarying(Context& ctx, float x, float y, float w, float h, float radTopLeft, float radTopRight, float radBottomRight, float radBottomLeft);
-void ellipse(Context& ctx, float cx, float cy, float rx, float ry);
-void circle(Context& ctx, float cx, float cy, float r);
-void fill(Context& ctx);
-void stroke(Context& ctx);
-int createFont(Context& ctx, const char* name, const char* filename);
-int createFontAtIndex(Context& ctx, const char* name, const char* filename, const int fontIndex);
-int createFontMem(Context& ctx, const char* name, unsigned char* data, int ndata, int freeData);
-int createFontMemAtIndex(Context& ctx, const char* name, unsigned char* data, int ndata, int freeData, const int fontIndex);
-int findFont(Context& ctx, const char* name);
-int addFallbackFontId(Context& ctx, int baseFont, int fallbackFont);
-int addFallbackFont(Context& ctx, const char* baseFont, const char* fallbackFont);
-void resetFallbackFontsId(Context& ctx, int baseFont);
-void resetFallbackFonts(Context& ctx, const char* baseFont);
-void fontSize(Context& ctx, float size);
-void fontBlur(Context& ctx, float blur);
-void fontDilate(Context& ctx, float dilate);
-void textLetterSpacing(Context& ctx, float spacing);
-void textLineHeight(Context& ctx, float lineHeight);
-void textAlign(Context& ctx, int align);
-void fontFaceId(Context& ctx, int font);
-void fontFace(Context& ctx, const char* font);
-int getFontFaceId(Context& ctx);
-float getFontSize(Context& ctx);
-float getStrokeWidth(Context& ctx);
-int getTextAlign(Context& ctx);
-float text(Context& ctx, float x, float y, const char* string, const char* end);
-void textBox(Context& ctx, float x, float y, float breakRowWidth, const char* string, const char* end);
-float textBounds(Context& ctx, float x, float y, const char* string, const char* end, float* bounds);
-void textBoxBounds(Context& ctx, float x, float y, float breakRowWidth, const char* string, const char* end, float* bounds);
-int textGlyphPositions(Context& ctx, float x, float y, const char* string, const char* end, GlyphPosition* positions, int maxPositions);
-void textMetrics(Context& ctx, float* ascender, float* descender, float* lineh);
-int textBreakLines(Context& ctx, const char* string, const char* end, float breakRowWidth, TextRow* rows, int maxRows, int skipSpaces);
-void debugDumpPathCache(Context& ctx);
-
-int getImageTextureId(Context* ctx, int handle)
-{
-	return (*ctx)->params.renderGetImageTextureId((*ctx)->params.userPtr, handle);
-}
-
-ScissorBounds currentScissor(Context& ctx) {
-	return ctx->scissor;
-}
-
-void beginFrame(Context& ctx, float windowWidth, float windowHeight, float devicePixelRatio)
-{
-/*	printf("Tris: draws:%d  fill:%d  stroke:%d  text:%d  TOT:%d\n",
-		ctx->drawCallCount, ctx->fillTriCount, ctx->strokeTriCount, ctx->textTriCount,
-		ctx->fillTriCount+ctx->strokeTriCount+ctx->textTriCount);*/
-
-	ctx->states.clear();
-	save(ctx);
-	reset(ctx);
-
-	detail::setDevicePixelRatio(*ctx, devicePixelRatio);
-
-	ctx->params.renderViewport(ctx->params.userPtr, windowWidth, windowHeight, devicePixelRatio);
-
-	ctx->drawCallCount = 0;
-	ctx->fillTriCount = 0;
-	ctx->strokeTriCount = 0;
-	ctx->textTriCount = 0;
-}
-
-void cancelFrame(Context& ctx)
-{
-	ctx->params.renderCancel(ctx->params.userPtr);
-}
-
-void endFrame(Context& ctx)
-{
-	ctx->params.renderFlush(ctx->params.userPtr);
-	if (ctx->fontImageIdx != 0) {
-		int fontImage = ctx->fontImages[ctx->fontImageIdx];
-		ctx->fontImages[ctx->fontImageIdx] = 0;
-		int i, j, iw, ih;
-		// delete images that smaller than current one
-		if (fontImage == 0)
-			return;
-		imageSize(ctx, fontImage, iw, ih);
-		for (i = j = 0; i < ctx->fontImageIdx; i++) {
-			if (ctx->fontImages[i] != 0) {
-				int nw, nh;
-				int image = ctx->fontImages[i];
-				ctx->fontImages[i] = 0;
-				imageSize(ctx, image, nw, nh);
-				if (nw < iw || nh < ih)
-					deleteImage(ctx, image);
-				else
-					ctx->fontImages[j++] = image;
-			}
-		}
-		// make current font image to first
-		ctx->fontImages[j] = ctx->fontImages[0];
-		ctx->fontImages[0] = fontImage;
-		ctx->fontImageIdx = 0;
-	}
-}
-
-} // namespace draw
 
 Color rgb(unsigned char r, unsigned char g, unsigned char b)
 {
@@ -1732,28 +1576,74 @@ float radToDeg(float rad)
 	return rad / (float)M_PI * 180.0f;
 }
 
-namespace draw {
-
-// State handling
-void save(Context& ctx)
+void Context::beginFrame(float windowWidth, float windowHeight, float devicePixelRatio)
 {
-	if (!ctx->states.empty())
-		ctx->states.push_back(ctx->states.back());
-	else
-		ctx->states.push_back({});
+	mImpl->states.clear();
+	save();
+	reset();
+
+	detail::setDevicePixelRatio(**this, devicePixelRatio);
+
+	mImpl->params.renderViewport(mImpl->params.userPtr, windowWidth, windowHeight, devicePixelRatio);
+
+	mImpl->drawCallCount = 0;
+	mImpl->fillTriCount = 0;
+	mImpl->strokeTriCount = 0;
+	mImpl->textTriCount = 0;
 }
 
-void restore(Context& ctx)
+void Context::cancelFrame()
 {
-	if(ctx->states.size()<=1)
+	mImpl->params.renderCancel(mImpl->params.userPtr);
+}
+
+void Context::endFrame()
+{
+	mImpl->params.renderFlush(mImpl->params.userPtr);
+	if (mImpl->fontImageIdx != 0) {
+		int fontImage = mImpl->fontImages[mImpl->fontImageIdx];
+		mImpl->fontImages[mImpl->fontImageIdx] = 0;
+		int i, j, iw, ih;
+		if (fontImage == 0)
+			return;
+		imageSize(fontImage, iw, ih);
+		for (i = j = 0; i < mImpl->fontImageIdx; i++) {
+			if (mImpl->fontImages[i] != 0) {
+				int nw, nh;
+				int image = mImpl->fontImages[i];
+				mImpl->fontImages[i] = 0;
+				imageSize(image, nw, nh);
+				if (nw < iw || nh < ih)
+					deleteImage(image);
+				else
+					mImpl->fontImages[j++] = image;
+			}
+		}
+		mImpl->fontImages[j] = mImpl->fontImages[0];
+		mImpl->fontImages[0] = fontImage;
+		mImpl->fontImageIdx = 0;
+	}
+}
+
+void Context::save()
+{
+	if (!mImpl->states.empty())
+		mImpl->states.push_back(mImpl->states.back());
+	else
+		mImpl->states.push_back({});
+}
+
+void Context::restore()
+{
+	if(mImpl->states.size()<=1)
 		return;
 
-	ctx->states.pop_back();
+	mImpl->states.pop_back();
 }
 
-void reset(Context& ctx)
+void Context::reset()
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(**this);
 	state = State{};
 
 	detail::setPaintColor(state.fill, rgba(255,255,255,255));
@@ -1781,154 +1671,159 @@ void reset(Context& ctx)
 }
 
 // State setting
-void shapeAntiAlias(Context& ctx, int enabled)
+ScissorBounds Context::currentScissor()
 {
-	State& state = detail::getState(*ctx);
+	return mImpl->scissor;
+}
+
+void Context::shapeAntiAlias(int enabled)
+{
+	State& state = detail::getState(**this);
 	state.shapeAntiAlias = enabled;
 }
 
-void strokeWidth(Context& ctx, float width)
+void Context::strokeWidth(float width)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(**this);
 	state.strokeWidth = width;
 }
 
-float getStrokeWidth(Context& ctx) {
-	State& state = detail::getState(*ctx);
+float Context::getStrokeWidth() {
+	State& state = detail::getState(**this);
 	return state.strokeWidth;
 }
 
-int getTextAlign(Context& ctx) {
-	State& state = detail::getState(*ctx);
+int Context::getTextAlign() {
+	State& state = detail::getState(**this);
 	return state.textAlign;
 }
 
-float getFontSize(Context& ctx) {
-	State& state = detail::getState(*ctx);
+float Context::getFontSize() {
+	State& state = detail::getState(**this);
 	return state.fontSize;
 }
-int getFontFaceId(Context& ctx) {
-	State& state = detail::getState(*ctx);
+int Context::getFontFaceId() {
+	State& state = detail::getState(**this);
 	return state.fontId;
 }
 
-void miterLimit(Context& ctx, float limit)
+void Context::miterLimit(float limit)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(**this);
 	state.miterLimit = limit;
 }
 
-void lineStyle(Context& ctx, int lineStyle) {
-	State& state = detail::getState(*ctx);
+void Context::lineStyle(int lineStyle) {
+	State& state = detail::getState(**this);
 	state.lineStyle = lineStyle;
 }
 
-void lineCap(Context& ctx, int cap)
+void Context::lineCap(int cap)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(**this);
 	state.lineCap = cap;
 }
 
-void lineJoin(Context& ctx, int join)
+void Context::lineJoin(int join)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(**this);
 	state.lineJoin = join;
 }
 
-void globalAlpha(Context& ctx, float alpha)
+void Context::globalAlpha(float alpha)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(**this);
 	state.alpha = alpha;
 }
 
-void transform(Context& ctx, float a, float b, float c, float d, float e, float f)
+void Context::transform(float a, float b, float c, float d, float e, float f)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(**this);
 	const std::array<float, 6> t = { a, b, c, d, e, f };
 	transformPremultiply(state.xform.data(), t.data());
 }
 
-void resetTransform(Context& ctx)
+void Context::resetTransform()
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(**this);
 	transformIdentity(state.xform.data());
 }
 
-void translate(Context& ctx, float x, float y)
+void Context::translate(float x, float y)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(**this);
 	std::array<float, 6> t{};
 	transformTranslate(t.data(), x,y);
 	transformPremultiply(state.xform.data(), t.data());
 }
 
-void rotate(Context& ctx, float angle)
+void Context::rotate(float angle)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(**this);
 	std::array<float, 6> t{};
 	transformRotate(t.data(), angle);
 	transformPremultiply(state.xform.data(), t.data());
 }
 
-void skewX(Context& ctx, float angle)
+void Context::skewX(float angle)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(**this);
 	std::array<float, 6> t{};
 	transformSkewX(t.data(), angle);
 	transformPremultiply(state.xform.data(), t.data());
 }
 
-void skewY(Context& ctx, float angle)
+void Context::skewY(float angle)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(**this);
 	std::array<float, 6> t{};
 	transformSkewY(t.data(), angle);
 	transformPremultiply(state.xform.data(), t.data());
 }
 
-void scale(Context& ctx, float x, float y)
+void Context::scale(float x, float y)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(**this);
 	std::array<float, 6> t{};
 	transformScale(t.data(), x,y);
 	transformPremultiply(state.xform.data(), t.data());
 }
 
-void currentTransform(Context& ctx, float* xform)
+void Context::currentTransform(float* xform)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(**this);
 	if (xform == NULL) return;
 	memcpy(xform, state.xform.data(), sizeof(float)*6);
 }
 
-void strokeColor(Context& ctx, Color color)
+void Context::strokeColor(Color color)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(**this);
 	detail::setPaintColor(state.stroke, color);
 }
 
-void strokePaint(Context& ctx, Paint paint)
+void Context::strokePaint(Paint paint)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(**this);
 	state.stroke = paint;
 	transformMultiply(state.stroke.xform, state.xform.data());
 }
 
-void fillColor(Context& ctx, Color color)
+void Context::fillColor(Color color)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(**this);
 	detail::setPaintColor(state.fill, color);
 }
 
-void fillPaint(Context& ctx, Paint paint)
+void Context::fillPaint(Paint paint)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(**this);
 	state.fill = paint;
 	transformMultiply(state.fill.xform, state.xform.data());
 }
 
 #ifndef NVG_NO_STB
-int createImage(Context& ctx, const char* filename, int imageFlags)
+int Context::createImage(const char* filename, int imageFlags)
 {
 	int w, h, n, image;
 	unsigned char* img;
@@ -1939,12 +1834,12 @@ int createImage(Context& ctx, const char* filename, int imageFlags)
 //		printf("Failed to load %s - %s\n", filename, stbi_failure_reason());
 		return 0;
 	}
-	image = createImageRGBA(ctx, w, h, imageFlags, img);
+	image = createImageRGBA(w, h, imageFlags, img);
 	stbi_image_free(img);
 	return image;
 }
 
-int createImageMem(Context& ctx, int imageFlags, unsigned char* data, int ndata)
+int Context::createImageMem(int imageFlags, unsigned char* data, int ndata)
 {
 	int w, h, n, image;
 	stbi_set_unpremultiply_on_load(1);
@@ -1954,42 +1849,41 @@ int createImageMem(Context& ctx, int imageFlags, unsigned char* data, int ndata)
 //		printf("Failed to load %s - %s\n", filename, stbi_failure_reason());
 		return 0;
 	}
-	image = createImageRGBA(ctx, w, h, imageFlags, img);
+	image = createImageRGBA(w, h, imageFlags, img);
 	stbi_image_free(img);
 	return image;
 }
 #endif
 
-int createImageRGBA(Context& ctx, int w, int h, int imageFlags, const unsigned char* data)
+int Context::createImageRGBA(int w, int h, int imageFlags, const unsigned char* data)
 {
-	return ctx->params.renderCreateTexture(ctx->params.userPtr, static_cast<int>(Texture::Rgba), w, h, imageFlags, data);
+	return mImpl->params.renderCreateTexture(mImpl->params.userPtr, static_cast<int>(Texture::Rgba), w, h, imageFlags, data);
 }
 
-void updateImage(Context& ctx, int image, const unsigned char* data)
+void Context::updateImage(int image, const unsigned char* data)
 {
 	int w, h;
-	ctx->params.renderGetTextureSize(ctx->params.userPtr, image, &w, &h);
-	ctx->params.renderUpdateTexture(ctx->params.userPtr, image, 0,0, w,h, data);
+	mImpl->params.renderGetTextureSize(mImpl->params.userPtr, image, &w, &h);
+	mImpl->params.renderUpdateTexture(mImpl->params.userPtr, image, 0,0, w,h, data);
 }
 
-void imageSize(Context& ctx, int image, int& w, int& h)
+void Context::imageSize(int image, int& w, int& h)
 {
-	ctx->params.renderGetTextureSize(ctx->params.userPtr, image, &w, &h);
+	mImpl->params.renderGetTextureSize(mImpl->params.userPtr, image, &w, &h);
 }
 
-void deleteImage(Context& ctx, int image)
+void Context::deleteImage(int image)
 {
-	ctx->params.renderDeleteTexture(ctx->params.userPtr, image);
+	mImpl->params.renderDeleteTexture(mImpl->params.userPtr, image);
 }
 
-Paint linearGradient(Context& ctx,
+Paint Context::linearGradient(
 								  float sx, float sy, float ex, float ey,
 								  Color icol, Color ocol)
 {
 	Paint p{};
 	float dx, dy, d;
 	const float large = 1e5;
-	UNUSED(ctx);
 
 	// Calculate transform aligned to the line
 	dx = ex - sx;
@@ -2020,14 +1914,13 @@ Paint linearGradient(Context& ctx,
 	return p;
 }
 
-Paint radialGradient(Context& ctx,
+Paint Context::radialGradient(
 								  float cx, float cy, float inr, float outr,
 								  Color icol, Color ocol)
 {
 	Paint p{};
 	float r = (inr+outr)*0.5f;
 	float f = (outr-inr);
-	UNUSED(ctx);
 
 	transformIdentity(p.xform);
 	p.xform[4] = cx;
@@ -2046,12 +1939,11 @@ Paint radialGradient(Context& ctx,
 	return p;
 }
 
-Paint boxGradient(Context& ctx,
+Paint Context::boxGradient(
 							   float x, float y, float w, float h, float r, float f,
 							   Color icol, Color ocol)
 {
 	Paint p{};
-	UNUSED(ctx);
 
 	transformIdentity(p.xform);
 	p.xform[4] = x+w*0.5f;
@@ -2071,12 +1963,11 @@ Paint boxGradient(Context& ctx,
 }
 
 
-Paint imagePattern(Context& ctx,
+Paint Context::imagePattern(
 								float cx, float cy, float w, float h, float angle,
 								int image, float alpha)
 {
 	Paint p{};
-	UNUSED(ctx);
 
 	transformRotate(p.xform, angle);
 	p.xform[4] = cx;
@@ -2093,10 +1984,10 @@ Paint imagePattern(Context& ctx,
 }
 
 // Scissoring
-void scissor(Context& ctx, float x, float y, float w, float h)
+void Context::scissor(float x, float y, float w, float h)
 {
-	State& state = detail::getState(*ctx);
-	ctx->scissor = ScissorBounds{x, y, w, h};
+	State& state = detail::getState(**this);
+	mImpl->scissor = ScissorBounds{x, y, w, h};
 	w = detail::maxf(0.0f, w);
 	h = detail::maxf(0.0f, h);
 
@@ -2110,9 +2001,9 @@ void scissor(Context& ctx, float x, float y, float w, float h)
 }
 
 
-void intersectScissor(Context& ctx, float x, float y, float w, float h)
+void Context::intersectScissor(float x, float y, float w, float h)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(**this);
 	std::array<float, 6> pxform{};
 	std::array<float, 6> invxorm{};
 	std::array<float, 4> rect{};
@@ -2120,7 +2011,7 @@ void intersectScissor(Context& ctx, float x, float y, float w, float h)
 
 	// If no previous scissor has been set, set the scissor as current scissor.
 	if (state.scissor.extent[0] < 0) {
-		scissor(ctx, x, y, w, h);
+		scissor(x, y, w, h);
 		return;
 	}
 
@@ -2137,30 +2028,30 @@ void intersectScissor(Context& ctx, float x, float y, float w, float h)
 	// Intersect rects.
 	detail::isectRects(rect.data(), pxform[4]-tex,pxform[5]-tey,tex*2,tey*2, x,y,w,h);
 
-	scissor(ctx, rect[0], rect[1], rect[2], rect[3]);
+	scissor(rect[0], rect[1], rect[2], rect[3]);
 }
 
-void resetScissor(Context& ctx)
+void Context::resetScissor()
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(**this);
 	state.scissor = Scissor{};
 	state.scissor.extent[0] = -1.0f;
 	state.scissor.extent[1] = -1.0f;
 }
 
 // Global composite operation.
-void globalCompositeOperation(Context& ctx, int op)
+void Context::globalCompositeOperation(int op)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(**this);
 	state.compositeOperation = detail::compositeOperationState(op);
 }
 
-void globalCompositeBlendFunc(Context& ctx, int sfactor, int dfactor)
+void Context::globalCompositeBlendFunc(int sfactor, int dfactor)
 {
-	globalCompositeBlendFuncSeparate(ctx, sfactor, dfactor, sfactor, dfactor);
+	globalCompositeBlendFuncSeparate(sfactor, dfactor, sfactor, dfactor);
 }
 
-void globalCompositeBlendFuncSeparate(Context& ctx, int srcRGB, int dstRGB, int srcAlpha, int dstAlpha)
+void Context::globalCompositeBlendFuncSeparate(int srcRGB, int dstRGB, int srcAlpha, int dstAlpha)
 {
 	CompositeOperationState op;
 	op.srcRGB = srcRGB;
@@ -2168,7 +2059,7 @@ void globalCompositeBlendFuncSeparate(Context& ctx, int srcRGB, int dstRGB, int 
 	op.srcAlpha = srcAlpha;
 	op.dstAlpha = dstAlpha;
 
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(**this);
 	state.compositeOperation = op;
 }
 
@@ -2210,58 +2101,58 @@ void globalCompositeBlendFuncSeparate(Context& ctx, int srcRGB, int dstRGB, int 
 
 
 // Draw
-void beginPath(Context& ctx)
+void Context::beginPath()
 {
-	ctx->commands.clear();
-	detail::clearPathCache(*ctx);
+	mImpl->commands.clear();
+	detail::clearPathCache(**this);
 }
 
-void moveTo(Context& ctx, float x, float y)
+void Context::moveTo(float x, float y)
 {
 	std::array<float, 3> vals = { static_cast<float>(to_underlying(PathCommand::MoveTo)), x, y };
-	detail::appendCommands(*ctx, vals);
+	detail::appendCommands(**this, vals);
 }
 
-void lineTo(Context& ctx, float x, float y)
+void Context::lineTo(float x, float y)
 {
 	std::array<float, 3> vals = { static_cast<float>(to_underlying(PathCommand::LineTo)), x, y };
-	detail::appendCommands(*ctx, vals);
+	detail::appendCommands(**this, vals);
 }
 
-void bezierTo(Context& ctx, float c1x, float c1y, float c2x, float c2y, float x, float y)
+void Context::bezierTo(float c1x, float c1y, float c2x, float c2y, float x, float y)
 {
 	std::array<float, 7> vals = { static_cast<float>(to_underlying(PathCommand::BezierTo)), c1x, c1y, c2x, c2y, x, y };
-	detail::appendCommands(*ctx, vals);
+	detail::appendCommands(**this, vals);
 }
 
-void quadTo(Context& ctx, float cx, float cy, float x, float y)
+void Context::quadTo(float cx, float cy, float x, float y)
 {
-    float x0 = ctx->commandx;
-    float y0 = ctx->commandy;
+    float x0 = mImpl->commandx;
+    float y0 = mImpl->commandy;
     std::array<float, 7> vals = { static_cast<float>(to_underlying(PathCommand::BezierTo)),
         x0 + 2.0f/3.0f*(cx - x0), y0 + 2.0f/3.0f*(cy - y0),
         x + 2.0f/3.0f*(cx - x), y + 2.0f/3.0f*(cy - y),
         x, y };
-   detail::appendCommands(*ctx, vals);
+   detail::appendCommands(**this, vals);
 }
 
-void arcTo(Context& ctx, float x1, float y1, float x2, float y2, float radius)
+void Context::arcTo(float x1, float y1, float x2, float y2, float radius)
 {
-	float x0 = ctx->commandx;
-	float y0 = ctx->commandy;
+	float x0 = mImpl->commandx;
+	float y0 = mImpl->commandy;
 	float dx0,dy0, dx1,dy1, a, d, cx,cy, a0,a1;
 	int dir;
 
-	if (ctx->commands.empty()) {
+	if (mImpl->commands.empty()) {
 		return;
 	}
 
 	// Handle degenerate cases.
-	if (detail::ptEquals(x0,y0, x1,y1, ctx->distTol) ||
-		detail::ptEquals(x1,y1, x2,y2, ctx->distTol) ||
-		detail::distPtSeg(x1,y1, x0,y0, x2,y2) < ctx->distTol*ctx->distTol ||
-		radius < ctx->distTol) {
-		lineTo(ctx, x1,y1);
+	if (detail::ptEquals(x0,y0, x1,y1, mImpl->distTol) ||
+		detail::ptEquals(x1,y1, x2,y2, mImpl->distTol) ||
+		detail::distPtSeg(x1,y1, x0,y0, x2,y2) < mImpl->distTol*mImpl->distTol ||
+		radius < mImpl->distTol) {
+		lineTo(x1,y1);
 		return;
 	}
 
@@ -2278,7 +2169,7 @@ void arcTo(Context& ctx, float x1, float y1, float x2, float y2, float radius)
 //	printf("a=%f° d=%f\n", a/M_PI*180.0f, d);
 
 	if (d > 10000.0f) {
-		lineTo(ctx, x1,y1);
+		lineTo(x1,y1);
 		return;
 	}
 
@@ -2298,22 +2189,22 @@ void arcTo(Context& ctx, float x1, float y1, float x2, float y2, float radius)
 //		printf("CCW c=(%f, %f) a0=%f° a1=%f°\n", cx, cy, a0/M_PI*180.0f, a1/M_PI*180.0f);
 	}
 
-	arc(ctx, cx, cy, radius, a0, a1, dir);
+	arc(cx, cy, radius, a0, a1, dir);
 }
 
-void closePath(Context& ctx)
+void Context::closePath()
 {
 	std::array<float, 1> vals = { static_cast<float>(to_underlying(PathCommand::Close)) };
-	detail::appendCommands(*ctx, vals);
+	detail::appendCommands(**this, vals);
 }
 
-void pathWinding(Context& ctx, int dir)
+void Context::pathWinding(int dir)
 {
 	std::array<float, 2> vals = { static_cast<float>(to_underlying(PathCommand::Winding)), (float)dir };
-	detail::appendCommands(*ctx, vals);
+	detail::appendCommands(**this, vals);
 }
 
-void arc(Context& ctx, float cx, float cy, float r, float a0, float a1, int dir)
+void Context::arc(float cx, float cy, float r, float a0, float a1, int dir)
 {
 	const float pi = (float)M_PI;
 	const float twoPi = pi * 2.0f;
@@ -2322,7 +2213,7 @@ void arc(Context& ctx, float cx, float cy, float r, float a0, float a1, int dir)
 	float px = 0, py = 0, ptanx = 0, ptany = 0;
 	std::array<float, 3 + 5*7 + 100> vals{};
 	int i, ndivs, nvals;
-	int move = !ctx->commands.empty() ? static_cast<int>(PathCommand::LineTo) : static_cast<int>(PathCommand::MoveTo);
+	int move = !mImpl->commands.empty() ? static_cast<int>(PathCommand::LineTo) : static_cast<int>(PathCommand::MoveTo);
 
 	// Clamp angles
 	da = a1 - a0;
@@ -2378,10 +2269,10 @@ void arc(Context& ctx, float cx, float cy, float r, float a0, float a1, int dir)
 	}
 
 	std::span<float> span(vals.data(), static_cast<size_t>(nvals));
-	detail::appendCommands(*ctx, span);
+	detail::appendCommands(**this, span);
 }
 
-void rect(Context& ctx, float x, float y, float w, float h)
+void Context::rect(float x, float y, float w, float h)
 {
 	std::array<float, 13> vals = {
 		static_cast<float>(to_underlying(PathCommand::MoveTo)), x,y,
@@ -2390,18 +2281,18 @@ void rect(Context& ctx, float x, float y, float w, float h)
 		static_cast<float>(to_underlying(PathCommand::LineTo)), x+w,y,
 		static_cast<float>(to_underlying(PathCommand::Close))
 	};
-	detail::appendCommands(*ctx, vals);
+	detail::appendCommands(**this, vals);
 }
 
-void roundedRect(Context& ctx, float x, float y, float w, float h, float r)
+void Context::roundedRect(float x, float y, float w, float h, float r)
 {
-	roundedRectVarying(ctx, x, y, w, h, r, r, r, r);
+	roundedRectVarying(x, y, w, h, r, r, r, r);
 }
 
-void roundedRectVarying(Context& ctx, float x, float y, float w, float h, float radTopLeft, float radTopRight, float radBottomRight, float radBottomLeft)
+void Context::roundedRectVarying(float x, float y, float w, float h, float radTopLeft, float radTopRight, float radBottomRight, float radBottomLeft)
 {
 	if(radTopLeft < 0.1f && radTopRight < 0.1f && radBottomRight < 0.1f && radBottomLeft < 0.1f) {
-		rect(ctx, x, y, w, h);
+		rect(x, y, w, h);
 		return;
 	} else {
 		float halfw = detail::absf(w)*0.5f;
@@ -2422,11 +2313,11 @@ void roundedRectVarying(Context& ctx, float x, float y, float w, float h, float 
 			static_cast<float>(to_underlying(PathCommand::BezierTo)), x + rxTL*(1 - NVG_KAPPA90), y, x, y + ryTL*(1 - NVG_KAPPA90), x, y + ryTL,
 			static_cast<float>(to_underlying(PathCommand::Close))
 		};
-		detail::appendCommands(*ctx, vals);
+		detail::appendCommands(**this, vals);
 	}
 }
 
-void ellipse(Context& ctx, float cx, float cy, float rx, float ry)
+void Context::ellipse(float cx, float cy, float rx, float ry)
 {
 	std::array<float, 32> vals = {
 		static_cast<float>(to_underlying(PathCommand::MoveTo)), cx-rx, cy,
@@ -2436,22 +2327,22 @@ void ellipse(Context& ctx, float cx, float cy, float rx, float ry)
 		static_cast<float>(to_underlying(PathCommand::BezierTo)), cx-rx*NVG_KAPPA90, cy-ry, cx-rx, cy-ry*NVG_KAPPA90, cx-rx, cy,
 		static_cast<float>(to_underlying(PathCommand::Close))
 	};
-	detail::appendCommands(*ctx, vals);
+	detail::appendCommands(**this, vals);
 }
 
-void circle(Context& ctx, float cx, float cy, float r)
+void Context::circle(float cx, float cy, float r)
 {
-	ellipse(ctx, cx,cy, r,r);
+	ellipse(cx,cy, r,r);
 }
 
-void debugDumpPathCache(Context& ctx)
+void Context::debugDumpPathCache()
 {
 	const Path* path;
 	int i, j;
 
-	printf("Dumping %zu cached paths\n", ctx->cache->paths.size());
-	for (i = 0; i < static_cast<int>(ctx->cache->paths.size()); i++) {
-		path = &ctx->cache->paths[i];
+	printf("Dumping %zu cached paths\n", mImpl->cache->paths.size());
+	for (i = 0; i < static_cast<int>(mImpl->cache->paths.size()); i++) {
+		path = &mImpl->cache->paths[i];
 		printf(" - Path %d\n", i);
 		if (path->nfill) {
 			printf("   - fill: %d\n", path->nfill);
@@ -2466,38 +2357,38 @@ void debugDumpPathCache(Context& ctx)
 	}
 }
 
-void fill(Context& ctx)
+void Context::fill()
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(**this);
 	const Path* path;
 	Paint fillPaint = state.fill;
 	int i;
 
-	detail::flattenPaths(*ctx);
-	if (ctx->params.edgeAntiAlias && state.shapeAntiAlias)
-		detail::expandFill(*ctx, ctx->fringeWidth, static_cast<int>(LineCap::Miter), 2.4f);
+	detail::flattenPaths(**this);
+	if (mImpl->params.edgeAntiAlias && state.shapeAntiAlias)
+		detail::expandFill(**this, mImpl->fringeWidth, static_cast<int>(LineCap::Miter), 2.4f);
 	else
-		detail::expandFill(*ctx, 0.0f, static_cast<int>(LineCap::Miter), 2.4f);
+		detail::expandFill(**this, 0.0f, static_cast<int>(LineCap::Miter), 2.4f);
 
 	// Apply global alpha
 	fillPaint.innerColor.a *= state.alpha;
 	fillPaint.outerColor.a *= state.alpha;
 
-	ctx->params.renderFill(ctx->params.userPtr, &fillPaint, state.compositeOperation, &state.scissor, ctx->fringeWidth,
-						   ctx->cache->bounds.data(), ctx->cache->paths.data(), static_cast<int>(ctx->cache->paths.size()));
+	mImpl->params.renderFill(mImpl->params.userPtr, &fillPaint, state.compositeOperation, &state.scissor, mImpl->fringeWidth,
+						   mImpl->cache->bounds.data(), mImpl->cache->paths.data(), static_cast<int>(mImpl->cache->paths.size()));
 
 	// Count triangles
-	for (i = 0; i < static_cast<int>(ctx->cache->paths.size()); i++) {
-		path = &ctx->cache->paths[i];
-		ctx->fillTriCount += path->nfill-2;
-		ctx->fillTriCount += path->nstroke-2;
-		ctx->drawCallCount += 2;
+	for (i = 0; i < static_cast<int>(mImpl->cache->paths.size()); i++) {
+		path = &mImpl->cache->paths[i];
+		mImpl->fillTriCount += path->nfill-2;
+		mImpl->fillTriCount += path->nstroke-2;
+		mImpl->drawCallCount += 2;
 	}
 }
 
-void stroke(Context& ctx)
+void Context::stroke()
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(**this);
 	const float scale = detail::getAverageScale(state.xform.data());
 	float strokeWidth = detail::clampf(state.strokeWidth * scale, 0.0f, 1000.0f);
 	Paint strokePaint = state.stroke;
@@ -2505,133 +2396,133 @@ void stroke(Context& ctx)
 	int i;
 
 
-	if (strokeWidth < ctx->fringeWidth) {
+	if (strokeWidth < mImpl->fringeWidth) {
 		// If the stroke width is less than pixel size, use alpha to emulate coverage.
 		// Since coverage is area, scale by alpha*alpha.
-		float alpha = detail::clampf(strokeWidth / ctx->fringeWidth, 0.0f, 1.0f);
+		float alpha = detail::clampf(strokeWidth / mImpl->fringeWidth, 0.0f, 1.0f);
 		strokePaint.innerColor.a *= alpha*alpha;
 		strokePaint.outerColor.a *= alpha*alpha;
-		strokeWidth = ctx->fringeWidth;
+		strokeWidth = mImpl->fringeWidth;
 	}
 
 	// Apply global alpha
 	strokePaint.innerColor.a *= state.alpha;
 	strokePaint.outerColor.a *= state.alpha;
 
-	detail::flattenPaths(*ctx);
+	detail::flattenPaths(**this);
 
-	if (ctx->params.edgeAntiAlias && state.shapeAntiAlias)
-		detail::expandStroke(*ctx, strokeWidth*0.5f, ctx->fringeWidth, state.lineCap, state.lineJoin, state.lineStyle, state.miterLimit);
+	if (mImpl->params.edgeAntiAlias && state.shapeAntiAlias)
+		detail::expandStroke(**this, strokeWidth*0.5f, mImpl->fringeWidth, state.lineCap, state.lineJoin, state.lineStyle, state.miterLimit);
 	else
-		detail::expandStroke(*ctx, strokeWidth*0.5f, 0.0f, state.lineCap, state.lineJoin, state.lineStyle, state.miterLimit);
+		detail::expandStroke(**this, strokeWidth*0.5f, 0.0f, state.lineCap, state.lineJoin, state.lineStyle, state.miterLimit);
 
-	ctx->params.renderStroke(ctx->params.userPtr, &strokePaint, state.compositeOperation, &state.scissor, ctx->fringeWidth,
-							 strokeWidth, state.lineStyle, ctx->cache->paths.data(), static_cast<int>(ctx->cache->paths.size()));
+	mImpl->params.renderStroke(mImpl->params.userPtr, &strokePaint, state.compositeOperation, &state.scissor, mImpl->fringeWidth,
+							 strokeWidth, state.lineStyle, mImpl->cache->paths.data(), static_cast<int>(mImpl->cache->paths.size()));
 
 	// Count triangles
-	for (i = 0; i < static_cast<int>(ctx->cache->paths.size()); i++) {
-		path = &ctx->cache->paths[i];
-		ctx->strokeTriCount += path->nstroke-2;
-		ctx->drawCallCount++;
+	for (i = 0; i < static_cast<int>(mImpl->cache->paths.size()); i++) {
+		path = &mImpl->cache->paths[i];
+		mImpl->strokeTriCount += path->nstroke-2;
+		mImpl->drawCallCount++;
 	}
 }
 
 // Add fonts
-int createFont(Context& ctx, const char* name, const char* filename)
+int Context::createFont(const char* name, const char* filename)
 {
-	return fonsAddFont(ctx->fs.get(), name, filename, 0);
+	return fonsAddFont(mImpl->fs.get(), name, filename, 0);
 }
 
-int createFontAtIndex(Context& ctx, const char* name, const char* filename, const int fontIndex)
+int Context::createFontAtIndex(const char* name, const char* filename, const int fontIndex)
 {
-	return fonsAddFont(ctx->fs.get(), name, filename, fontIndex);
+	return fonsAddFont(mImpl->fs.get(), name, filename, fontIndex);
 }
 
-int createFontMem(Context& ctx, const char* name, unsigned char* data, int ndata, int freeData)
+int Context::createFontMem(const char* name, unsigned char* data, int ndata, int freeData)
 {
-	return fonsAddFontMem(ctx->fs.get(), name, data, ndata, freeData, 0);
+	return fonsAddFontMem(mImpl->fs.get(), name, data, ndata, freeData, 0);
 }
 
-int createFontMemAtIndex(Context& ctx, const char* name, unsigned char* data, int ndata, int freeData, const int fontIndex)
+int Context::createFontMemAtIndex(const char* name, unsigned char* data, int ndata, int freeData, const int fontIndex)
 {
-	return fonsAddFontMem(ctx->fs.get(), name, data, ndata, freeData, fontIndex);
+	return fonsAddFontMem(mImpl->fs.get(), name, data, ndata, freeData, fontIndex);
 }
 
-int findFont(Context& ctx, const char* name)
+int Context::findFont(const char* name)
 {
 	if (name == NULL) return -1;
-	return fonsGetFontByName(ctx->fs.get(), name);
+	return fonsGetFontByName(mImpl->fs.get(), name);
 }
 
 
-int addFallbackFontId(Context& ctx, int baseFont, int fallbackFont)
+int Context::addFallbackFontId(int baseFont, int fallbackFont)
 {
 	if(baseFont == -1 || fallbackFont == -1) return 0;
-	return fonsAddFallbackFont(ctx->fs.get(), baseFont, fallbackFont);
+	return fonsAddFallbackFont(mImpl->fs.get(), baseFont, fallbackFont);
 }
 
-int addFallbackFont(Context& ctx, const char* baseFont, const char* fallbackFont)
+int Context::addFallbackFont(const char* baseFont, const char* fallbackFont)
 {
-	return addFallbackFontId(ctx, findFont(ctx, baseFont), findFont(ctx, fallbackFont));
+	return addFallbackFontId(findFont(baseFont), findFont(fallbackFont));
 }
 
-void resetFallbackFontsId(Context& ctx, int baseFont)
+void Context::resetFallbackFontsId(int baseFont)
 {
-	fonsResetFallbackFont(ctx->fs.get(), baseFont);
+	fonsResetFallbackFont(mImpl->fs.get(), baseFont);
 }
 
-void resetFallbackFonts(Context& ctx, const char* baseFont)
+void Context::resetFallbackFonts(const char* baseFont)
 {
-	resetFallbackFontsId(ctx, findFont(ctx, baseFont));
+	resetFallbackFontsId(findFont(baseFont));
 }
 
 // State setting
-void fontSize(Context& ctx, float size)
+void Context::fontSize(float size)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(**this);
 	state.fontSize = size;
 }
 
-void fontBlur(Context& ctx, float blur)
+void Context::fontBlur(float blur)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(**this);
 	state.fontBlur = blur;
 }
 
-void fontDilate(Context& ctx, float dilate)
+void Context::fontDilate(float dilate)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(**this);
 	state.fontDilate = dilate;
 }
 
-void textLetterSpacing(Context& ctx, float spacing)
+void Context::textLetterSpacing(float spacing)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(**this);
 	state.letterSpacing = spacing;
 }
 
-void textLineHeight(Context& ctx, float lineHeight)
+void Context::textLineHeight(float lineHeight)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(**this);
 	state.lineHeight = lineHeight;
 }
 
-void textAlign(Context& ctx, int align)
+void Context::textAlign(int align)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(**this);
 	state.textAlign = align;
 }
 
-void fontFaceId(Context& ctx, int font)
+void Context::fontFaceId(int font)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(**this);
 	state.fontId = font;
 }
 
-void fontFace(Context& ctx, const char* font)
+void Context::fontFace(const char* font)
 {
-	State& state = detail::getState(*ctx);
-	state.fontId = fonsGetFontByName(ctx->fs.get(), font);
+	State& state = detail::getState(**this);
+	state.fontId = fonsGetFontByName(mImpl->fs.get(), font);
 }
 
 
@@ -2640,13 +2531,13 @@ void fontFace(Context& ctx, const char* font)
 
 
 
-float text(Context& ctx, float x, float y, const char* string, const char* end)
+float Context::text(float x, float y, const char* string, const char* end)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(**this);
 	FONStextIter iter, prevIter;
 	FONSquad q;
-	std::vector<Vertex>& buf = ctx->cache->verts;
-	float scale = detail::getFontScale(&state) * ctx->devicePxRatio;
+	std::vector<Vertex>& buf = mImpl->cache->verts;
+	float scale = detail::getFontScale(&state) * mImpl->devicePxRatio;
 	float invscale = 1.0f / scale;
 	int cverts = 0;
 	int isFlipped = detail::isTransformFlipped(state.xform.data());
@@ -2656,29 +2547,29 @@ float text(Context& ctx, float x, float y, const char* string, const char* end)
 
 	if (state.fontId == FONS_INVALID) return x;
 
-	fonsSetSize(ctx->fs.get(), state.fontSize*scale);
-	fonsSetSpacing(ctx->fs.get(), state.letterSpacing*scale);
-	fonsSetBlur(ctx->fs.get(), state.fontBlur*scale);
-	fonsSetDilate(ctx->fs.get(), state.fontDilate*scale);
-	fonsSetAlign(ctx->fs.get(), state.textAlign);
-	fonsSetFont(ctx->fs.get(), state.fontId);
+	fonsSetSize(mImpl->fs.get(), state.fontSize*scale);
+	fonsSetSpacing(mImpl->fs.get(), state.letterSpacing*scale);
+	fonsSetBlur(mImpl->fs.get(), state.fontBlur*scale);
+	fonsSetDilate(mImpl->fs.get(), state.fontDilate*scale);
+	fonsSetAlign(mImpl->fs.get(), state.textAlign);
+	fonsSetFont(mImpl->fs.get(), state.fontId);
 
 	cverts = detail::maxi(2, (int)(end - string)) * 6; // conservative estimate.
-	detail::prepareTempVerts(*ctx, cverts);
+	detail::prepareTempVerts(**this, cverts);
 
-	fonsTextIterInit(ctx->fs.get(), &iter, 0, 0, string, end, FONS_GLYPH_BITMAP_REQUIRED);
+	fonsTextIterInit(mImpl->fs.get(), &iter, 0, 0, string, end, FONS_GLYPH_BITMAP_REQUIRED);
 	prevIter = iter;
-	while (fonsTextIterNext(ctx->fs.get(), &iter, &q)) {
+	while (fonsTextIterNext(mImpl->fs.get(), &iter, &q)) {
 		std::array<float, 8> c{};
 		if (iter.prevGlyphIndex == -1) { // can not retrieve glyph?
 			if (!buf.empty()) {
-				detail::renderText(*ctx, buf.data(), static_cast<int>(buf.size()));
+				detail::renderText(**this, buf.data(), static_cast<int>(buf.size()));
 				buf.clear();
 			}
-			if (!detail::allocTextAtlas(*ctx))
+			if (!detail::allocTextAtlas(**this))
 				break; // no memory :(
 			iter = prevIter;
-			fonsTextIterNext(ctx->fs.get(), &iter, &q); // try again
+			fonsTextIterNext(mImpl->fs.get(), &iter, &q); // try again
 			if (iter.prevGlyphIndex == -1) // still can not find glyph?
 				break;
 		}
@@ -2706,15 +2597,15 @@ float text(Context& ctx, float x, float y, const char* string, const char* end)
 	}
 
 	// TODO: add back-end bit to do this just once per frame.
-	detail::flushTextTexture(*ctx);
+	detail::flushTextTexture(**this);
 
-	detail::renderText(*ctx, buf.data(), static_cast<int>(buf.size()));
+	detail::renderText(**this, buf.data(), static_cast<int>(buf.size()));
 	return iter.nextx * invscale + x;
 }
 
-void textBox(Context& ctx, float x, float y, float breakRowWidth, const char* string, const char* end)
+void Context::textBox(float x, float y, float breakRowWidth, const char* string, const char* end)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(**this);
 	std::array<TextRow, 2> rows{};
 	int nrows = 0, i;
 	int oldAlign = state.textAlign;
@@ -2724,19 +2615,19 @@ void textBox(Context& ctx, float x, float y, float breakRowWidth, const char* st
 
 	if (state.fontId == FONS_INVALID) return;
 
-	textMetrics(ctx, NULL, NULL, &lineh);
+	textMetrics(NULL, NULL, &lineh);
 
 	state.textAlign = static_cast<int>(Align::Left) | valign;
 
-	while ((nrows = textBreakLines(ctx, string, end, breakRowWidth, rows.data(), (int)rows.size(), 0))) {
+	while ((nrows = textBreakLines(string, end, breakRowWidth, rows.data(), (int)rows.size(), 0))) {
 		for (i = 0; i < nrows; i++) {
 			TextRow* row = &rows[(size_t)i];
 			if (halign & Align::Left)
-				text(ctx, x, y, row->start, row->end);
+				text(x, y, row->start, row->end);
 			else if (halign & Align::Center)
-				text(ctx, x + breakRowWidth*0.5f - row->width*0.5f, y, row->start, row->end);
+				text(x + breakRowWidth*0.5f - row->width*0.5f, y, row->start, row->end);
 			else if (halign & Align::Right)
-				text(ctx, x + breakRowWidth - row->width, y, row->start, row->end);
+				text(x + breakRowWidth - row->width, y, row->start, row->end);
 			y += lineh * state.lineHeight;
 		}
 		string = rows[(size_t)nrows-1].next;
@@ -2745,10 +2636,10 @@ void textBox(Context& ctx, float x, float y, float breakRowWidth, const char* st
 	state.textAlign = oldAlign;
 }
 
-int textGlyphPositions(Context& ctx, float x, float y, const char* string, const char* end, GlyphPosition* positions, int maxPositions)
+int Context::textGlyphPositions(float x, float y, const char* string, const char* end, GlyphPosition* positions, int maxPositions)
 {
-	State& state = detail::getState(*ctx);
-	float scale = detail::getFontScale(&state) * ctx->devicePxRatio;
+	State& state = detail::getState(**this);
+	float scale = detail::getFontScale(&state) * mImpl->devicePxRatio;
 	float invscale = 1.0f / scale;
 	FONStextIter iter, prevIter;
 	FONSquad q;
@@ -2762,18 +2653,18 @@ int textGlyphPositions(Context& ctx, float x, float y, const char* string, const
 	if (string == end)
 		return 0;
 
-	fonsSetSize(ctx->fs.get(), state.fontSize*scale);
-	fonsSetSpacing(ctx->fs.get(), state.letterSpacing*scale);
-	fonsSetBlur(ctx->fs.get(), state.fontBlur*scale);
-	fonsSetAlign(ctx->fs.get(), state.textAlign);
-	fonsSetFont(ctx->fs.get(), state.fontId);
+	fonsSetSize(mImpl->fs.get(), state.fontSize*scale);
+	fonsSetSpacing(mImpl->fs.get(), state.letterSpacing*scale);
+	fonsSetBlur(mImpl->fs.get(), state.fontBlur*scale);
+	fonsSetAlign(mImpl->fs.get(), state.textAlign);
+	fonsSetFont(mImpl->fs.get(), state.fontId);
 
-	fonsTextIterInit(ctx->fs.get(), &iter, 0, 0, string, end, FONS_GLYPH_BITMAP_OPTIONAL);
+	fonsTextIterInit(mImpl->fs.get(), &iter, 0, 0, string, end, FONS_GLYPH_BITMAP_OPTIONAL);
 	prevIter = iter;
-	while (fonsTextIterNext(ctx->fs.get(), &iter, &q)) {
-		if (iter.prevGlyphIndex < 0 && detail::allocTextAtlas(*ctx)) { // can not retrieve glyph?
+	while (fonsTextIterNext(mImpl->fs.get(), &iter, &q)) {
+		if (iter.prevGlyphIndex < 0 && detail::allocTextAtlas(**this)) { // can not retrieve glyph?
 			iter = prevIter;
-			fonsTextIterNext(ctx->fs.get(), &iter, &q); // try again
+			fonsTextIterNext(mImpl->fs.get(), &iter, &q); // try again
 		}
 		prevIter = iter;
 		positions[npos].str = iter.str;
@@ -2795,10 +2686,10 @@ enum class CodepointType : int {
 	CjkChar,
 };
 
-int textBreakLines(Context& ctx, const char* string, const char* end, float breakRowWidth, TextRow* rows, int maxRows, int skipSpaces)
+int Context::textBreakLines(const char* string, const char* end, float breakRowWidth, TextRow* rows, int maxRows, int skipSpaces)
 {
-	State& state = detail::getState(*ctx);
-	float scale = detail::getFontScale(&state) * ctx->devicePxRatio;
+	State& state = detail::getState(**this);
+	float scale = detail::getFontScale(&state) * mImpl->devicePxRatio;
 	float invscale = 1.0f / scale;
 	FONStextIter iter, prevIter;
 	FONSquad q;
@@ -2826,21 +2717,21 @@ int textBreakLines(Context& ctx, const char* string, const char* end, float brea
 
 	if (string == end) return 0;
 
-	fonsSetSize(ctx->fs.get(), state.fontSize*scale);
-	fonsSetSpacing(ctx->fs.get(), state.letterSpacing*scale);
-	fonsSetBlur(ctx->fs.get(), state.fontBlur*scale);
-	fonsSetDilate(ctx->fs.get(), state.fontDilate*scale);
-	fonsSetAlign(ctx->fs.get(), state.textAlign);
-	fonsSetFont(ctx->fs.get(), state.fontId);
+	fonsSetSize(mImpl->fs.get(), state.fontSize*scale);
+	fonsSetSpacing(mImpl->fs.get(), state.letterSpacing*scale);
+	fonsSetBlur(mImpl->fs.get(), state.fontBlur*scale);
+	fonsSetDilate(mImpl->fs.get(), state.fontDilate*scale);
+	fonsSetAlign(mImpl->fs.get(), state.textAlign);
+	fonsSetFont(mImpl->fs.get(), state.fontId);
 
 	breakRowWidth *= scale;
 
-	fonsTextIterInit(ctx->fs.get(), &iter, 0, 0, string, end, FONS_GLYPH_BITMAP_OPTIONAL);
+	fonsTextIterInit(mImpl->fs.get(), &iter, 0, 0, string, end, FONS_GLYPH_BITMAP_OPTIONAL);
 	prevIter = iter;
-	while (fonsTextIterNext(ctx->fs.get(), &iter, &q)) {
-		if (iter.prevGlyphIndex < 0 && detail::allocTextAtlas(*ctx)) { // can not retrieve glyph?
+	while (fonsTextIterNext(mImpl->fs.get(), &iter, &q)) {
+		if (iter.prevGlyphIndex < 0 && detail::allocTextAtlas(**this)) { // can not retrieve glyph?
 			iter = prevIter;
-			fonsTextIterNext(ctx->fs.get(), &iter, &q); // try again
+			fonsTextIterNext(mImpl->fs.get(), &iter, &q); // try again
 		}
 		prevIter = iter;
 		switch (iter.codepoint) {
@@ -3010,26 +2901,26 @@ int textBreakLines(Context& ctx, const char* string, const char* end, float brea
 	return nrows;
 }
 
-float textBounds(Context& ctx, float x, float y, const char* string, const char* end, float* bounds)
+float Context::textBounds(float x, float y, const char* string, const char* end, float* bounds)
 {
-	State& state = detail::getState(*ctx);
-	float scale = detail::getFontScale(&state) * ctx->devicePxRatio;
+	State& state = detail::getState(**this);
+	float scale = detail::getFontScale(&state) * mImpl->devicePxRatio;
 	float invscale = 1.0f / scale;
 	float width;
 
 	if (state.fontId == FONS_INVALID) return 0;
 
-	fonsSetSize(ctx->fs.get(), state.fontSize*scale);
-	fonsSetSpacing(ctx->fs.get(), state.letterSpacing*scale);
-	fonsSetBlur(ctx->fs.get(), state.fontBlur*scale);
-	fonsSetDilate(ctx->fs.get(), state.fontDilate*scale);
-	fonsSetAlign(ctx->fs.get(), state.textAlign);
-	fonsSetFont(ctx->fs.get(), state.fontId);
+	fonsSetSize(mImpl->fs.get(), state.fontSize*scale);
+	fonsSetSpacing(mImpl->fs.get(), state.letterSpacing*scale);
+	fonsSetBlur(mImpl->fs.get(), state.fontBlur*scale);
+	fonsSetDilate(mImpl->fs.get(), state.fontDilate*scale);
+	fonsSetAlign(mImpl->fs.get(), state.textAlign);
+	fonsSetFont(mImpl->fs.get(), state.fontId);
 
-	width = fonsTextBounds(ctx->fs.get(), 0, 0, string, end, bounds);
+	width = fonsTextBounds(mImpl->fs.get(), 0, 0, string, end, bounds);
 	if (bounds != NULL) {
 		// Use line bounds for height.
-		fonsLineBounds(ctx->fs.get(), 0, &bounds[1], &bounds[3]);
+		fonsLineBounds(mImpl->fs.get(), 0, &bounds[1], &bounds[3]);
 		bounds[0] = bounds[0] * invscale + x;
 		bounds[1] = bounds[1] * invscale + y;
 		bounds[2] = bounds[2] * invscale + x;
@@ -3038,11 +2929,11 @@ float textBounds(Context& ctx, float x, float y, const char* string, const char*
 	return width * invscale;
 }
 
-void textBoxBounds(Context& ctx, float x, float y, float breakRowWidth, const char* string, const char* end, float* bounds)
+void Context::textBoxBounds(float x, float y, float breakRowWidth, const char* string, const char* end, float* bounds)
 {
-	State& state = detail::getState(*ctx);
+	State& state = detail::getState(**this);
 	std::array<TextRow, 2> rows{};
-	float scale = detail::getFontScale(&state) * ctx->devicePxRatio;
+	float scale = detail::getFontScale(&state) * mImpl->devicePxRatio;
 	float invscale = 1.0f / scale;
 	float yoff = 0;
 	int nrows = 0, i;
@@ -3058,24 +2949,24 @@ void textBoxBounds(Context& ctx, float x, float y, float breakRowWidth, const ch
 		return;
 	}
 
-	textMetrics(ctx, NULL, NULL, &lineh);
+	textMetrics(NULL, NULL, &lineh);
 
 	state.textAlign = static_cast<int>(Align::Left) | valign;
 
 	minx = maxx = 0;
 	miny = maxy = 0;
 
-	fonsSetSize(ctx->fs.get(), state.fontSize*scale);
-	fonsSetSpacing(ctx->fs.get(), state.letterSpacing*scale);
-	fonsSetBlur(ctx->fs.get(), state.fontBlur*scale);
-	fonsSetDilate(ctx->fs.get(), state.fontDilate*scale);
-	fonsSetAlign(ctx->fs.get(), state.textAlign);
-	fonsSetFont(ctx->fs.get(), state.fontId);
-	fonsLineBounds(ctx->fs.get(), 0, &rminy, &rmaxy);
+	fonsSetSize(mImpl->fs.get(), state.fontSize*scale);
+	fonsSetSpacing(mImpl->fs.get(), state.letterSpacing*scale);
+	fonsSetBlur(mImpl->fs.get(), state.fontBlur*scale);
+	fonsSetDilate(mImpl->fs.get(), state.fontDilate*scale);
+	fonsSetAlign(mImpl->fs.get(), state.textAlign);
+	fonsSetFont(mImpl->fs.get(), state.fontId);
+	fonsLineBounds(mImpl->fs.get(), 0, &rminy, &rmaxy);
 	rminy *= invscale;
 	rmaxy *= invscale;
 
-	while ((nrows = textBreakLines(ctx, string, end, breakRowWidth, rows.data(), (int)rows.size(), 0))) {
+	while ((nrows = textBreakLines(string, end, breakRowWidth, rows.data(), (int)rows.size(), 0))) {
 		for (i = 0; i < nrows; i++) {
 			TextRow* row = &rows[(size_t)i];
 			float rminx, rmaxx, dx = 0;
@@ -3109,22 +3000,22 @@ void textBoxBounds(Context& ctx, float x, float y, float breakRowWidth, const ch
 	}
 }
 
-void textMetrics(Context& ctx, float* ascender, float* descender, float* lineh)
+void Context::textMetrics(float* ascender, float* descender, float* lineh)
 {
-	State& state = detail::getState(*ctx);
-	float scale = detail::getFontScale(&state) * ctx->devicePxRatio;
+	State& state = detail::getState(**this);
+	float scale = detail::getFontScale(&state) * mImpl->devicePxRatio;
 	float invscale = 1.0f / scale;
 
 	if (state.fontId == FONS_INVALID) return;
 
-	fonsSetSize(ctx->fs.get(), state.fontSize*scale);
-	fonsSetSpacing(ctx->fs.get(), state.letterSpacing*scale);
-	fonsSetBlur(ctx->fs.get(), state.fontBlur*scale);
-	fonsSetDilate(ctx->fs.get(), state.fontDilate*scale);
-	fonsSetAlign(ctx->fs.get(), state.textAlign);
-	fonsSetFont(ctx->fs.get(), state.fontId);
+	fonsSetSize(mImpl->fs.get(), state.fontSize*scale);
+	fonsSetSpacing(mImpl->fs.get(), state.letterSpacing*scale);
+	fonsSetBlur(mImpl->fs.get(), state.fontBlur*scale);
+	fonsSetDilate(mImpl->fs.get(), state.fontDilate*scale);
+	fonsSetAlign(mImpl->fs.get(), state.textAlign);
+	fonsSetFont(mImpl->fs.get(), state.fontId);
 
-	fonsVertMetrics(ctx->fs.get(), ascender, descender, lineh);
+	fonsVertMetrics(mImpl->fs.get(), ascender, descender, lineh);
 	if (ascender != NULL)
 		*ascender *= invscale;
 	if (descender != NULL)
@@ -3132,158 +3023,6 @@ void textMetrics(Context& ctx, float* ascender, float* descender, float* lineh)
 	if (lineh != NULL)
 		*lineh *= invscale;
 }
-
-} // namespace draw
-
-void Context::beginFrame(float windowWidth, float windowHeight, float devicePixelRatio) {
-	draw::beginFrame(*this, windowWidth, windowHeight, devicePixelRatio);
-}
-void Context::cancelFrame() { draw::cancelFrame(*this); }
-void Context::endFrame() { draw::endFrame(*this); }
-void Context::globalCompositeOperation(int op) { draw::globalCompositeOperation(*this, op); }
-void Context::globalCompositeBlendFunc(int sfactor, int dfactor) {
-	draw::globalCompositeBlendFunc(*this, sfactor, dfactor);
-}
-void Context::globalCompositeBlendFuncSeparate(int srcRGB, int dstRGB, int srcAlpha, int dstAlpha) {
-	draw::globalCompositeBlendFuncSeparate(*this, srcRGB, dstRGB, srcAlpha, dstAlpha);
-}
-void Context::save() { draw::save(*this); }
-void Context::restore() { draw::restore(*this); }
-void Context::reset() { draw::reset(*this); }
-ScissorBounds Context::currentScissor() { return draw::currentScissor(*this); }
-void Context::shapeAntiAlias(int enabled) { draw::shapeAntiAlias(*this, enabled); }
-void Context::strokeColor(Color color) { draw::strokeColor(*this, color); }
-void Context::strokePaint(Paint paint) { draw::strokePaint(*this, paint); }
-void Context::fillColor(Color color) { draw::fillColor(*this, color); }
-void Context::fillPaint(Paint paint) { draw::fillPaint(*this, paint); }
-void Context::miterLimit(float limit) { draw::miterLimit(*this, limit); }
-void Context::strokeWidth(float size) { draw::strokeWidth(*this, size); }
-void Context::lineStyle(int lineStyle) { draw::lineStyle(*this, lineStyle); }
-void Context::lineCap(int cap) { draw::lineCap(*this, cap); }
-void Context::lineJoin(int join) { draw::lineJoin(*this, join); }
-void Context::globalAlpha(float alpha) { draw::globalAlpha(*this, alpha); }
-void Context::resetTransform() { draw::resetTransform(*this); }
-void Context::transform(float a, float b, float c, float d, float e, float f) {
-	draw::transform(*this, a, b, c, d, e, f);
-}
-void Context::translate(float x, float y) { draw::translate(*this, x, y); }
-void Context::rotate(float angle) { draw::rotate(*this, angle); }
-void Context::skewX(float angle) { draw::skewX(*this, angle); }
-void Context::skewY(float angle) { draw::skewY(*this, angle); }
-void Context::scale(float x, float y) { draw::scale(*this, x, y); }
-void Context::currentTransform(float* xform) { draw::currentTransform(*this, xform); }
-int Context::createImage(const char* filename, int imageFlags) {
-	return draw::createImage(*this, filename, imageFlags);
-}
-int Context::createImageMem(int imageFlags, unsigned char* data, int ndata) {
-	return draw::createImageMem(*this, imageFlags, data, ndata);
-}
-int Context::createImageRGBA(int w, int h, int imageFlags, const unsigned char* data) {
-	return draw::createImageRGBA(*this, w, h, imageFlags, data);
-}
-void Context::updateImage(int image, const unsigned char* data) {
-	draw::updateImage(*this, image, data);
-}
-void Context::imageSize(int image, int& w, int& h) { draw::imageSize(*this, image, w, h); }
-void Context::deleteImage(int image) { draw::deleteImage(*this, image); }
-Paint Context::linearGradient(float sx, float sy, float ex, float ey, Color icol, Color ocol) {
-	return draw::linearGradient(*this, sx, sy, ex, ey, icol, ocol);
-}
-Paint Context::boxGradient(float x, float y, float w, float h, float r, float f, Color icol, Color ocol) {
-	return draw::boxGradient(*this, x, y, w, h, r, f, icol, ocol);
-}
-Paint Context::radialGradient(float cx, float cy, float inr, float outr, Color icol, Color ocol) {
-	return draw::radialGradient(*this, cx, cy, inr, outr, icol, ocol);
-}
-Paint Context::imagePattern(float ox, float oy, float ex, float ey, float angle, int image, float alpha) {
-	return draw::imagePattern(*this, ox, oy, ex, ey, angle, image, alpha);
-}
-void Context::scissor(float x, float y, float w, float h) { draw::scissor(*this, x, y, w, h); }
-void Context::intersectScissor(float x, float y, float w, float h) {
-	draw::intersectScissor(*this, x, y, w, h);
-}
-void Context::resetScissor() { draw::resetScissor(*this); }
-void Context::beginPath() { draw::beginPath(*this); }
-void Context::moveTo(float x, float y) { draw::moveTo(*this, x, y); }
-void Context::lineTo(float x, float y) { draw::lineTo(*this, x, y); }
-void Context::bezierTo(float c1x, float c1y, float c2x, float c2y, float x, float y) {
-	draw::bezierTo(*this, c1x, c1y, c2x, c2y, x, y);
-}
-void Context::quadTo(float cx, float cy, float x, float y) { draw::quadTo(*this, cx, cy, x, y); }
-void Context::arcTo(float x1, float y1, float x2, float y2, float radius) {
-	draw::arcTo(*this, x1, y1, x2, y2, radius);
-}
-void Context::closePath() { draw::closePath(*this); }
-void Context::pathWinding(int dir) { draw::pathWinding(*this, dir); }
-void Context::arc(float cx, float cy, float r, float a0, float a1, int dir) {
-	draw::arc(*this, cx, cy, r, a0, a1, dir);
-}
-void Context::rect(float x, float y, float w, float h) { draw::rect(*this, x, y, w, h); }
-void Context::roundedRect(float x, float y, float w, float h, float r) {
-	draw::roundedRect(*this, x, y, w, h, r);
-}
-void Context::roundedRectVarying(float x, float y, float w, float h, float radTopLeft, float radTopRight, float radBottomRight, float radBottomLeft) {
-	draw::roundedRectVarying(*this, x, y, w, h, radTopLeft, radTopRight, radBottomRight, radBottomLeft);
-}
-void Context::ellipse(float cx, float cy, float rx, float ry) { draw::ellipse(*this, cx, cy, rx, ry); }
-void Context::circle(float cx, float cy, float r) { draw::circle(*this, cx, cy, r); }
-void Context::fill() { draw::fill(*this); }
-void Context::stroke() { draw::stroke(*this); }
-int Context::createFont(const char* name, const char* filename) {
-	return draw::createFont(*this, name, filename);
-}
-int Context::createFontAtIndex(const char* name, const char* filename, const int fontIndex) {
-	return draw::createFontAtIndex(*this, name, filename, fontIndex);
-}
-int Context::createFontMem(const char* name, unsigned char* data, int ndata, int freeData) {
-	return draw::createFontMem(*this, name, data, ndata, freeData);
-}
-int Context::createFontMemAtIndex(const char* name, unsigned char* data, int ndata, int freeData, const int fontIndex) {
-	return draw::createFontMemAtIndex(*this, name, data, ndata, freeData, fontIndex);
-}
-int Context::findFont(const char* name) { return draw::findFont(*this, name); }
-int Context::addFallbackFontId(int baseFont, int fallbackFont) {
-	return draw::addFallbackFontId(*this, baseFont, fallbackFont);
-}
-int Context::addFallbackFont(const char* baseFont, const char* fallbackFont) {
-	return draw::addFallbackFont(*this, baseFont, fallbackFont);
-}
-void Context::resetFallbackFontsId(int baseFont) { draw::resetFallbackFontsId(*this, baseFont); }
-void Context::resetFallbackFonts(const char* baseFont) { draw::resetFallbackFonts(*this, baseFont); }
-void Context::fontSize(float size) { draw::fontSize(*this, size); }
-void Context::fontBlur(float blur) { draw::fontBlur(*this, blur); }
-void Context::fontDilate(float dilate) { draw::fontDilate(*this, dilate); }
-void Context::textLetterSpacing(float spacing) { draw::textLetterSpacing(*this, spacing); }
-void Context::textLineHeight(float lineHeight) { draw::textLineHeight(*this, lineHeight); }
-void Context::textAlign(int align) { draw::textAlign(*this, align); }
-void Context::fontFaceId(int font) { draw::fontFaceId(*this, font); }
-void Context::fontFace(const char* font) { draw::fontFace(*this, font); }
-int Context::getFontFaceId() { return draw::getFontFaceId(*this); }
-float Context::getFontSize() { return draw::getFontSize(*this); }
-float Context::getStrokeWidth() { return draw::getStrokeWidth(*this); }
-int Context::getTextAlign() { return draw::getTextAlign(*this); }
-float Context::text(float x, float y, const char* string, const char* end) {
-	return draw::text(*this, x, y, string, end);
-}
-void Context::textBox(float x, float y, float breakRowWidth, const char* string, const char* end) {
-	draw::textBox(*this, x, y, breakRowWidth, string, end);
-}
-float Context::textBounds(float x, float y, const char* string, const char* end, float* bounds) {
-	return draw::textBounds(*this, x, y, string, end, bounds);
-}
-void Context::textBoxBounds(float x, float y, float breakRowWidth, const char* string, const char* end, float* bounds) {
-	draw::textBoxBounds(*this, x, y, breakRowWidth, string, end, bounds);
-}
-int Context::textGlyphPositions(float x, float y, const char* string, const char* end, GlyphPosition* positions, int maxPositions) {
-	return draw::textGlyphPositions(*this, x, y, string, end, positions, maxPositions);
-}
-void Context::textMetrics(float* ascender, float* descender, float* lineh) {
-	draw::textMetrics(*this, ascender, descender, lineh);
-}
-int Context::textBreakLines(const char* string, const char* end, float breakRowWidth, TextRow* rows, int maxRows, int skipSpaces) {
-	return draw::textBreakLines(*this, string, end, breakRowWidth, rows, maxRows, skipSpaces);
-}
 const Params& Context::internalParams() { return (*this)->params; }
-void Context::debugDumpPathCache() { draw::debugDumpPathCache(*this); }
 
 }
