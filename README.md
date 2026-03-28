@@ -5,9 +5,25 @@ NanoVG
 
 NanoVG is small antialiased vector graphics rendering library for OpenGL. It has lean API modeled after HTML5 canvas API. It is aimed to be a practical and fun toolset for building scalable user interfaces and visualizations.
 
+This repository’s **`modernize-cpp`** branch extends upstream NanoVG with a C++20 implementation while keeping the original C API available for legacy examples and bindings. The notes below under **Changes since upstream** summarize what differs from the merge-base with [memononen/nanovg](https://github.com/memononen/nanovg) `master` (commit `6a8a2e7`).
+
+## Changes since upstream
+
+- **C++20 core** — Drawing logic lives under [`src/nvg/`](src/nvg/): [`nanovg.hpp`](src/nvg/nanovg.hpp) is the primary C++ API; implementation is split across `nanovg.cpp`, `nanovg_context.*`, `nanovg_detail.*`, and related translation units instead of a single `nanovg.c`.
+- **C API compatibility** — The classic `nvg*` entry points from [`nanovg.h`](src/nvg/legacy/nanovg.h) are implemented in [`nanovg_adapter.cpp`](src/nvg/nanovg_adapter.cpp) on top of `nvg::Context`. Legacy C headers live in [`src/nvg/legacy/`](src/nvg/legacy/) (`nanovg.h`, `nanovg_gl.h`, `nanovg_gl_utils.h`).
+- **OpenGL backends** — C++ headers: [`nanovg_gl.hpp`](src/nvg/nanovg_gl.hpp), [`nanovg_gl_utils.hpp`](src/nvg/nanovg_gl_utils.hpp). Legacy C includes remain the `.h` variants in `legacy/`.
+- **Third-party headers** — `fontstash.h`, `stb_truetype.h`, and the tree’s `stb_image.h` are under [`src/thirdParty/`](src/thirdParty/).
+- **Build** — **CMake** is the supported route: requires **GLFW** and **GLEW** via `find_package` or the `external/glfw` and `external/glew` git submodules. **Premake** (`premake4.lua`) is still present but secondary. Example targets: `example_gl2`, `example_gl3`, `example_fbo` (and GLES variants on non-Windows), plus **`example_legacy_*`** for the original C sources.
+- **Example layout** — C++ sources and shared `demo.cpp` / `perf.cpp` stay in [`example/`](example/). Original C examples, `demo.c` / `perf.c`, and local `stb_image*.h` copies are under [`example/legacy/`](example/legacy/).
+- **Removed** — Monolithic `src/nanovg.c` and the old split `obsolete/nanovg_gl2.h` / `obsolete/nanovg_gl3.h` tree; premake-focused layout assumptions no longer match the default build.
+
+### Headless check
+
+The `example_gl3` binary accepts `--test N` (and `--test=N`) to run a fixed-frame capture path useful for CI (see `.cursor/skills/verify` in this repo).
+
 ## Screenshot
 
-![screenshot of some text rendered witht the sample program](/example/screenshot-01.png?raw=true)
+The sample PNGs that shipped with upstream are not present in this branch; run the `example_gl3` (or other) demo locally to view output.
 
 Usage
 =====
@@ -16,20 +32,34 @@ The NanoVG API is modeled loosely on HTML5 canvas API. If you know canvas, you'r
 
 ## Creating drawing context
 
-The drawing context is created using platform specific constructor function. If you're using the OpenGL 2.0 back-end the context is created as follows:
-```C
-#define NANOVG_GL2_IMPLEMENTATION	// Use GL2 implementation.
+### C++ (default in this branch)
+
+Use the OpenGL backend define matching your API, then `nvg::createGL` with `nvg::CreateFlags` (declared in [`nanovg_gl.hpp`](src/nvg/nanovg_gl.hpp)):
+
+```cpp
+#define NANOVG_GL3_IMPLEMENTATION
 #include "nanovg_gl.hpp"
-...
-struct NVGcontext* vg = nvgCreateGL2(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
+// After GL context is current:
+auto vgOwner = nvg::createGL(static_cast<int>(
+    nvg::CreateFlags::Antialias | nvg::CreateFlags::StencilStrokes));
+if (!vgOwner) { /* error */ }
+nvg::Context& vg = *vgOwner;
 ```
 
-The first parameter defines flags for creating the renderer.
+Flags correspond to the old C names: **Antialias** ≈ `NVG_ANTIALIAS`, **StencilStrokes** ≈ `NVG_STENCIL_STROKES`, **Debug** ≈ `NVG_DEBUG`.
 
-- `NVG_ANTIALIAS` means that the renderer adjusts the geometry to include anti-aliasing. If you're using MSAA, you can omit this flags. 
-- `NVG_STENCIL_STROKES` means that the render uses better quality rendering for (overlapping) strokes. The quality is mostly visible on wider strokes. If you want speed, you can omit this flag.
+### Legacy C API
 
-Currently there is an OpenGL back-end for NanoVG: [nanovg_gl.hpp](/src/nanovg_gl.hpp) for OpenGL 2.0, OpenGL ES 2.0, OpenGL 3.2 core profile and OpenGL ES 3. The implementation can be chosen using a define as in above example. See the header file and examples for further info. 
+C examples under [`example/legacy/`](example/legacy/) still use the upstream-style constructors, for example:
+
+```C
+#include "nanovg.h"
+#define NANOVG_GL3_IMPLEMENTATION
+#include "nanovg_gl.h"
+NVGcontext* vg = nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
+```
+
+The OpenGL backend is selected with the same `NANOVG_GL2_IMPLEMENTATION` / `NANOVG_GL3_IMPLEMENTATION` / GLES defines as before; headers for C are in [`src/nvg/legacy/`](src/nvg/legacy/). See [nanovg_gl.hpp](src/nvg/nanovg_gl.hpp) (C++) or `nanovg_gl.h` (C) and the examples for details. 
 
 *NOTE:* The render target you're rendering to must have stencil buffer.
 
@@ -46,6 +76,8 @@ nvgFill(vg);
 
 Calling `nvgBeginPath()` will clear any existing paths and start drawing from blank slate. There are number of number of functions to define the path to draw, such as rectangle, rounded rectangle and ellipse, or you can use the common moveTo, lineTo, bezierTo and arcTo API to compose the paths step by step.
 
+In the C++ API, the same operations are methods on `nvg::Context` (for example `vg.beginPath()`, `vg.rect(...)`, `vg.fill()`).
+
 ## Understanding Composite Paths
 
 Because of the way the rendering backend is build in NanoVG, drawing a composite path, that is path consisting from multiple paths defining holes and fills, is a bit more involved. NanoVG uses even-odd filling rule and by default the paths are wound in counter clockwise order. Keep that in mind when drawing using the low level draw API. In order to wind one of the predefined shapes as a hole, you should call `nvgPathWinding(vg, NVG_HOLE)`, or `nvgPathWinding(vg, NVG_CW)` _after_ defining the path.
@@ -61,7 +93,7 @@ nvgFill(vg);
 
 ## Rendering is wrong, what to do?
 
-- make sure you have created NanoVG context using one of the `nvgCreatexxx()` calls
+- make sure you have created NanoVG context using one of the `nvgCreatexxx()` calls (C) or `nvg::createGL` (C++)
 - make sure you have initialised OpenGL with *stencil buffer*
 - make sure you have cleared stencil buffer
 - make sure all rendering calls happen between `nvgBeginFrame()` and `nvgEndFrame()`
@@ -98,7 +130,7 @@ The data for the whole frame is buffered and flushed in `nvgEndFrame()`. The fol
 
 ## API Reference
 
-See the header file [nanovg.hpp](/src/nanovg.hpp) for API reference.
+See the header file [nanovg.hpp](src/nvg/nanovg.hpp) for the C++ API. The C surface is declared in [nanovg.h](src/nvg/legacy/nanovg.h).
 
 ## Ports
 
