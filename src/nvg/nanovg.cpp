@@ -345,14 +345,14 @@ static float hue(float h, float m1, float m2)
 		return m1 + (m2 - m1) * (2.0f/3.0f - h) * 6.0f;
 	return m1;
 }
-static void setPaintColor(Paint* p, Color color)
+static void setPaintColor(Paint& p, Color color)
 {
-	memset(p, 0, sizeof(*p));
-	transformIdentity(p->xform);
-	p->radius = 0.0f;
-	p->feather = 1.0f;
-	p->innerColor = color;
-	p->outerColor = color;
+	p = Paint{};
+	transformIdentity(p.xform);
+	p.radius = 0.0f;
+	p.feather = 1.0f;
+	p.innerColor = color;
+	p.outerColor = color;
 }
 static void isectRects(float* dst,
 							float ax, float ay, float aw, float ah,
@@ -456,7 +456,7 @@ static void addPath(Context& ctx)
 	}
 	paths.emplace_back();
 	Path* path = &paths.back();
-	std::memset(path, 0, sizeof(*path));
+	*path = Path{};
 	path->first = static_cast<int>(ctx.cache->points.size());
 	path->winding = static_cast<int>(Winding::CCW);
 }
@@ -490,7 +490,7 @@ static void addPoint(Context& ctx, float x, float y, int flags)
 
 	points.emplace_back();
 	Point* pt = &points.back();
-	std::memset(pt, 0, sizeof(*pt));
+	*pt = Point{};
 	pt->x = x;
 	pt->y = y;
 	pt->flags = static_cast<unsigned char>(flags);
@@ -1360,7 +1360,7 @@ Context::~Context() {
 		params.renderDelete(params.userPtr);
 }
 Context::Context(const Params& params):params(params){
-	FONSparams fontParams;
+	FONSparams fontParams{};
 	fontImages.resize(NVG_MAX_FONTIMAGES, 0);
 
 	cache = detail::allocPathCache();
@@ -1373,7 +1373,6 @@ Context::Context(const Params& params):params(params){
 		throw std::runtime_error("Could not init render context.");
 
 	// Init font rendering
-	std::memset(&fontParams, 0, sizeof(fontParams));
 	fontParams.width = NVG_INIT_FONTIMAGE_SIZE;
 	fontParams.height = NVG_INIT_FONTIMAGE_SIZE;
 	fontParams.flags = FONS_ZERO_TOPLEFT;
@@ -1664,10 +1663,10 @@ void restore(Context& ctx)
 void reset(Context& ctx)
 {
 	State& state = detail::getState(ctx);
-	std::memset(&state, 0, sizeof(state));
+	state = State{};
 
-	detail::setPaintColor(&state.fill, rgba(255,255,255,255));
-	detail::setPaintColor(&state.stroke, rgba(0,0,0,255));
+	detail::setPaintColor(state.fill, rgba(255,255,255,255));
+	detail::setPaintColor(state.stroke, rgba(0,0,0,255));
 	state.compositeOperation = detail::compositeOperationState(static_cast<int>(CompositeOperation::SourceOver));
 	state.shapeAntiAlias = 1;
 	state.strokeWidth = 1.0f;
@@ -1814,7 +1813,7 @@ void currentTransform(Context& ctx, float* xform)
 void strokeColor(Context& ctx, Color color)
 {
 	State& state = detail::getState(ctx);
-	detail::setPaintColor(&state.stroke, color);
+	detail::setPaintColor(state.stroke, color);
 }
 
 void strokePaint(Context& ctx, Paint paint)
@@ -1827,7 +1826,7 @@ void strokePaint(Context& ctx, Paint paint)
 void fillColor(Context& ctx, Color color)
 {
 	State& state = detail::getState(ctx);
-	detail::setPaintColor(&state.fill, color);
+	detail::setPaintColor(state.fill, color);
 }
 
 void fillPaint(Context& ctx, Paint paint)
@@ -1896,11 +1895,10 @@ Paint linearGradient(Context& ctx,
 								  float sx, float sy, float ex, float ey,
 								  Color icol, Color ocol)
 {
-	Paint p;
+	Paint p{};
 	float dx, dy, d;
 	const float large = 1e5;
 	UNUSED(ctx);
-	memset(&p, 0, sizeof(p));
 
 	// Calculate transform aligned to the line
 	dx = ex - sx;
@@ -1935,11 +1933,10 @@ Paint radialGradient(Context& ctx,
 								  float cx, float cy, float inr, float outr,
 								  Color icol, Color ocol)
 {
-	Paint p;
+	Paint p{};
 	float r = (inr+outr)*0.5f;
 	float f = (outr-inr);
 	UNUSED(ctx);
-	memset(&p, 0, sizeof(p));
 
 	transformIdentity(p.xform);
 	p.xform[4] = cx;
@@ -1962,9 +1959,8 @@ Paint boxGradient(Context& ctx,
 							   float x, float y, float w, float h, float r, float f,
 							   Color icol, Color ocol)
 {
-	Paint p;
+	Paint p{};
 	UNUSED(ctx);
-	memset(&p, 0, sizeof(p));
 
 	transformIdentity(p.xform);
 	p.xform[4] = x+w*0.5f;
@@ -1988,9 +1984,8 @@ Paint imagePattern(Context& ctx,
 								float cx, float cy, float w, float h, float angle,
 								int image, float alpha)
 {
-	Paint p;
+	Paint p{};
 	UNUSED(ctx);
-	memset(&p, 0, sizeof(p));
 
 	transformRotate(p.xform, angle);
 	p.xform[4] = cx;
@@ -2057,7 +2052,7 @@ void intersectScissor(Context& ctx, float x, float y, float w, float h)
 void resetScissor(Context& ctx)
 {
 	State& state = detail::getState(ctx);
-	memset(state.scissor.xform, 0, sizeof(state.scissor.xform));
+	state.scissor = Scissor{};
 	state.scissor.extent[0] = -1.0f;
 	state.scissor.extent[1] = -1.0f;
 }
