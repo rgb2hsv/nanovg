@@ -91,7 +91,7 @@ int main()
 	}
 	nvg::Context& vg = *vgOwner;
 
-	if (loadDemoData(vg, &data) == -1)
+	if (loadDemoData(vg, data) == -1)
 		return -1;
 
 	glfwSwapInterval(0);
@@ -132,7 +132,7 @@ int main()
 
 		beginFrame(vg, winWidth, winHeight, pxRatio);
 
-		renderDemo(vg, mx,my, winWidth,winHeight, t, blowup, &data);
+		renderDemo(vg, mx,my, winWidth,winHeight, t, blowup, data);
 		renderGraph(vg, 5,5, fps);
 
 		endFrame(vg);
@@ -148,7 +148,7 @@ int main()
 		glfwPollEvents();
 	}
 
-	freeDemoData(vg, &data);
+	freeDemoData(vg, data);
 
 	nvg::deleteGLES2(std::move(vgOwner));
 

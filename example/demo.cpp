@@ -885,70 +885,66 @@ void drawLines(nvg::Context& vg, float x, float y, float w, float h, float lineW
 	vg.restore();
 }
 
-int loadDemoData(nvg::Context& vg, DemoData* data)
+int loadDemoData(nvg::Context& vg, DemoData& data)
 {
 	int i;
-			namespace fs = std::filesystem;
-		auto findFile=[](const fs::path& name){
-			fs::path current_dir = fs::current_path();
+	namespace fs = std::filesystem;
+	auto findFile=[](const fs::path& name){
+		fs::path current_dir = fs::current_path();
+		for(int i=0;i<4;i++){
 			fs::path path =current_dir/"example"/ name;
 			if (fs::exists(path)) {
 				return path.string();
 			}
-
-			path = current_dir.parent_path()/"example"/ name;
-			if (fs::exists(path)) {
-				return path.string();
-			}
-			
-			path = current_dir.parent_path().parent_path()/"example"/name;
-			return path.string();
-		};
+			current_dir = current_dir.parent_path();
+		}
+		throw std::runtime_error("Could not find file: " + name.string());
+	};
 
 	for (i = 0; i < 12; i++) {
 		const std::string file = findFile(fs::path("images")/("image" + std::to_string(i+1) + ".jpg"));
-		data->images[i] = vg.createImage(file.c_str(), 0);
-		if (data->images[i] == 0) {
+		data.images[i] = vg.createImage(file.c_str(), 0);
+		if (data.images[i] == 0) {
 			printf("Could not load %s.\n", file.c_str());
 			return -1;
 		}
 	}
 	const std::string fontIcons = findFile("entypo.ttf");
-	data->fontIcons = vg.createFont("icons", fontIcons.c_str());
-	if (data->fontIcons == -1) {
+	data.fontIcons = vg.createFont("icons", fontIcons.c_str());
+	if (data.fontIcons == -1) {
 		printf("Could not add font icons.\n");
 		return -1;
 	}
 	const std::string fontNormal = findFile("Roboto-Regular.ttf");
-	data->fontNormal = vg.createFont( "sans", fontNormal.c_str());
-	if (data->fontNormal == -1) {
+	data.fontNormal = vg.createFont( "sans", fontNormal.c_str());
+	if (data.fontNormal == -1) {
 		printf("Could not add font normal %s\n",fontNormal.c_str());
 		return -1;
 	}
 	const std::string fontBold = findFile("Roboto-Bold.ttf");
-	data->fontBold = vg.createFont(  "sans-bold", fontBold.c_str());
-	if (data->fontBold == -1) {
+	data.fontBold = vg.createFont(  "sans-bold", fontBold.c_str());
+	if (data.fontBold == -1) {
 		printf("Could not add font bold %s\n",fontBold.c_str());
 		return -1;
 	}
 	const std::string fontEmoji = findFile("NotoEmoji-Regular.ttf");
-	data->fontEmoji =  vg.createFont("emoji",fontEmoji.c_str());
-	if (data->fontEmoji == -1) {
+	data.fontEmoji =  vg.createFont("emoji",fontEmoji.c_str());
+	if (data.fontEmoji == -1) {
 		printf("Could not add font emoji %s\n",fontEmoji.c_str());
 		return -1;
 	}
-	vg.addFallbackFontId(data->fontNormal, data->fontEmoji);
+	vg.addFallbackFontId(data.fontNormal, data.fontEmoji);
 	vg.addFallbackFont(fontNormal.c_str(), fontEmoji.c_str());
 
 	return 0;
 }
 
-void freeDemoData(nvg::Context& vg, DemoData* data)
+void freeDemoData(nvg::Context& vg, DemoData& data)
 {
 	int i;
 
 	for (i = 0; i < 12; i++)
-		vg.deleteImage( data->images[i]);
+		vg.deleteImage( data.images[i]);
 }
 
 void drawParagraph(nvg::Context& vg, float x, float y, float width, float height, float mx, float my)
@@ -1227,7 +1223,7 @@ void drawScaledText(nvg::Context& vg, float x0, float y0, float t){
 }
 
 void renderDemo(nvg::Context& vg, float mx, float my, float width, float height,
-				float t, int blowup, DemoData* data)
+				float t, int blowup, DemoData& data)
 {
 	float x,y,popy;
 
@@ -1300,7 +1296,7 @@ void renderDemo(nvg::Context& vg, float mx, float my, float width, float height,
 	drawButton(vg, 0, "Cancel", x+170, y, 110, 28, nvg::rgba(0,0,0,0));
 
 	// Thumbnails box
-	drawThumbnails(vg, 365, popy-30, 160, 300, data->images.data(), (int)data->images.size(), t);
+	drawThumbnails(vg, 365, popy-30, 160, 300, data.images.data(), (int)data.images.size(), t);
 
 	vg.restore();
 

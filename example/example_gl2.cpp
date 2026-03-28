@@ -103,7 +103,7 @@ int main()
 	}
 	nvg::Context& vg = *vgOwner;
 
-	if (loadDemoData(vg, &data) == -1)
+	if (loadDemoData(vg, data) == -1)
 		return -1;
 
 	glfwSwapInterval(0);
@@ -140,7 +140,7 @@ int main()
 
 		vg.beginFrame( static_cast<float>(winWidth), static_cast<float>(winHeight), pxRatio);
 
-		renderDemo(vg, static_cast<float>(mx), static_cast<float>(my), static_cast<float>(winWidth), static_cast<float>(winHeight), static_cast<float>(t), blowup, &data);
+		renderDemo(vg, static_cast<float>(mx), static_cast<float>(my), static_cast<float>(winWidth), static_cast<float>(winHeight), static_cast<float>(t), blowup, data);
 		renderGraph(vg, 5,5, fps);
 
 		vg.endFrame();
@@ -154,7 +154,7 @@ int main()
 		glfwPollEvents();
 	}
 
-	freeDemoData(vg, &data);
+	freeDemoData(vg, data);
 
 	nvg::deleteGL(vgOwner);
 

@@ -149,7 +149,7 @@ int main(int argc, char** argv)
 	}
 	nvg::Context& vg = *vgOwner;
 
-	if (loadDemoData(vg, &data) == -1) {
+	if (loadDemoData(vg, data) == -1) {
 		printf("Could not load demo data.\n");
 		return -1;
 	}
@@ -212,7 +212,7 @@ int main(int argc, char** argv)
 
 		vg.beginFrame( (float)winWidth, (float)winHeight, pxRatio);
 
-		renderDemo(vg, (float)mx, (float)my, (float)winWidth, (float)winHeight, (float)t, blowup, &data);
+		renderDemo(vg, (float)mx, (float)my, (float)winWidth, (float)winHeight, (float)t, blowup, data);
 
 		if(!testRequested){
 			renderGraph(vg, 5,5, fps);
@@ -251,7 +251,7 @@ int main(int argc, char** argv)
 		glfwPollEvents();
 	}
 
-	freeDemoData(vg, &data);
+	freeDemoData(vg, data);
 
 	nvg::deleteGL(vgOwner);
 
