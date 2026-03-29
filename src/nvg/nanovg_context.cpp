@@ -340,7 +340,7 @@ int ContextImpl::expandStroke(float w, float fringe, int lineCap, int lineJoin, 
     float t;
     float aa = fringe;  // fringeWidth;
     float u0 = 0.0f, u1 = 1.0f;
-    int ncap = detail::curveDivs(w, PI, tessTol);  // Calculate divisions per half circle.
+    int ncap = detail::curveDivs(w, nvgPi, tessTol);  // Calculate divisions per half circle.
 
     w += aa * 0.5f;
     const float invStrokeWidth = 1.0f / w;

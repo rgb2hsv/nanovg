@@ -314,12 +314,12 @@ void roundJoin(std::vector<Vertex>& out, Point* p0, Point* p1, float lw, float r
         chooseBevel(p1->flags & PointFlags::InnerBevel, p0, p1, lw, &lx0, &ly0, &lx1, &ly1);
         a0 = atan2f(-dly0, -dlx0);
         a1 = atan2f(-dly1, -dlx1);
-        if (a1 > a0) a1 -= PI * 2.0f;
+        if (a1 > a0) a1 -= nvgPi * 2.0f;
 
         pushVertex(out, lx0, ly0, lu, 1, -1, t);
         pushVertex(out, p1->x - dlx0 * rw, p1->y - dly0 * rw, ru, 1, 1, t);
 
-        n = clampi(static_cast<int>(std::ceil(((a0 - a1) / PI) * ncap)), 2, ncap);
+        n = clampi(static_cast<int>(std::ceil(((a0 - a1) / nvgPi) * ncap)), 2, ncap);
         for (i = 0; i < n; i++) {
             float u = i / (float)(n - 1);
             float a = a0 + u * (a1 - a0);
@@ -337,12 +337,12 @@ void roundJoin(std::vector<Vertex>& out, Point* p0, Point* p1, float lw, float r
         chooseBevel(p1->flags & PointFlags::InnerBevel, p0, p1, -rw, &rx0, &ry0, &rx1, &ry1);
         a0 = atan2f(dly0, dlx0);
         a1 = atan2f(dly1, dlx1);
-        if (a1 < a0) a1 += PI * 2.0f;
+        if (a1 < a0) a1 += nvgPi * 2.0f;
 
         pushVertex(out, p1->x + dlx0 * rw, p1->y + dly0 * rw, lu, 1, -1, t);
         pushVertex(out, rx0, ry0, ru, 1, 1, t);
 
-        n = clampi(static_cast<int>(std::ceil(((a1 - a0) / PI) * ncap)), 2, ncap);
+        n = clampi(static_cast<int>(std::ceil(((a1 - a0) / nvgPi) * ncap)), 2, ncap);
         for (i = 0; i < n; i++) {
             float u = i / (float)(n - 1);
             float a = a0 + u * (a1 - a0);
@@ -470,7 +470,7 @@ void roundCapStart(std::vector<Vertex>& out, Point* p, float dx, float dy, float
     float dly = -dx;
     UNUSED(aa);
     for (i = 0; i < ncap; i++) {
-        const float a = i / (float)(ncap - 1) * PI;
+        const float a = i / (float)(ncap - 1) * nvgPi;
         float ax = cosf(a) * w, ay = sinf(a) * w;
         pushVertex(out, px - dlx * ax - dx * ay, py - dly * ax - dy * ay, u0, 1, ax / w, t - dir * ay / w);
         pushVertex(out, px, py, 0.5f, 1, 0, t);
@@ -490,7 +490,7 @@ void roundCapEnd(std::vector<Vertex>& out, Point* p, float dx, float dy, float w
     pushVertex(out, px + dlx * w, py + dly * w, u0, 1, w, t);
     pushVertex(out, px - dlx * w, py - dly * w, u1, 1, -w, t);
     for (i = 0; i < ncap; i++) {
-        float a = i / (float)(ncap - 1) * PI;
+        float a = i / (float)(ncap - 1) * nvgPi;
         float ax = cosf(a) * w, ay = sinf(a) * w;
         pushVertex(out, px, py, 0.5f, 1, 0, t);
         pushVertex(out, px - dlx * ax + dx * ay, py - dly * ax + dy * ay, u0, 1, ax / w, t + dir * ay / w);

@@ -185,7 +185,7 @@ int main(int argc, char** argv)
         nvgwin_get_window_size(window, &winWidth, &winHeight);
         nvgwin_get_framebuffer_size(window, &fbWidth, &fbHeight);
         if (testRequested) {
-            double angle = 2.0 * nvg::PI * testRemaining / (double)testCount;
+            double angle = 2.0 * nvg::nvgPi * testRemaining / (double)testCount;
             mx = winWidth / 2.0f + cos(angle) * winWidth / 4.0f;
             my = winHeight / 2.0f + sin(angle) * winHeight / 4.0f;
         } else {
