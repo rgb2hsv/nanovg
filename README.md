@@ -1,9 +1,7 @@
-*This project is not actively maintained.*
-
-NanoVG
+NanoVG++
 ==========
 
-NanoVG is small antialiased vector graphics rendering library for OpenGL. It has lean API modeled after HTML5 canvas API. It is aimed to be a practical and fun toolset for building scalable user interfaces and visualizations.
+NanoVG++ is small antialiased vector graphics rendering library for OpenGL. It has lean API modeled after HTML5 canvas API. It is aimed to be a practical and fun toolset for building scalable user interfaces and visualizations.
 
 This repository’s **`modernize-cpp`** branch extends upstream NanoVG with a C++20 implementation while keeping the original C API available for legacy examples and bindings. The notes below under **Changes since upstream** summarize what differs from the merge-base with [memononen/nanovg](https://github.com/memononen/nanovg) `master` (commit `6a8a2e7`).
 
@@ -22,8 +20,7 @@ This repository’s **`modernize-cpp`** branch extends upstream NanoVG with a C+
 The `example_gl3` binary accepts `--test N` (and `--test=N`) to run a fixed-frame capture path useful for CI (see `.cursor/skills/verify` in this repo).
 
 ## Screenshot
-
-The sample PNGs that shipped with upstream are not present in this branch; run the `example_gl3` (or other) demo locally to view output.
+<img width="1000" height="600" alt="screenshot003" src="https://github.com/user-attachments/assets/44fb1758-7fe5-46d1-82b4-6cb4755fa6f7" />
 
 Usage
 =====
