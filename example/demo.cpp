@@ -20,10 +20,10 @@
 #endif
 #include <GLFW/glfw3.h>
 
-
-#include "stb_image.h"
+// Do not define the STB_IMAGE_IMPLEMENTATION twice
+#include "thirdParty/stb_image.h"
 #define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "stb_image_write.h"
+#include "thirdParty/stb_image_write.h"
 
 
 #include "nanovg.hpp"
