@@ -8,12 +8,12 @@
 namespace nvg {
 namespace detail {
 
-float modf(float a, float b) { return std::fmodf(a, b); }
-float sinf(float a) { return std::sinf(a); }
-float cosf(float a) { return std::cosf(a); }
-float tanf(float a) { return std::tanf(a); }
-float atan2f(float a, float b) { return std::atan2f(a, b); }
-float acosf(float a) { return std::acosf(a); }
+float modf(float a, float b) { return ::fmodf(a, b); }
+float sinf(float a) { return ::sinf(a); }
+float cosf(float a) { return ::cosf(a); }
+float tanf(float a) { return ::tanf(a); }
+float atan2f(float a, float b) { return ::atan2f(a, b); }
+float acosf(float a) { return ::acosf(a); }
 int mini(int a, int b) { return a < b ? a : b; }
 int maxi(int a, int b) { return a > b ? a : b; }
 int clampi(int a, int mn, int mx) { return a < mn ? mn : (a > mx ? mx : a); }

@@ -445,7 +445,7 @@ static int glnvg__createShader(GlShader* shader, const char* name, const char* h
 	str[0] = header;
 	str[1] = opts != NULL ? opts : "";
 
-	std::memset(shader, 0, sizeof(*shader));
+	*shader = GlShader{};
 
 	prog = glCreateProgram();
 	vert = glCreateShader(GL_VERTEX_SHADER);

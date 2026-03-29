@@ -64,7 +64,7 @@ int main()
 {
 	NvgWindow* window;
 	DemoData data;
-	std::shared_ptr<nvg::Context> vgOwner;
+	std::unique_ptr<nvg::Context> vgOwner;
 	PerfGraph fps;
 	double prevt = 0;
 
@@ -87,7 +87,7 @@ int main()
 
 	nvgwin_make_current(window);
 
-	vgOwner = nvg::createGLES3(static_cast<int>(nvg::CreateFlags::Antialias | nvg::CreateFlags::StencilStrokes | nvg::CreateFlags::Debug));
+	vgOwner = nvg::createGL(static_cast<int>(nvg::CreateFlags::Antialias | nvg::CreateFlags::StencilStrokes | nvg::CreateFlags::Debug));
 	if (!vgOwner) {
 		printf("Could not init nanovg.\n");
 		return -1;
@@ -153,7 +153,7 @@ int main()
 
 	freeDemoData(vg, data);
 
-	nvg::deleteGLES3(std::move(vgOwner));
+	nvg::deleteGL(vgOwner);
 
 	nvgwin_destroy(window);
 	nvgwin_shutdown();
