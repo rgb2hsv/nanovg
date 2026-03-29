@@ -2,8 +2,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+#include <algorithm>
 #include <string>
 #include <array>
+#include <cstring>
 #ifdef NANOVG_GLEW
 #  include <GL/glew.h>
 #endif
@@ -86,8 +88,12 @@ void initGraph(PerfGraph& graph, int style, const std::string& name)
 	graph.head = 0;
 	graph.values.fill(0.0f);
 	graph.name.fill('\0');
-	strncpy(graph.name.data(), name.c_str(), graph.name.size());
-	graph.name[graph.name.size()-1] = '\0';
+	const size_t cap = graph.name.size();
+	if (cap > 0) {
+		const size_t n = std::min(name.size(), cap - 1);
+		std::memcpy(graph.name.data(), name.c_str(), n);
+		graph.name[n] = '\0';
+	}
 }
 
 void updateGraph(PerfGraph& graph, float frameTime)

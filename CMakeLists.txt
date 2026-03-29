@@ -8,7 +8,6 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_C_STANDARD 11)
 
 option(NVG_FAST_SQRT "Use fast inverse-sqrt path in the NanoVG core (defines NANOVG_FAST_SQRT)" ON)
-
 option(NANOVG_USE_SDL3 "Build C++ examples with SDL3 instead of GLFW (legacy examples still use GLFW)" ON)
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
@@ -141,7 +140,7 @@ elseif(WIN32)
                 list(APPEND DEFS GLEW_STATIC)
         endif()
 else()
-        set(NANOVG_GL_LIBS ${GLEW_TARGET} GLU GL Xext Xi Xrandr X11 Xxf86vm Xinerama Xcursor Xdamage dl z m)
+        set(NANOVG_GL_LIBS ${GLEW_TARGET} GLU GL Xext Xi Xrandr X11 Xxf86vm Xinerama Xcursor dl z m)
 endif()
 set(EXAMPLE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/example")
 set(EXAMPLE_LEGACY_DIR "${EXAMPLE_DIR}/legacy")

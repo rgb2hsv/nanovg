@@ -195,7 +195,7 @@ void ContextImpl::flattenPaths()
 
 	// Flatten
 	i = 0;
-	while (i < commands.size()) {
+	while (static_cast<size_t>(i) < commands.size()) {
 		int cmd = (int)commands[i];
 		switch (cmd) {
 		case static_cast<int>(PathCommand::MoveTo):

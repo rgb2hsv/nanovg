@@ -21,11 +21,10 @@
 #include "nanovg.hpp"
 
 #include <array>
-#include <concepts>
 #include <cstdlib>
 #include <iterator>
 #include <memory>
-#include <ranges>
+#include <span>
 #include <vector>
 
 struct FONScontext;
@@ -134,38 +133,36 @@ struct ContextImpl {
 	const State& topState() const;
 	void setDevicePixelRatio(float ratio);
 
-	template <class C>
-		requires std::ranges::range<C> && std::same_as<std::ranges::range_value_t<C>, float>
-	void appendCommands(C& vals)
+	void appendCommands(std::span<float> vals)
 	{
 		State& st = topState();
-		auto nvals = std::ranges::size(vals);
+		const size_t nvals = vals.size();
 		if (nvals == 0) {
 			std::terminate();
 		}
-		if (auto front = static_cast<int>(vals.front());
+		float* v = vals.data();
+		if (const int front = static_cast<int>(v[0]);
 			front != static_cast<int>(PathCommand::Close) && front != static_cast<int>(PathCommand::Winding)) {
-			auto iter = std::rbegin(vals);
-			commandy = *iter++;
-			commandx = *iter;
+			commandy = v[nvals - 1];
+			commandx = v[nvals - 2];
 		}
 
 		size_t i = 0;
 		while (i < nvals) {
-			int cmd = static_cast<int>(vals[i]);
+			const int cmd = static_cast<int>(v[i]);
 			switch (cmd) {
 			case static_cast<int>(PathCommand::MoveTo):
-				transformPoint(vals[i+1], vals[i+2], st.xform.data(), vals[i+1], vals[i+2]);
+				transformPoint(v[i+1], v[i+2], st.xform.data(), v[i+1], v[i+2]);
 				i += 3;
 				break;
 			case static_cast<int>(PathCommand::LineTo):
-				transformPoint(vals[i+1], vals[i+2], st.xform.data(), vals[i+1], vals[i+2]);
+				transformPoint(v[i+1], v[i+2], st.xform.data(), v[i+1], v[i+2]);
 				i += 3;
 				break;
 			case static_cast<int>(PathCommand::BezierTo):
-				transformPoint(vals[i+1], vals[i+2], st.xform.data(), vals[i+1], vals[i+2]);
-				transformPoint(vals[i+3], vals[i+4], st.xform.data(), vals[i+3], vals[i+4]);
-				transformPoint(vals[i+5], vals[i+6], st.xform.data(), vals[i+5], vals[i+6]);
+				transformPoint(v[i+1], v[i+2], st.xform.data(), v[i+1], v[i+2]);
+				transformPoint(v[i+3], v[i+4], st.xform.data(), v[i+3], v[i+4]);
+				transformPoint(v[i+5], v[i+6], st.xform.data(), v[i+5], v[i+6]);
 				i += 7;
 				break;
 			case static_cast<int>(PathCommand::Close):

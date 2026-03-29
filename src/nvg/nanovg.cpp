@@ -332,11 +332,12 @@ void Context::endFrame()
 	if (mImpl->fontImageIdx != 0) {
 		int fontImage = mImpl->fontImages[mImpl->fontImageIdx];
 		mImpl->fontImages[mImpl->fontImageIdx] = 0;
-		int i, j, iw, ih;
+		int iw, ih;
 		if (fontImage == 0)
 			return;
 		imageSize(fontImage, iw, ih);
-		for (i = j = 0; i < mImpl->fontImageIdx; i++) {
+		size_t j = 0;
+		for (size_t i = 0; i < mImpl->fontImageIdx; i++) {
 			if (mImpl->fontImages[i] != 0) {
 				int nw, nh;
 				int image = mImpl->fontImages[i];
