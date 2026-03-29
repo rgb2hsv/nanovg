@@ -21,8 +21,14 @@
 #ifdef NANOVG_GLEW
 #  include <GL/glew.h>
 #endif
-#define GLFW_INCLUDE_GLEXT
-#include <GLFW/glfw3.h>
+#if defined(NANOVG_USE_SDL3) && !defined(NANOVG_GLEW)
+#  include <SDL3/SDL_opengl.h>
+#elif !defined(NANOVG_USE_SDL3)
+#  define GLFW_INCLUDE_GLEXT
+#  include <GLFW/glfw3.h>
+#endif
+#include "nvg_window.hpp"
+#include "nvg_input.hpp"
 #include "nanovg.hpp"
 #define NANOVG_GL2_IMPLEMENTATION
 #include "nanovg_gl.hpp"
@@ -32,59 +38,58 @@
 
 void errorcb(int error, const char* desc)
 {
-	printf("GLFW error %d: %s\n", error, desc);
+	printf("Window error %d: %s\n", error, desc);
 }
 
 int blowup = 0;
 int screenshot = 0;
 int premult = 0;
 
-static void key(GLFWwindow* window, int key, int scancode, int action, int mods)
+static void key(NvgWindow* window, int key, int scancode, int action, int mods, void* user)
 {
+	UNUSED(user);
 	UNUSED(scancode);
 	UNUSED(mods);
-	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-		glfwSetWindowShouldClose(window, GL_TRUE);
-	if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
+	if (key == NVG_KEY_ESCAPE && action == NVG_PRESS)
+		nvgwin_set_should_close(window, 1);
+	if (key == NVG_KEY_SPACE && action == NVG_PRESS)
 		blowup = !blowup;
-	if (key == GLFW_KEY_S && action == GLFW_PRESS)
+	if (key == NVG_KEY_S && action == NVG_PRESS)
 		screenshot = 1;
-	if (key == GLFW_KEY_P && action == GLFW_PRESS)
+	if (key == NVG_KEY_P && action == NVG_PRESS)
 		premult = !premult;
 }
 
 int main()
 {
-	GLFWwindow* window;
+	NvgWindow* window;
 	DemoData data;
 	PerfGraph fps;
 	double prevt = 0;
 
-	if (!glfwInit()) {
-		printf("Failed to init GLFW.");
+	if (nvgwin_init() != 0) {
+		printf("Failed to init window system.");
 		return -1;
 	}
 
 	initGraph(fps, GRAPH_RENDER_FPS, "Frame Time");
 
-	glfwSetErrorCallback(errorcb);
-
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+	nvgwin_set_error_callback(errorcb);
 #ifdef DEMO_MSAA
-	glfwWindowHint(GLFW_SAMPLES, 4);
+	const int msaa = 4;
+#else
+	const int msaa = 0;
 #endif
 
-	window = glfwCreateWindow(1000, 600, "NanoVG", NULL, NULL);
-//	window = glfwCreateWindow(1000, 600, "NanoVG", glfwGetPrimaryMonitor(), NULL);
+	window = nvgwin_create(1000, 600, "NanoVG", NVGWIN_PROFILE_GL2, msaa, 0);
 	if (!window) {
-		glfwTerminate();
+		nvgwin_shutdown();
 		return -1;
 	}
 
-	glfwSetKeyCallback(window, key);
+	nvgwin_set_key_callback(window, key, nullptr);
 
-	glfwMakeContextCurrent(window);
+	nvgwin_make_current(window);
 #ifdef NANOVG_GLEW
     if(glewInit() != GLEW_OK) {
 		printf("Could not init glew.\n");
@@ -106,26 +111,26 @@ int main()
 	if (loadDemoData(vg, data) == -1)
 		return -1;
 
-	glfwSwapInterval(0);
+	nvgwin_swap_interval(0);
 
-	glfwSetTime(0);
-	prevt = glfwGetTime();
+	nvgwin_set_time(0);
+	prevt = nvgwin_get_time();
 
-	while (!glfwWindowShouldClose(window))
+	while (!nvgwin_should_close(window))
 	{
 		double mx, my, t, dt;
 		int winWidth, winHeight;
 		int fbWidth, fbHeight;
 		float pxRatio;
 
-		t = glfwGetTime();
+		t = nvgwin_get_time();
 		dt = t - prevt;
 		prevt = t;
 		updateGraph(fps, static_cast<float>(dt));
 
-		glfwGetCursorPos(window, &mx, &my);
-		glfwGetWindowSize(window, &winWidth, &winHeight);
-		glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
+		nvgwin_get_cursor_pos(window, &mx, &my);
+		nvgwin_get_window_size(window, &winWidth, &winHeight);
+		nvgwin_get_framebuffer_size(window, &fbWidth, &fbHeight);
 
 		// Calculate pixel ration for hi-dpi devices.
 		pxRatio = (float)fbWidth / (float)winWidth;
@@ -150,15 +155,16 @@ int main()
 			saveScreenShot(fbWidth, fbHeight, premult, "dump.png");
 		}
 		
-		glfwSwapBuffers(window);
-		glfwPollEvents();
+		nvgwin_swap_buffers(window);
+		nvgwin_poll_events();
 	}
 
 	freeDemoData(vg, data);
 
 	nvg::deleteGL(vgOwner);
 
-	glfwTerminate();
+	nvgwin_destroy(window);
+	nvgwin_shutdown();
 	return 0;
 }
 

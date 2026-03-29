@@ -18,9 +18,16 @@
 
 #include <stdio.h>
 #include <memory>
-#define GLFW_INCLUDE_ES3
-#define GLFW_INCLUDE_GLEXT
-#include <GLFW/glfw3.h>
+#if defined(NANOVG_USE_SDL3)
+#	include <GLES3/gl3.h>
+#	include <GLES3/gl3ext.h>
+#else
+#	define GLFW_INCLUDE_ES3
+#	define GLFW_INCLUDE_GLEXT
+#	include <GLFW/glfw3.h>
+#endif
+#include "nvg_window.hpp"
+#include "nvg_input.hpp"
 #include "nanovg.hpp"
 #define NANOVG_GLES3_IMPLEMENTATION
 #include "nanovg_gl.hpp"
@@ -31,58 +38,54 @@
 
 void errorcb(int error, const char* desc)
 {
-	printf("GLFW error %d: %s\n", error, desc);
+	printf("Window error %d: %s\n", error, desc);
 }
 
 int blowup = 0;
 int screenshot = 0;
 int premult = 0;
 
-static void key(GLFWwindow* window, int key, int scancode, int action, int mods)
+static void key(NvgWindow* window, int key, int scancode, int action, int mods, void* user)
 {
+	UNUSED(user);
 	UNUSED(scancode);
 	UNUSED(mods);
-	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-		glfwSetWindowShouldClose(window, GL_TRUE);
-	if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
+	if (key == NVG_KEY_ESCAPE && action == NVG_PRESS)
+		nvgwin_set_should_close(window, 1);
+	if (key == NVG_KEY_SPACE && action == NVG_PRESS)
 		blowup = !blowup;
-	if (key == GLFW_KEY_S && action == GLFW_PRESS)
+	if (key == NVG_KEY_S && action == NVG_PRESS)
 		screenshot = 1;
-	if (key == GLFW_KEY_P && action == GLFW_PRESS)
+	if (key == NVG_KEY_P && action == NVG_PRESS)
 		premult = !premult;
 }
 
 int main()
 {
-	GLFWwindow* window;
+	NvgWindow* window;
 	DemoData data;
 	std::shared_ptr<nvg::Context> vgOwner;
 	PerfGraph fps;
 	double prevt = 0;
 
-	if (!glfwInit()) {
-		printf("Failed to init GLFW.");
+	if (nvgwin_init() != 0) {
+		printf("Failed to init window system.");
 		return -1;
 	}
 
 	initGraph(fps, GRAPH_RENDER_FPS, "Frame Time");
 
-	glfwSetErrorCallback(errorcb);
+	nvgwin_set_error_callback(errorcb);
 
-	glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-
-	window = glfwCreateWindow(1000, 600, "NanoVG", NULL, NULL);
-//	window = glfwCreateWindow(1000, 600, "NanoVG", glfwGetPrimaryMonitor(), NULL);
+	window = nvgwin_create(1000, 600, "NanoVG", NVGWIN_PROFILE_GLES3, 0, 0);
 	if (!window) {
-		glfwTerminate();
+		nvgwin_shutdown();
 		return -1;
 	}
 
-	glfwSetKeyCallback(window, key);
+	nvgwin_set_key_callback(window, key, nullptr);
 
-	glfwMakeContextCurrent(window);
+	nvgwin_make_current(window);
 
 	vgOwner = nvg::createGLES3(static_cast<int>(nvg::CreateFlags::Antialias | nvg::CreateFlags::StencilStrokes | nvg::CreateFlags::Debug));
 	if (!vgOwner) {
@@ -94,26 +97,26 @@ int main()
 	if (loadDemoData(vg, data) == -1)
 		return -1;
 
-	glfwSwapInterval(0);
+	nvgwin_swap_interval(0);
 
-	glfwSetTime(0);
-	prevt = glfwGetTime();
+	nvgwin_set_time(0);
+	prevt = nvgwin_get_time();
 
-	while (!glfwWindowShouldClose(window))
+	while (!nvgwin_should_close(window))
 	{
 		double mx, my, t, dt;
 		int winWidth, winHeight;
 		int fbWidth, fbHeight;
 		float pxRatio;
 
-		t = glfwGetTime();
+		t = nvgwin_get_time();
 		dt = t - prevt;
 		prevt = t;
 		updateGraph(fps, dt);
 
-		glfwGetCursorPos(window, &mx, &my);
-		glfwGetWindowSize(window, &winWidth, &winHeight);
-		glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
+		nvgwin_get_cursor_pos(window, &mx, &my);
+		nvgwin_get_window_size(window, &winWidth, &winHeight);
+		nvgwin_get_framebuffer_size(window, &fbWidth, &fbHeight);
 		// Calculate pixel ration for hi-dpi devices.
 		pxRatio = (float)fbWidth / (float)winWidth;
 
@@ -130,12 +133,12 @@ int main()
 		glEnable(GL_CULL_FACE);
 		glDisable(GL_DEPTH_TEST);
 
-		beginFrame(vg, winWidth, winHeight, pxRatio);
+		vg.beginFrame(static_cast<float>(winWidth), static_cast<float>(winHeight), pxRatio);
 
 		renderDemo(vg, mx,my, winWidth,winHeight, t, blowup, data);
 		renderGraph(vg, 5,5, fps);
 
-		endFrame(vg);
+		vg.endFrame();
 
 		glEnable(GL_DEPTH_TEST);
 
@@ -144,15 +147,16 @@ int main()
 			saveScreenShot(fbWidth, fbHeight, premult, "dump.png");
 		}
 		
-		glfwSwapBuffers(window);
-		glfwPollEvents();
+		nvgwin_swap_buffers(window);
+		nvgwin_poll_events();
 	}
 
 	freeDemoData(vg, data);
 
 	nvg::deleteGLES3(std::move(vgOwner));
 
-	glfwTerminate();
+	nvgwin_destroy(window);
+	nvgwin_shutdown();
 	return 0;
 }
 

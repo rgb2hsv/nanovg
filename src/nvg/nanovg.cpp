@@ -54,7 +54,6 @@
 #pragma warning(disable: 4204)  // nonstandard extension used : non-constant aggregate initializer
 #pragma warning(disable: 4706)  // assignment within conditional expression
 #endif
-#define NANOVG_FAST_SQRT
 #define FONTSTASH_IMPLEMENTATION
 #include "fontstash.h"
 

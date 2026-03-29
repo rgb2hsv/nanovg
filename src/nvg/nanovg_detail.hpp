@@ -11,7 +11,9 @@
 
 #include "nanovg_context.hpp"
 
-#ifndef NANOVG_FAST_SQRT
+#if defined(NANOVG_NO_FAST_SQRT)
+#undef NANOVG_FAST_SQRT
+#elif !defined(NANOVG_FAST_SQRT)
 #define NANOVG_FAST_SQRT
 #endif
 

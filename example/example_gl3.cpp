@@ -25,11 +25,17 @@
 #ifdef NANOVG_GLEW
 #	include <GL/glew.h>
 #endif
-#ifdef __APPLE__
-#	define GLFW_INCLUDE_GLCOREARB
+#if defined(NANOVG_USE_SDL3) && !defined(NANOVG_GLEW)
+#	include <SDL3/SDL_opengl.h>
+#elif !defined(NANOVG_USE_SDL3)
+#	ifdef __APPLE__
+#		define GLFW_INCLUDE_GLCOREARB
+#	endif
+#	define GLFW_INCLUDE_GLEXT
+#	include <GLFW/glfw3.h>
 #endif
-#define GLFW_INCLUDE_GLEXT
-#include <GLFW/glfw3.h>
+#include "nvg_window.hpp"
+#include "nvg_input.hpp"
 #include "nanovg.hpp"
 #define NANOVG_GL3_IMPLEMENTATION
 #include "nanovg_gl.hpp"
@@ -39,30 +45,31 @@
 
 void errorcb(int error, const char* desc)
 {
-	printf("GLFW error %d: %s\n", error, desc);
+	printf("Window error %d: %s\n", error, desc);
 }
 
 int blowup = 0;
 int screenshot = 0;
 int premult = 0;
 
-static void key(GLFWwindow* window, int key, int scancode, int action, int mods)
+static void key(NvgWindow* window, int key, int scancode, int action, int mods, void* user)
 {
+	UNUSED(user);
 	UNUSED(scancode);
 	UNUSED(mods);
-	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-		glfwSetWindowShouldClose(window, GL_TRUE);
-	if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
+	if (key == NVG_KEY_ESCAPE && action == NVG_PRESS)
+		nvgwin_set_should_close(window, 1);
+	if (key == NVG_KEY_SPACE && action == NVG_PRESS)
 		blowup = !blowup;
-	if (key == GLFW_KEY_S && action == GLFW_PRESS)
+	if (key == NVG_KEY_S && action == NVG_PRESS)
 		screenshot = 1;
-	if (key == GLFW_KEY_P && action == GLFW_PRESS)
+	if (key == NVG_KEY_P && action == NVG_PRESS)
 		premult = !premult;
 }
 
 int main(int argc, char** argv)
 {
-	GLFWwindow* window;
+	NvgWindow* window;
 	DemoData data;
 	GPUtimer gpuTimer;
 	PerfGraph fps, cpuGraph, gpuGraph;
@@ -97,8 +104,8 @@ int main(int argc, char** argv)
 	}
 	int testRemaining = testCount;
 
-	if (!glfwInit()) {
-		printf("Failed to init GLFW.");
+	if (nvgwin_init() != 0) {
+		printf("Failed to init window system.");
 		return -1;
 	}
 
@@ -106,28 +113,21 @@ int main(int argc, char** argv)
 	initGraph(cpuGraph, GRAPH_RENDER_MS, "CPU Time");
 	initGraph(gpuGraph, GRAPH_RENDER_MS, "GPU Time");
 
-	glfwSetErrorCallback(errorcb);
-#ifndef _WIN32 // don't require this on win32, and works with more cards
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-#endif
-	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, 1);
-
+	nvgwin_set_error_callback(errorcb);
 #ifdef DEMO_MSAA
-	glfwWindowHint(GLFW_SAMPLES, 4);
+	const int msaa = 4;
+#else
+	const int msaa = 0;
 #endif
-	window = glfwCreateWindow(1000, 600, "NanoVG", NULL, NULL);
-//	window = glfwCreateWindow(1000, 600, "NanoVG", glfwGetPrimaryMonitor(), NULL);
+	window = nvgwin_create(1000, 600, "NanoVG", NVGWIN_PROFILE_GL3, msaa, 1);
 	if (!window) {
-		glfwTerminate();
+		nvgwin_shutdown();
 		return -1;
 	}
 
-	glfwSetKeyCallback(window, key);
+	nvgwin_set_key_callback(window, key, nullptr);
 
-	glfwMakeContextCurrent(window);
+	nvgwin_make_current(window);
 #ifdef NANOVG_GLEW
 	glewExperimental = GL_TRUE;
 	if(glewInit() != GLEW_OK) {
@@ -155,22 +155,22 @@ int main(int argc, char** argv)
 	}
 
 	if (testRequested && testCount == 0)
-		glfwSetWindowShouldClose(window, GL_TRUE);
+		nvgwin_set_should_close(window, 1);
 
-	glfwSwapInterval(0);
+	nvgwin_swap_interval(0);
 
 	initGPUTimer(&gpuTimer);
 
-	glfwSetTime(0);
+	nvgwin_set_time(0);
 	long long frameCounter = 0;
 	int sampleRate = 5;
 	bool success= true;
 	if(testRequested)
 		prevt = 0.0f;
 	else
-		prevt = glfwGetTime();
+		prevt = nvgwin_get_time();
 	
-	while (!glfwWindowShouldClose(window))
+	while (!nvgwin_should_close(window))
 	{
 		double mx, my, t, dt;
 		int winWidth, winHeight;
@@ -182,7 +182,7 @@ int main(int argc, char** argv)
 		if(testRequested)
 			t=frameCounter/30.0f;
 		else
-			t = glfwGetTime();
+			t = nvgwin_get_time();
 		
 		dt = t - prevt;
 		prevt = t;
@@ -190,14 +190,14 @@ int main(int argc, char** argv)
 		startGPUTimer(&gpuTimer);
 
 
-		glfwGetWindowSize(window, &winWidth, &winHeight);
-		glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
+		nvgwin_get_window_size(window, &winWidth, &winHeight);
+		nvgwin_get_framebuffer_size(window, &fbWidth, &fbHeight);
 		if(testRequested){
 			double angle = 2.0 * nvg::PI * testRemaining / (double)testCount;
 			mx=winWidth/2.0f+cos(angle)*winWidth/4.0f;
 			my=winHeight/2.0f+sin(angle)*winHeight/4.0f;
 		} else {
-			glfwGetCursorPos(window, &mx, &my);
+			nvgwin_get_cursor_pos(window, &mx, &my);
 		}
 		// Calculate pixel ration for hi-dpi devices.
 		pxRatio = (float)fbWidth / (float)winWidth;
@@ -224,7 +224,7 @@ int main(int argc, char** argv)
 		vg.endFrame();
 
 		// Measure the CPU time taken excluding swap buffers (as the swap may wait for GPU)
-		cpuTime = glfwGetTime() - t;
+		cpuTime = nvgwin_get_time() - t;
 
 		updateGraph(fps, (float)dt);
 		updateGraph(cpuGraph, (float)cpuTime);
@@ -241,14 +241,14 @@ int main(int argc, char** argv)
 			success &= saveScreenShot(fbWidth, fbHeight, false, std::string(fileName.data()), true);
 			testRemaining--;
 			if (testRemaining == 0)
-				glfwSetWindowShouldClose(window, GL_TRUE);
+				nvgwin_set_should_close(window, 1);
 		} else if (screenshot&&!testRequested) {
 			screenshot = 0;
 			success&=saveScreenShot(fbWidth, fbHeight, premult, "dump.png");
 		}
 		frameCounter++;
-		glfwSwapBuffers(window);
-		glfwPollEvents();
+		nvgwin_swap_buffers(window);
+		nvgwin_poll_events();
 	}
 
 	freeDemoData(vg, data);
@@ -266,7 +266,8 @@ int main(int argc, char** argv)
 			printf("Test failed!\n");
 	}
 
-	glfwTerminate();
+	nvgwin_destroy(window);
+	nvgwin_shutdown();
 	return (success)?EXIT_SUCCESS:EXIT_FAILURE;
 }
 

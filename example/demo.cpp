@@ -18,7 +18,11 @@
 #ifdef NANOVG_GLEW
 #include <GL/glew.h>
 #endif
+#if defined(NANOVG_USE_SDL3) && !defined(NANOVG_GLEW)
+#include <SDL3/SDL_opengl.h>
+#elif !defined(NANOVG_USE_SDL3)
 #include <GLFW/glfw3.h>
+#endif
 
 // Do not define the STB_IMAGE_IMPLEMENTATION twice
 #include "thirdParty/stb_image.h"
