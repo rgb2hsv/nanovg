@@ -1,0 +1,10 @@
+BasedOnStyle: Google
+IndentWidth: 4
+UseTab: Never
+BreakBeforeBraces: Linux
+SortIncludes: false
+ColumnLimit: 200
+BinPackArguments: true
+PointerAlignment: Left
+AllowShortFunctionsOnASingleLine: false
+AccessModifierOffset: -4
