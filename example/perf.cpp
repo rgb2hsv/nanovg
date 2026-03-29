@@ -9,7 +9,13 @@
 #ifdef NANOVG_GLEW
 #  include <GL/glew.h>
 #endif
-#if !defined(NANOVG_USE_SDL3)
+#if defined(NANOVG_USE_SDL3) && !defined(NANOVG_GLEW)
+#  include <SDL3/SDL_opengl.h>
+#elif !defined(NANOVG_USE_SDL3)
+#  ifdef __APPLE__
+#    define GLFW_INCLUDE_GLCOREARB
+#  endif
+#  define GLFW_INCLUDE_GLEXT
 #  include <GLFW/glfw3.h>
 #endif
 #include "nanovg.hpp"
