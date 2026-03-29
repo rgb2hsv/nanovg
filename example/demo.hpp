@@ -4,8 +4,8 @@
 #include <string>
 
 struct DemoData {
-	int fontNormal, fontBold, fontIcons, fontEmoji;
-	std::array<int, 12> images{};
+    int fontNormal, fontBold, fontIcons, fontEmoji;
+    std::array<int, 12> images{};
 };
 
 int loadDemoData(nvg::Context& vg, DemoData& data);

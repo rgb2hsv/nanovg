@@ -7,10 +7,10 @@ extern "C" {
 typedef struct NvgWindow NvgWindow;
 
 typedef enum NvgwinProfile {
-	NVGWIN_PROFILE_GL2,
-	NVGWIN_PROFILE_GL3,
-	NVGWIN_PROFILE_GLES2,
-	NVGWIN_PROFILE_GLES3,
+    NVGWIN_PROFILE_GL2,
+    NVGWIN_PROFILE_GL3,
+    NVGWIN_PROFILE_GLES2,
+    NVGWIN_PROFILE_GLES3,
 } NvgwinProfile;
 
 int nvgwin_init(void);

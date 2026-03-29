@@ -23,16 +23,16 @@
 #include <memory>
 #include <string>
 #ifdef NANOVG_GLEW
-#	include <GL/glew.h>
+#include <GL/glew.h>
 #endif
 #if defined(NANOVG_USE_SDL3) && !defined(NANOVG_GLEW)
-#	include <SDL3/SDL_opengl.h>
+#include <SDL3/SDL_opengl.h>
 #elif !defined(NANOVG_USE_SDL3)
-#	ifdef __APPLE__
-#		define GLFW_INCLUDE_GLCOREARB
-#	endif
-#	define GLFW_INCLUDE_GLEXT
-#	include <GLFW/glfw3.h>
+#ifdef __APPLE__
+#define GLFW_INCLUDE_GLCOREARB
+#endif
+#define GLFW_INCLUDE_GLEXT
+#include <GLFW/glfw3.h>
 #endif
 #include "nvg_window.hpp"
 #include "nvg_input.hpp"
@@ -42,10 +42,9 @@
 #include "demo.hpp"
 #include "perf.hpp"
 
-
 void errorcb(int error, const char* desc)
 {
-	printf("Window error %d: %s\n", error, desc);
+    printf("Window error %d: %s\n", error, desc);
 }
 
 int blowup = 0;
@@ -54,222 +53,210 @@ int premult = 0;
 
 static void key(NvgWindow* window, int key, int scancode, int action, int mods, void* user)
 {
-	UNUSED(user);
-	UNUSED(scancode);
-	UNUSED(mods);
-	if (key == NVG_KEY_ESCAPE && action == NVG_PRESS)
-		nvgwin_set_should_close(window, 1);
-	if (key == NVG_KEY_SPACE && action == NVG_PRESS)
-		blowup = !blowup;
-	if (key == NVG_KEY_S && action == NVG_PRESS)
-		screenshot = 1;
-	if (key == NVG_KEY_P && action == NVG_PRESS)
-		premult = !premult;
+    UNUSED(user);
+    UNUSED(scancode);
+    UNUSED(mods);
+    if (key == NVG_KEY_ESCAPE && action == NVG_PRESS) nvgwin_set_should_close(window, 1);
+    if (key == NVG_KEY_SPACE && action == NVG_PRESS) blowup = !blowup;
+    if (key == NVG_KEY_S && action == NVG_PRESS) screenshot = 1;
+    if (key == NVG_KEY_P && action == NVG_PRESS) premult = !premult;
 }
 
 int main(int argc, char** argv)
 {
-	NvgWindow* window;
-	DemoData data;
-	GPUtimer gpuTimer;
-	PerfGraph fps, cpuGraph, gpuGraph;
-	double prevt = 0, cpuTime = 0;
-	int testCount = 0;
-	bool testRequested = false;
-	for (int i = 1; i < argc; i++) {
-		if (!strcmp(argv[i], "--test")) {
-			if (i + 1 >= argc) {
-				printf("Missing value for --test N.\n");
-				return -1;
-			}
-			char* endptr = NULL;
-			long v = strtol(argv[i + 1], &endptr, 10);
-			if (endptr == argv[i + 1] || (endptr && *endptr != '\0') || v < 0) {
-				printf("Invalid --test N value.\n");
-				return -1;
-			}
-			testCount = static_cast<int>(v);
-			testRequested = true;
-			i++;
-		} else if (!strncmp(argv[i], "--test=", 7)) {
-			char* endptr = NULL;
-			long v = strtol(argv[i] + 7, &endptr, 10);
-			if (endptr == argv[i] + 7 || (endptr && *endptr != '\0') || v < 0) {
-				printf("Invalid --test N value.\n");
-				return -1;
-			}
-			testCount = static_cast<int>(v);
-			testRequested = true;
-		}
-	}
-	int testRemaining = testCount;
+    NvgWindow* window;
+    DemoData data;
+    GPUtimer gpuTimer;
+    PerfGraph fps, cpuGraph, gpuGraph;
+    double prevt = 0, cpuTime = 0;
+    int testCount = 0;
+    bool testRequested = false;
+    for (int i = 1; i < argc; i++) {
+        if (!strcmp(argv[i], "--test")) {
+            if (i + 1 >= argc) {
+                printf("Missing value for --test N.\n");
+                return -1;
+            }
+            char* endptr = NULL;
+            long v = strtol(argv[i + 1], &endptr, 10);
+            if (endptr == argv[i + 1] || (endptr && *endptr != '\0') || v < 0) {
+                printf("Invalid --test N value.\n");
+                return -1;
+            }
+            testCount = static_cast<int>(v);
+            testRequested = true;
+            i++;
+        } else if (!strncmp(argv[i], "--test=", 7)) {
+            char* endptr = NULL;
+            long v = strtol(argv[i] + 7, &endptr, 10);
+            if (endptr == argv[i] + 7 || (endptr && *endptr != '\0') || v < 0) {
+                printf("Invalid --test N value.\n");
+                return -1;
+            }
+            testCount = static_cast<int>(v);
+            testRequested = true;
+        }
+    }
+    int testRemaining = testCount;
 
-	if (nvgwin_init() != 0) {
-		printf("Failed to init window system.");
-		return -1;
-	}
+    if (nvgwin_init() != 0) {
+        printf("Failed to init window system.");
+        return -1;
+    }
 
-	initGraph(fps, GRAPH_RENDER_FPS, "Frame Time");
-	initGraph(cpuGraph, GRAPH_RENDER_MS, "CPU Time");
-	initGraph(gpuGraph, GRAPH_RENDER_MS, "GPU Time");
+    initGraph(fps, GRAPH_RENDER_FPS, "Frame Time");
+    initGraph(cpuGraph, GRAPH_RENDER_MS, "CPU Time");
+    initGraph(gpuGraph, GRAPH_RENDER_MS, "GPU Time");
 
-	nvgwin_set_error_callback(errorcb);
+    nvgwin_set_error_callback(errorcb);
 #ifdef DEMO_MSAA
-	const int msaa = 4;
+    const int msaa = 4;
 #else
-	const int msaa = 0;
+    const int msaa = 0;
 #endif
-	window = nvgwin_create(1000, 600, "NanoVG", NVGWIN_PROFILE_GL3, msaa, 1);
-	if (!window) {
-		nvgwin_shutdown();
-		return -1;
-	}
+    window = nvgwin_create(1000, 600, "NanoVG", NVGWIN_PROFILE_GL3, msaa, 1);
+    if (!window) {
+        nvgwin_shutdown();
+        return -1;
+    }
 
-	nvgwin_set_key_callback(window, key, nullptr);
+    nvgwin_set_key_callback(window, key, nullptr);
 
-	nvgwin_make_current(window);
+    nvgwin_make_current(window);
 #ifdef NANOVG_GLEW
-	glewExperimental = GL_TRUE;
-	if(glewInit() != GLEW_OK) {
-		printf("Could not init glew.\n");
-		return -1;
-	}
-	// GLEW generates GL error because it calls glGetString(GL_EXTENSIONS), we'll consume it here.
-	glGetError();
+    glewExperimental = GL_TRUE;
+    if (glewInit() != GLEW_OK) {
+        printf("Could not init glew.\n");
+        return -1;
+    }
+    // GLEW generates GL error because it calls glGetString(GL_EXTENSIONS), we'll consume it here.
+    glGetError();
 #endif
 
 #ifdef DEMO_MSAA
-	auto vgOwner = nvg::createGL(static_cast<int>(nvg::CreateFlags::StencilStrokes | nvg::CreateFlags::Debug));
+    auto vgOwner = nvg::createGL(static_cast<int>(nvg::CreateFlags::StencilStrokes | nvg::CreateFlags::Debug));
 #else
-	auto vgOwner = nvg::createGL(static_cast<int>(nvg::CreateFlags::Antialias | nvg::CreateFlags::StencilStrokes | nvg::CreateFlags::Debug));
+    auto vgOwner = nvg::createGL(static_cast<int>(nvg::CreateFlags::Antialias | nvg::CreateFlags::StencilStrokes | nvg::CreateFlags::Debug));
 #endif
-	if (!vgOwner) {
-		printf("Could not init nanovg.\n");
-		return -1;
-	}
-	nvg::Context& vg = *vgOwner;
+    if (!vgOwner) {
+        printf("Could not init nanovg.\n");
+        return -1;
+    }
+    nvg::Context& vg = *vgOwner;
 
-	if (loadDemoData(vg, data) == -1) {
-		printf("Could not load demo data.\n");
-		return -1;
-	}
+    if (loadDemoData(vg, data) == -1) {
+        printf("Could not load demo data.\n");
+        return -1;
+    }
 
-	if (testRequested && testCount == 0)
-		nvgwin_set_should_close(window, 1);
+    if (testRequested && testCount == 0) nvgwin_set_should_close(window, 1);
 
-	nvgwin_swap_interval(0);
+    nvgwin_swap_interval(0);
 
-	initGPUTimer(&gpuTimer);
+    initGPUTimer(&gpuTimer);
 
-	nvgwin_set_time(0);
-	long long frameCounter = 0;
-	int sampleRate = 5;
-	bool success= true;
-	if(testRequested)
-		prevt = 0.0f;
-	else
-		prevt = nvgwin_get_time();
-	
-	while (!nvgwin_should_close(window))
-	{
-		double mx, my, t, dt;
-		int winWidth, winHeight;
-		int fbWidth, fbHeight;
-		float pxRatio;
-		std::array<float, 3> gpuTimes{};
-		int i, n;
+    nvgwin_set_time(0);
+    long long frameCounter = 0;
+    int sampleRate = 5;
+    bool success = true;
+    if (testRequested)
+        prevt = 0.0f;
+    else
+        prevt = nvgwin_get_time();
 
-		if(testRequested)
-			t=frameCounter/30.0f;
-		else
-			t = nvgwin_get_time();
-		
-		dt = t - prevt;
-		prevt = t;
+    while (!nvgwin_should_close(window)) {
+        double mx, my, t, dt;
+        int winWidth, winHeight;
+        int fbWidth, fbHeight;
+        float pxRatio;
+        std::array<float, 3> gpuTimes{};
+        int i, n;
 
-		startGPUTimer(&gpuTimer);
+        if (testRequested)
+            t = frameCounter / 30.0f;
+        else
+            t = nvgwin_get_time();
 
+        dt = t - prevt;
+        prevt = t;
 
-		nvgwin_get_window_size(window, &winWidth, &winHeight);
-		nvgwin_get_framebuffer_size(window, &fbWidth, &fbHeight);
-		if(testRequested){
-			double angle = 2.0 * nvg::PI * testRemaining / (double)testCount;
-			mx=winWidth/2.0f+cos(angle)*winWidth/4.0f;
-			my=winHeight/2.0f+sin(angle)*winHeight/4.0f;
-		} else {
-			nvgwin_get_cursor_pos(window, &mx, &my);
-		}
-		// Calculate pixel ration for hi-dpi devices.
-		pxRatio = (float)fbWidth / (float)winWidth;
+        startGPUTimer(&gpuTimer);
 
-		// Update and render
-		glViewport(0, 0, fbWidth, fbHeight);
-		if (premult)
-			glClearColor(0,0,0,0);
-		else
-			glClearColor(0.3f, 0.3f, 0.32f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT|GL_STENCIL_BUFFER_BIT);
+        nvgwin_get_window_size(window, &winWidth, &winHeight);
+        nvgwin_get_framebuffer_size(window, &fbWidth, &fbHeight);
+        if (testRequested) {
+            double angle = 2.0 * nvg::PI * testRemaining / (double)testCount;
+            mx = winWidth / 2.0f + cos(angle) * winWidth / 4.0f;
+            my = winHeight / 2.0f + sin(angle) * winHeight / 4.0f;
+        } else {
+            nvgwin_get_cursor_pos(window, &mx, &my);
+        }
+        // Calculate pixel ration for hi-dpi devices.
+        pxRatio = (float)fbWidth / (float)winWidth;
 
-		vg.beginFrame( (float)winWidth, (float)winHeight, pxRatio);
+        // Update and render
+        glViewport(0, 0, fbWidth, fbHeight);
+        if (premult)
+            glClearColor(0, 0, 0, 0);
+        else
+            glClearColor(0.3f, 0.3f, 0.32f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-		renderDemo(vg, (float)mx, (float)my, (float)winWidth, (float)winHeight, (float)t, blowup, data);
+        vg.beginFrame((float)winWidth, (float)winHeight, pxRatio);
 
-		if(!testRequested){
-			renderGraph(vg, 5,5, fps);
-			renderGraph(vg, 5+200+5,5, cpuGraph);
-			if (gpuTimer.supported) {
-				renderGraph(vg, 5+200+5+200+5,5, gpuGraph);
-			}
-		}
-		vg.endFrame();
+        renderDemo(vg, (float)mx, (float)my, (float)winWidth, (float)winHeight, (float)t, blowup, data);
 
-		// Measure the CPU time taken excluding swap buffers (as the swap may wait for GPU)
-		cpuTime = nvgwin_get_time() - t;
+        if (!testRequested) {
+            renderGraph(vg, 5, 5, fps);
+            renderGraph(vg, 5 + 200 + 5, 5, cpuGraph);
+            if (gpuTimer.supported) {
+                renderGraph(vg, 5 + 200 + 5 + 200 + 5, 5, gpuGraph);
+            }
+        }
+        vg.endFrame();
 
-		updateGraph(fps, (float)dt);
-		updateGraph(cpuGraph, (float)cpuTime);
+        // Measure the CPU time taken excluding swap buffers (as the swap may wait for GPU)
+        cpuTime = nvgwin_get_time() - t;
 
-		// We may get multiple results.
-		n = stopGPUTimer(&gpuTimer, gpuTimes.data(), (int)gpuTimes.size());
-		for (i = 0; i < n; i++)
-			updateGraph(gpuGraph, gpuTimes[i]);
+        updateGraph(fps, (float)dt);
+        updateGraph(cpuGraph, (float)cpuTime);
 
-		if (testRemaining > 0 && frameCounter % sampleRate ==0) {
-			std::array<char, 256> fileName{};
-			printf("Capturing %d/%d at t = %0.2f sec\n", testCount - testRemaining + 1, testCount,t);
-			snprintf(fileName.data(), (int)fileName.size(), "screenshot%03d.png", testCount - testRemaining + 1);
-			success &= saveScreenShot(fbWidth, fbHeight, false, std::string(fileName.data()), true);
-			testRemaining--;
-			if (testRemaining == 0)
-				nvgwin_set_should_close(window, 1);
-		} else if (screenshot&&!testRequested) {
-			screenshot = 0;
-			success&=saveScreenShot(fbWidth, fbHeight, premult, "dump.png");
-		}
-		frameCounter++;
-		nvgwin_swap_buffers(window);
-		nvgwin_poll_events();
-	}
+        // We may get multiple results.
+        n = stopGPUTimer(&gpuTimer, gpuTimes.data(), (int)gpuTimes.size());
+        for (i = 0; i < n; i++) updateGraph(gpuGraph, gpuTimes[i]);
 
-	freeDemoData(vg, data);
+        if (testRemaining > 0 && frameCounter % sampleRate == 0) {
+            std::array<char, 256> fileName{};
+            printf("Capturing %d/%d at t = %0.2f sec\n", testCount - testRemaining + 1, testCount, t);
+            snprintf(fileName.data(), (int)fileName.size(), "screenshot%03d.png", testCount - testRemaining + 1);
+            success &= saveScreenShot(fbWidth, fbHeight, false, std::string(fileName.data()), true);
+            testRemaining--;
+            if (testRemaining == 0) nvgwin_set_should_close(window, 1);
+        } else if (screenshot && !testRequested) {
+            screenshot = 0;
+            success &= saveScreenShot(fbWidth, fbHeight, premult, "dump.png");
+        }
+        frameCounter++;
+        nvgwin_swap_buffers(window);
+        nvgwin_poll_events();
+    }
 
-	nvg::deleteGL(vgOwner);
+    freeDemoData(vg, data);
 
-	if (!testRequested) {
-		printf("Average Frame Time: %.2f ms\n", getGraphAverage(fps) * 1000.0f);
-		printf("          CPU Time: %.2f ms\n", getGraphAverage(cpuGraph) * 1000.0f);
-		printf("          GPU Time: %.2f ms\n", getGraphAverage(gpuGraph) * 1000.0f);
-	} else {
-		if(success)
-			printf("Test passed!\n");
-		else
-			printf("Test failed!\n");
-	}
+    nvg::deleteGL(vgOwner);
 
-	nvgwin_destroy(window);
-	nvgwin_shutdown();
-	return (success)?EXIT_SUCCESS:EXIT_FAILURE;
+    if (!testRequested) {
+        printf("Average Frame Time: %.2f ms\n", getGraphAverage(fps) * 1000.0f);
+        printf("          CPU Time: %.2f ms\n", getGraphAverage(cpuGraph) * 1000.0f);
+        printf("          GPU Time: %.2f ms\n", getGraphAverage(gpuGraph) * 1000.0f);
+    } else {
+        if (success)
+            printf("Test passed!\n");
+        else
+            printf("Test failed!\n");
+    }
+
+    nvgwin_destroy(window);
+    nvgwin_shutdown();
+    return (success) ? EXIT_SUCCESS : EXIT_FAILURE;
 }
-
-
-

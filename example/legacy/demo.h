@@ -8,8 +8,8 @@ extern "C" {
 #endif
 
 struct DemoData {
-	int fontNormal, fontBold, fontIcons, fontEmoji;
-	int images[12];
+    int fontNormal, fontBold, fontIcons, fontEmoji;
+    int images[12];
 };
 typedef struct DemoData DemoData;
 
@@ -23,4 +23,4 @@ void saveScreenShot(int w, int h, int premult, const char* name);
 }
 #endif
 
-#endif // DEMO_H
+#endif  // DEMO_H

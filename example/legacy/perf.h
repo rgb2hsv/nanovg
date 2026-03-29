@@ -15,10 +15,10 @@ enum GraphrenderStyle {
 
 #define GRAPH_HISTORY_COUNT 100
 struct PerfGraph {
-	int style;
-	char name[32];
-	float values[GRAPH_HISTORY_COUNT];
-	int head;
+    int style;
+    char name[32];
+    float values[GRAPH_HISTORY_COUNT];
+    int head;
 };
 typedef struct PerfGraph PerfGraph;
 
@@ -29,9 +29,9 @@ float getGraphAverage(PerfGraph* fps);
 
 #define GPU_QUERY_COUNT 5
 struct GPUtimer {
-	int supported;
-	int cur, ret;
-	unsigned int queries[GPU_QUERY_COUNT];
+    int supported;
+    int cur, ret;
+    unsigned int queries[GPU_QUERY_COUNT];
 };
 typedef struct GPUtimer GPUtimer;
 
@@ -43,4 +43,4 @@ int stopGPUTimer(GPUtimer* timer, float* times, int maxTimes);
 }
 #endif
 
-#endif // PERF_H
+#endif  // PERF_H

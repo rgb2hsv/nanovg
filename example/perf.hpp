@@ -12,10 +12,10 @@ enum GraphrenderStyle {
 
 #define GRAPH_HISTORY_COUNT 100
 struct PerfGraph {
-	int style;
-	std::array<char, 32> name{};
-	std::array<float, GRAPH_HISTORY_COUNT> values{};
-	int head;
+    int style;
+    std::array<char, 32> name{};
+    std::array<float, GRAPH_HISTORY_COUNT> values{};
+    int head;
 };
 
 void initGraph(PerfGraph& graph, int style, const std::string& name);
@@ -25,9 +25,9 @@ float getGraphAverage(PerfGraph& graph);
 
 #define GPU_QUERY_COUNT 5
 struct GPUtimer {
-	int supported;
-	int cur, ret;
-	std::array<unsigned int, GPU_QUERY_COUNT> queries{};
+    int supported;
+    int cur, ret;
+    std::array<unsigned int, GPU_QUERY_COUNT> queries{};
 };
 
 void initGPUTimer(GPUtimer* timer);
