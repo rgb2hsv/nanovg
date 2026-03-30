@@ -254,7 +254,7 @@ public:
     void save();
     void restore();
     void reset();
-    ScissorBounds currentScissor() const;
+    const ScissorBounds& currentScissor() const;
     void shapeAntiAlias(int enabled);
     void strokeColor(const Color& color);
     void strokePaint(const Paint& paint);

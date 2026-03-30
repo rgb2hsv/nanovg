@@ -56,7 +56,7 @@ NVGpaint toLegacy(const nvg::Paint& p) noexcept
     return r;
 }
 
-NVGscissorBounds toLegacy(const nvg::ScissorBounds& b) noexcept
+struct NVGscissorBounds toLegacy(const nvg::ScissorBounds& b) noexcept
 {
     NVGscissorBounds r;
     std::memcpy(&r, &b, sizeof(r));

@@ -425,9 +425,9 @@ void Context::reset()
 }
 
 // State setting
-ScissorBounds Context::currentScissor() const
+const ScissorBounds& Context::currentScissor() const
 {
-    return (*this)->scissor;
+    return mImpl->scissor;
 }
 
 void Context::shapeAntiAlias(int enabled)

@@ -156,12 +156,7 @@ endif()
 set(COMMON_LEGACY_FILES "example/legacy/demo.c" "example/legacy/perf.c")
 
 set(TARGETS ${PROJECT_NAME})
-# OpenGL ES examples need GLES headers; typical Windows SDK + GLFW do not provide them.
-if(WIN32)
-	set(NANOVG_EXAMPLE_PROJECTS gl2 gl3 fbo)
-else()
-	set(NANOVG_EXAMPLE_PROJECTS gles2 gles3 gl2 gl3 fbo)
-endif()
+set(NANOVG_EXAMPLE_PROJECTS gl2 gl3 fbo)
 
 # C++20 examples
 foreach(EXAMPLE_PROJ IN ITEMS ${NANOVG_EXAMPLE_PROJECTS})
