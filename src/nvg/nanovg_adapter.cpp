@@ -2,7 +2,7 @@
 // C API wrapper for nvg::Context (see nanovg.hpp). Implements declarations in nvg/legacy/nanovg.h.
 //
 
-#include "nanovg.h"
+#include "legacy/nanovg.h"
 
 #include "nanovg.hpp"
 

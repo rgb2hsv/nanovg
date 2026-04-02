@@ -52,11 +52,11 @@
 #pragma warning(disable : 4706)  // assignment within conditional expression
 #endif
 #define FONTSTASH_IMPLEMENTATION
-#include "fontstash.h"
+#include "../thirdParty/fontstash.h"
 
 #ifndef NVG_NO_STB
 #define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
+#include "../thirdParty/stb_image.h"
 #endif
 #ifdef _MSC_VER
 #pragma warning(pop)

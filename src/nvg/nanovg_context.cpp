@@ -12,7 +12,7 @@
 #include <array>
 #include <vector>
 
-#include "fontstash.h"
+#include "../thirdParty/fontstash.h"
 
 namespace nvg
 {
