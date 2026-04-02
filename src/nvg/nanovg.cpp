@@ -398,8 +398,6 @@ void Context::restore()
 void Context::reset()
 {
     State& state = mImpl->topState();
-    state = State{};
-
     detail::setPaintColor(state.fill, rgba(255, 255, 255, 255));
     detail::setPaintColor(state.stroke, rgba(0, 0, 0, 255));
     state.compositeOperation = detail::compositeOperationState(static_cast<int>(CompositeOperation::SourceOver));

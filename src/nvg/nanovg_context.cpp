@@ -19,6 +19,9 @@ namespace nvg
 
 State& ContextImpl::topState()
 {
+    if(states.empty())  
+        states.emplace_back();
+        
     return states.back();
 }
 
